@@ -8,15 +8,15 @@
 #' @param port the local port (by default the port is set to 18011)
 #' @param local
 #'
-r4j.connect <- function(port = 18011, local = T) {
+connectToJava <- function(port = 18011, local = T) {
   if (local && (!exists("handle", envir = globalenv()) || process_state(handle) != "running")) {
     require(subprocess)
     print("Starting Java Virtual Machine...")
     parms <- c("-firstcall", "true")
-    if (exists(".extensionPath")) {
+    if (exists(".extensionPath", envir = globalenv())) {
      parms <- c(parms, "-ext", .extensionPath)
     }
-    handle <<- spawn_process("repicea.jar", parms) ### spawn the java server
+    handle <<- spawn_process(paste(find.package("R4J"),"repicea.jar",sep="/"), parms) ### spawn the java server
     Sys.sleep(2)
   }
   print("Connecting to JVM...")
@@ -24,7 +24,7 @@ r4j.connect <- function(port = 18011, local = T) {
   read.socket(mainSocket)
 }
 
-r4j.setExtensionPath <- function(path) {
+setJavaExtensionPath <- function(path) {
   .extensionPath <<- path
 }
 
@@ -54,7 +54,7 @@ r4j.setExtensionPath <- function(path) {
   return(str)
 }
 
-r4j.createObject <- function(class, ...) {
+createJavaObject <- function(class, ...) {
   parameters <- list(...)
   command <- paste("create", class, sep=";")
   command <- paste(command, .marshallCommand(parameters), sep=";")
@@ -101,7 +101,7 @@ r4j.createObject <- function(class, ...) {
   return(command)
 }
 
-r4j.callMethod <- function(javaObject, methodName, ...) {
+callJavaMethod <- function(javaObject, methodName, ...) {
   parameters <- list(...)
   command <- paste("method", paste("java.object",.translateJavaObject(javaObject),sep=""), methodName, sep=";")
   command <- paste(command, .marshallCommand(parameters), sep=";")
@@ -160,7 +160,7 @@ r4j.callMethod <- function(javaObject, methodName, ...) {
   }
 }
 
-r4j.shutdownJVM <- function() {
+shutdownJava <- function() {
   if (exists("mainSocket", envir = globalenv())) {
     write.socket(.getMainSocket(), "closeConnection")
     print("Closing connection and removing socket...")
@@ -181,7 +181,7 @@ r4j.shutdownJVM <- function() {
   print("Done.")
 }
 
-r4j.gc <- function() {
+callJavaGC <- function() {
   command <- NULL
   for (objectName in ls(envir = globalenv())) {
     object <- get(objectName)

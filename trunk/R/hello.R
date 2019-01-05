@@ -13,12 +13,12 @@
 #   Check Package:             'Ctrl + Shift + E'
 #   Test Package:              'Ctrl + Shift + T'
 
-hello <- function() {
-  print("Hello, world!")
-}
-source("./R/r4jFunctions.R")
+#hello <- function() {
+#  print("Hello, world!")
+#}
+#source("./R/r4jFunctions.R")
 
-r4j.setExtensionPath("/home/fortin/Documents/7_Developpement/JavaProjects/externallibraries")
-.extensionPath
-r4j.connect()
-r4j.shutdownJVM()
+#setJavaExtensionPath("/home/fortin/Documents/7_Developpement/JavaProjects/externallibraries")
+##.extensionPath
+#connectToJava()
+#shutdownJava()

@@ -1,11 +1,13 @@
 Package: R4J
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Creates Java objects and executes Java methods
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
+Author: Mathieu Fortin
+Maintainer: Mathieu Fortin <mathieu.fortin.re@gmail.com>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Imports:
+    subprocess (>= 0.8.3)
+License: LGPL 3.0
 Encoding: UTF-8
 LazyData: true
