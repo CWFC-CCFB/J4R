@@ -20,13 +20,12 @@ connectToJava <- function(port = 18011, local = TRUE) {
     if (exists(".extensionPath", envir = globalenv())) {
      parms <- c(parms, "-ext", .extensionPath)
     }
-    if (file.exists("./inst/repicea.jar")) {  ### debug mode
-      rootPath <- "./inst"
-    } else {
+#    if (file.exists("./inst/repicea.jar")) {  ### debug mode
+#      rootPath <- "./inst"
+#    } else {
       rootPath <- find.package("R4J")
-    }
+#    }
     path <- paste(rootPath,"repicea.jar",sep="/")
-    print(paste("Looking for repicea.jar at", path))
     handle <<- subprocess::spawn_process(path, parms) ### spawn the java server
     Sys.sleep(2)
   }
@@ -34,6 +33,7 @@ connectToJava <- function(port = 18011, local = TRUE) {
   mainSocket <<- make.socket("localhost", port)
   read.socket(mainSocket)
 }
+
 
 #'
 #' This function sets a path for eventual extensions, i.e. jar files.
