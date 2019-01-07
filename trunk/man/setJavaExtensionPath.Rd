@@ -17,4 +17,5 @@ This function sets a path for eventual extensions, i.e. jar files.
 }
 \examples{
 setJavaExtensionPath("/home/fortin/myExternalLibraries")
+
 }

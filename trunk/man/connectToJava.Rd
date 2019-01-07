@@ -6,7 +6,7 @@
 The extension path must be set before calling this function. See the setJavaExtensionPath
 function.}
 \usage{
-connectToJava(port = 18011, local = T)
+connectToJava(port = 18011, local = TRUE)
 }
 \arguments{
 \item{port}{the local port (the port is set to 18011 by default)}

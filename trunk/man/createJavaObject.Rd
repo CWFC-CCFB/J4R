@@ -34,4 +34,5 @@ createJavaObject("java.util.ArrayList", c(as.integer(3), as.integer(4)))
 
 ### shutting down Java
 shutdownJava()
+
 }

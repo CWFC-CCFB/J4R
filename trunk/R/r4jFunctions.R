@@ -1,9 +1,9 @@
 ########################################################
 # R function for connection to Gateway Server in Java
+# Author Mathieu Fortin - January 2019
 ########################################################
 
-######### TODO Clean memory through gc function
-
+#'
 #' This function connects the R environment to a gateway server that runs in Java.
 #' The extension path must be set before calling this function. See the setJavaExtensionPath
 #' function.
@@ -11,8 +11,10 @@
 #' @param port the local port (the port is set to 18011 by default)
 #' @param local for debugging only
 #' @return nothing
-connectToJava <- function(port = 18011, local = T) {
-  if (local && (!exists("handle", envir = globalenv()) || process_state(handle) != "running")) {
+#'
+#' @export
+connectToJava <- function(port = 18011, local = TRUE) {
+  if (local && (!exists("handle", envir = globalenv()) || subprocess::process_state(handle) != "running")) {
     print("Starting Java Virtual Machine...")
     parms <- c("-firstcall", "true")
     if (exists(".extensionPath", envir = globalenv())) {
@@ -23,7 +25,9 @@ connectToJava <- function(port = 18011, local = T) {
     } else {
       rootPath <- find.package("R4J")
     }
-    handle <<- subprocess::spawn_process(paste(rootPath,"repicea.jar",sep="/"), parms) ### spawn the java server
+    path <- paste(rootPath,"repicea.jar",sep="/")
+    print(paste("Looking for repicea.jar at", path))
+    handle <<- subprocess::spawn_process(path, parms) ### spawn the java server
     Sys.sleep(2)
   }
   print("Connecting to JVM...")
@@ -31,12 +35,15 @@ connectToJava <- function(port = 18011, local = T) {
   read.socket(mainSocket)
 }
 
+#'
 #' This function sets a path for eventual extensions, i.e. jar files.
 #'
 #' @param path the path to the jar files to be loaded by the Java classloader
 #' @return nothing
 #' @examples
 #' setJavaExtensionPath("/home/fortin/myExternalLibraries")
+#'
+#' @export
 setJavaExtensionPath <- function(path) {
   .extensionPath <<- path
 }
@@ -67,6 +74,7 @@ setJavaExtensionPath <- function(path) {
   return(str)
 }
 
+#'
 #' This function creates one or many object of a particular class. If the parameters
 #' contain vectors, then a series of instances of this class can be created.
 #'
@@ -88,6 +96,8 @@ setJavaExtensionPath <- function(path) {
 #'
 #' ### shutting down Java
 #' shutdownJava()
+#'
+#' @export
 createJavaObject <- function(class, ...) {
   parameters <- list(...)
   command <- paste("create", class, sep=";")
@@ -137,6 +147,7 @@ createJavaObject <- function(class, ...) {
   return(command)
 }
 
+#'
 #' This method calls a public method in a particular class of object. If the javaObject parameters or the additional
 #' parameters (...) include vectors, the method is called several times and a vector of primitive or a list of java
 #' instances can be returned.
@@ -156,6 +167,8 @@ createJavaObject <- function(class, ...) {
 #'
 #' ### shutting down Java
 #' shutdownJava()
+#'
+#' @export
 callJavaMethod <- function(javaObject, methodName, ...) {
   parameters <- list(...)
   command <- paste("method", paste("java.object",.translateJavaObject(javaObject),sep=""), methodName, sep=";")
@@ -215,7 +228,10 @@ callJavaMethod <- function(javaObject, methodName, ...) {
   }
 }
 
+#'
 #' This function shuts down Java and the gateway server.
+#'
+#' @export
 shutdownJava <- function() {
   if (exists("mainSocket", envir = globalenv())) {
     write.socket(.getMainSocket(), "closeConnection")
@@ -231,12 +247,13 @@ shutdownJava <- function() {
   }
   print("Terminating Java Virtual Machine...")
   if (exists("handle", envir = globalenv())) {
-    process_terminate(handle)
+    subprocess::process_terminate(handle)
     rm("handle", envir = globalenv())
   }
   print("Done.")
 }
 
+#'
 #' This function synchronizes the Java environment with the R environment. Objects that
 #' are removed from the R environment are not automatically removed from the Java
 #' environment. This function scans the R environment for the java.object instance and
@@ -244,6 +261,8 @@ shutdownJava <- function() {
 #' to in the R environment.
 #'
 #' To avoid a memory leak, the function should be called on a regular basis.
+#'
+#' @export
 callJavaGC <- function() {
   command <- NULL
   for (objectName in ls(envir = globalenv())) {
