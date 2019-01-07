@@ -2,21 +2,28 @@
 # R function for connection to Gateway Server in Java
 ########################################################
 
-######### TODO create documentation
-######### Clean memory through gc function
-#' Connect to the rgateway server that runs in Java.
-#' @param port the local port (by default the port is set to 18011)
-#' @param local
+######### TODO Clean memory through gc function
+
+#' This function connects the R environment to a gateway server that runs in Java.
+#' The extension path must be set before calling this function. See the setJavaExtensionPath
+#' function.
 #'
+#' @param port the local port (the port is set to 18011 by default)
+#' @param local for debugging only
+#' @return nothing
 connectToJava <- function(port = 18011, local = T) {
   if (local && (!exists("handle", envir = globalenv()) || process_state(handle) != "running")) {
-    require(subprocess)
     print("Starting Java Virtual Machine...")
     parms <- c("-firstcall", "true")
     if (exists(".extensionPath", envir = globalenv())) {
      parms <- c(parms, "-ext", .extensionPath)
     }
-    handle <<- spawn_process(paste(find.package("R4J"),"repicea.jar",sep="/"), parms) ### spawn the java server
+    if (file.exists("./inst/repicea.jar")) {  ### debug mode
+      rootPath <- "./inst"
+    } else {
+      rootPath <- find.package("R4J")
+    }
+    handle <<- subprocess::spawn_process(paste(rootPath,"repicea.jar",sep="/"), parms) ### spawn the java server
     Sys.sleep(2)
   }
   print("Connecting to JVM...")
@@ -24,6 +31,12 @@ connectToJava <- function(port = 18011, local = T) {
   read.socket(mainSocket)
 }
 
+#' This function sets a path for eventual extensions, i.e. jar files.
+#'
+#' @param path the path to the jar files to be loaded by the Java classloader
+#' @return nothing
+#' @examples
+#' setJavaExtensionPath("/home/fortin/myExternalLibraries")
 setJavaExtensionPath <- function(path) {
   .extensionPath <<- path
 }
@@ -54,10 +67,33 @@ setJavaExtensionPath <- function(path) {
   return(str)
 }
 
+#' This function creates one or many object of a particular class. If the parameters
+#' contain vectors, then a series of instances of this class can be created.
+#'
+#' @param class the Java class of the object (e.g. java.util.ArrayList)
+#' @param ... the parameters to be passed to the constructor of the object
+#' @return a java.object or java.list instance in the R environment
+#' @examples
+#' ### starting Java
+#' connectToJava()
+#'
+#' ### creating an empty ArrayList object
+#' createJavaObject("java.util.ArrayList")
+#'
+#' ### creating an ArrayList instance with initial capacity of 3
+#' createJavaObject("java.util.ArrayList", as.integer(3))
+#'
+#' ### creating two ArrayList with different capacities
+#' createJavaObject("java.util.ArrayList", c(as.integer(3), as.integer(4)))
+#'
+#' ### shutting down Java
+#' shutdownJava()
 createJavaObject <- function(class, ...) {
   parameters <- list(...)
   command <- paste("create", class, sep=";")
-  command <- paste(command, .marshallCommand(parameters), sep=";")
+  if (length(parameters) > 0) {
+    command <- paste(command, .marshallCommand(parameters), sep=";")
+  }
   write.socket(.getMainSocket(), command)
   callback <- read.socket(.getMainSocket(), maxlen = 10000)
   if(regexpr("Exception", callback) >= 0) {
@@ -101,6 +137,25 @@ createJavaObject <- function(class, ...) {
   return(command)
 }
 
+#' This method calls a public method in a particular class of object. If the javaObject parameters or the additional
+#' parameters (...) include vectors, the method is called several times and a vector of primitive or a list of java
+#' instances can be returned.
+#' @param javaObject this should be either a list of instances or a single instance of java.object.
+#' @param methodName the name of the method
+#' @param ... the parameters of the method
+#' @return It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.
+#' @examples
+#' ### starting Java
+#' connectToJava()
+#'
+#' ### creating an empty ArrayList object
+#' myList <- createJavaObject("java.util.ArrayList")
+#'
+#' ### adding 3 to the list
+#' callJavaMethod(myList, "add", 3)
+#'
+#' ### shutting down Java
+#' shutdownJava()
 callJavaMethod <- function(javaObject, methodName, ...) {
   parameters <- list(...)
   command <- paste("method", paste("java.object",.translateJavaObject(javaObject),sep=""), methodName, sep=";")
@@ -160,6 +215,7 @@ callJavaMethod <- function(javaObject, methodName, ...) {
   }
 }
 
+#' This function shuts down Java and the gateway server.
 shutdownJava <- function() {
   if (exists("mainSocket", envir = globalenv())) {
     write.socket(.getMainSocket(), "closeConnection")
@@ -181,6 +237,13 @@ shutdownJava <- function() {
   print("Done.")
 }
 
+#' This function synchronizes the Java environment with the R environment. Objects that
+#' are removed from the R environment are not automatically removed from the Java
+#' environment. This function scans the R environment for the java.object instance and
+#' commands the gateway server to get rid of the Java instances that are not longer referred
+#' to in the R environment.
+#'
+#' To avoid a memory leak, the function should be called on a regular basis.
 callJavaGC <- function() {
   command <- NULL
   for (objectName in ls(envir = globalenv())) {
