@@ -2,8 +2,7 @@
 % Please edit documentation in R/r4jFunctions.R
 \name{createJavaObject}
 \alias{createJavaObject}
-\title{This function creates one or many object of a particular class. If the parameters
-contain vectors, then a series of instances of this class can be created.}
+\title{Create Java objects}
 \usage{
 createJavaObject(class, ...)
 }

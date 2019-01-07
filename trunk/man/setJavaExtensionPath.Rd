@@ -2,20 +2,21 @@
 % Please edit documentation in R/r4jFunctions.R
 \name{setJavaExtensionPath}
 \alias{setJavaExtensionPath}
-\title{This function sets a path for eventual extensions, i.e. jar files.}
+\title{Set a path for jar extensions.}
 \usage{
 setJavaExtensionPath(path)
 }
 \arguments{
 \item{path}{the path to the jar files to be loaded by the Java classloader}
 }
-\value{
-nothing
-}
 \description{
-This function sets a path for eventual extensions, i.e. jar files.
+This function sets a path for eventual extensions, i.e. jar files. These
+extensions are loaded through a custom classloader.
 }
 \examples{
 setJavaExtensionPath("/home/fortin/myExternalLibraries")
+connectToJava()
+## your code ##
+shutdownJava()
 
 }

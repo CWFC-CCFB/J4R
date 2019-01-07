@@ -2,7 +2,7 @@
 % Please edit documentation in R/r4jFunctions.R
 \name{shutdownJava}
 \alias{shutdownJava}
-\title{This function shuts down Java and the gateway server.}
+\title{Shut down Java}
 \usage{
 shutdownJava()
 }

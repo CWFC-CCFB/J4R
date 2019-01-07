@@ -4,17 +4,17 @@
 ########################################################
 
 #'
+#' Connects to Java environment
+#'
 #' This function connects the R environment to a gateway server that runs in Java.
-#' The extension path must be set before calling this function. See the setJavaExtensionPath
-#' function.
+#' The extension path must be set before calling this function. See setJavaExtensionPath.
 #'
 #' @param port the local port (the port is set to 18011 by default)
-#' @param local for debugging only
 #' @return nothing
 #'
 #' @export
-connectToJava <- function(port = 18011, local = TRUE) {
-  if (local && (!exists("handle", envir = globalenv()) || subprocess::process_state(handle) != "running")) {
+connectToJava <- function(port = 18011) {
+  if (!exists("handle", envir = globalenv()) || subprocess::process_state(handle) != "running") {
     print("Starting Java Virtual Machine...")
     parms <- c("-firstcall", "true")
     if (exists(".extensionPath", envir = globalenv())) {
@@ -36,12 +36,17 @@ connectToJava <- function(port = 18011, local = TRUE) {
 
 
 #'
-#' This function sets a path for eventual extensions, i.e. jar files.
+#' Set a path for jar extensions.
+#'
+#' This function sets a path for eventual extensions, i.e. jar files. These
+#' extensions are loaded through a custom classloader.
 #'
 #' @param path the path to the jar files to be loaded by the Java classloader
-#' @return nothing
 #' @examples
 #' setJavaExtensionPath("/home/fortin/myExternalLibraries")
+#' connectToJava()
+#' ## your code ##
+#' shutdownJava()
 #'
 #' @export
 setJavaExtensionPath <- function(path) {
@@ -74,6 +79,8 @@ setJavaExtensionPath <- function(path) {
   return(str)
 }
 
+#'
+#' Create Java objects
 #'
 #' This function creates one or many object of a particular class. If the parameters
 #' contain vectors, then a series of instances of this class can be created.
@@ -148,9 +155,15 @@ createJavaObject <- function(class, ...) {
 }
 
 #'
+#' Call a Java method
+#'
 #' This method calls a public method in a particular class of object. If the javaObject parameters or the additional
 #' parameters (...) include vectors, the method is called several times and a vector of primitive or a list of java
 #' instances can be returned.
+#'
+#' There is no need to cast a particular parameter to a super class. Actually, the Java server tries to find the method
+#' that best matches the types of the parameters
+#'
 #' @param javaObject this should be either a list of instances or a single instance of java.object.
 #' @param methodName the name of the method
 #' @param ... the parameters of the method
@@ -228,6 +241,8 @@ callJavaMethod <- function(javaObject, methodName, ...) {
   }
 }
 
+#'
+#' Shut down Java
 #'
 #' This function shuts down Java and the gateway server.
 #'

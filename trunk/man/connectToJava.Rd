@@ -2,22 +2,17 @@
 % Please edit documentation in R/r4jFunctions.R
 \name{connectToJava}
 \alias{connectToJava}
-\title{This function connects the R environment to a gateway server that runs in Java.
-The extension path must be set before calling this function. See the setJavaExtensionPath
-function.}
+\title{Connects to Java environment}
 \usage{
-connectToJava(port = 18011, local = TRUE)
+connectToJava(port = 18011)
 }
 \arguments{
 \item{port}{the local port (the port is set to 18011 by default)}
-
-\item{local}{for debugging only}
 }
 \value{
 nothing
 }
 \description{
 This function connects the R environment to a gateway server that runs in Java.
-The extension path must be set before calling this function. See the setJavaExtensionPath
-function.
+The extension path must be set before calling this function. See setJavaExtensionPath.
 }
