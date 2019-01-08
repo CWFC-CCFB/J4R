@@ -14,24 +14,37 @@
 #'
 #' @export
 connectToJava <- function(port = 18011) {
-  if (!exists("handle", envir = globalenv()) || subprocess::process_state(handle) != "running") {
-    print("Starting Java Virtual Machine...")
-    parms <- c("-firstcall", "true")
-    if (exists(".extensionPath", envir = globalenv())) {
-     parms <- c(parms, "-ext", .extensionPath)
-    }
-#    if (file.exists("./inst/repicea.jar")) {  ### debug mode
-#      rootPath <- "./inst"
-#    } else {
-      rootPath <- find.package("R4J")
-#    }
-    path <- paste(rootPath,"repicea.jar",sep="/")
-    handle <<- subprocess::spawn_process(path, parms) ### spawn the java server
-    Sys.sleep(2)
+  if (exists("mainSocket", envir = globalenv())) {
+    print("The object mainSocket already exists! It seems R is already connected to the Java server.")
+  } else {
+    tryCatch({
+      print("Trying to connect to Java server...")
+      mainSocket <<- utils::make.socket("localhost", port)
+      callBack <- utils::read.socket(mainSocket)
+      if (callBack != "CallAccepted") {
+        print("The Java server is on, but the call has not been accepted!")
+        utils::close.socket(mainSocket)
+        rm("mainSocket", envir = globalenv())
+      }
+    }, error = function(err) {
+      parms <- c("-firstcall", "true")
+      if (exists(".extensionPath", envir = globalenv())) {
+        parms <- c(parms, "-ext", .extensionPath)
+      }
+      if (file.exists("./inst/repicea.jar")) {  ### debug mode
+        rootPath <- "./inst"
+      } else {
+        rootPath <- find.package("R4J")
+      }
+      path <- paste(rootPath,"repicea.jar",sep="/")
+      completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
+      system(completeCommand, wait=FALSE)
+      Sys.sleep(2)
+      print("Connecting to Java server...")
+      mainSocket <<- utils::make.socket("localhost", port)
+      utils::read.socket(mainSocket)
+    })
   }
-  print("Connecting to JVM...")
-  mainSocket <<- make.socket("localhost", port)
-  read.socket(mainSocket)
 }
 
 
@@ -111,8 +124,8 @@ createJavaObject <- function(class, ...) {
   if (length(parameters) > 0) {
     command <- paste(command, .marshallCommand(parameters), sep=";")
   }
-  write.socket(.getMainSocket(), command)
-  callback <- read.socket(.getMainSocket(), maxlen = 10000)
+  utils::write.socket(.getMainSocket(), command)
+  callback <- utils::read.socket(.getMainSocket(), maxlen = 10000)
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
   } else {
@@ -186,8 +199,8 @@ callJavaMethod <- function(javaObject, methodName, ...) {
   parameters <- list(...)
   command <- paste("method", paste("java.object",.translateJavaObject(javaObject),sep=""), methodName, sep=";")
   command <- paste(command, .marshallCommand(parameters), sep=";")
-  write.socket(.getMainSocket(), command)
-  callback <- read.socket(.getMainSocket(), maxlen=10000)
+  utils::write.socket(.getMainSocket(), command)
+  callback <- utils::read.socket(.getMainSocket(), maxlen=10000)
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
   } else if (regexpr("JavaObject", callback) >= 0) {
@@ -249,7 +262,7 @@ callJavaMethod <- function(javaObject, methodName, ...) {
 #' @export
 shutdownJava <- function() {
   if (exists("mainSocket", envir = globalenv())) {
-    write.socket(.getMainSocket(), "closeConnection")
+    utils::write.socket(.getMainSocket(), "closeConnection")
     print("Closing connection and removing socket...")
     rm("mainSocket", envir = globalenv())
   }
@@ -259,11 +272,6 @@ shutdownJava <- function() {
     if ("java.object" %in% class(object)) {
       rm(list = objectName, envir = globalenv())
     }
-  }
-  print("Terminating Java Virtual Machine...")
-  if (exists("handle", envir = globalenv())) {
-    subprocess::process_terminate(handle)
-    rm("handle", envir = globalenv())
   }
   print("Done.")
 }
@@ -290,6 +298,6 @@ callJavaGC <- function() {
       }
     }
   }
-  write.socket(.getMainSocket(), command)
+  utils::write.socket(.getMainSocket(), command)
 }
 

@@ -10,7 +10,6 @@ Description: This package makes it possible to create Java objects and to execut
     performance of socket connections, the package takes into account the concept of vector 
     in the calls to Java methods. 
 Imports:
-    subprocess (>= 0.8.3),
     utils (>= 3.4.4)
 License: GPL-3
 Encoding: UTF-8
