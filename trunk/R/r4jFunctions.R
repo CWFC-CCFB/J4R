@@ -26,35 +26,26 @@ connectToJava <- function(port = 18011) {
   if (exists("r4jSocket", envir = cacheEnv)) {
     print("The object r4jSocket already exists! It seems R is already connected to the Java server.")
   } else {
-    tryCatch({
-      print("Trying to connect to Java server...")
-      assign("r4jSocket", utils::make.socket("localhost", port), envir = cacheEnv)
-      callBack <- utils::read.socket(.getMainSocket())
-      if (callBack != "CallAccepted") {
-        print("The Java server is on, but the call has not been accepted!")
-        utils::close.socket(.getMainSocket())
-        rm("r4jSocket", envir = cacheEnv)
-      }
-    }, error = function(err) {
-      parms <- c("-firstcall", "true")
-      if (exists("extensionPath", envir = cacheEnv)) {
-        parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
-      }
-      # if (file.exists("./inst/repicea.jar")) {  ### debug mode
-      #   rootPath <- "./inst"
-      # } else {
-        rootPath <- find.package("R4J")
-      # }
-      path <- paste(rootPath,"repicea.jar",sep="/")
-      completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
-#      handle <- subprocess::spawn_process(path)
-      system(completeCommand, wait=FALSE)
-#      assign("r4jConnection", connection, envir = cacheEnv)
-      Sys.sleep(2)
-      print(paste("Connecting to Java server on port", port))
-      assign("r4jSocket", utils::make.socket("localhost", port),envir = cacheEnv)
-      utils::read.socket(.getMainSocket())
-    })
+    print("Starting Java server...")
+    parms <- c("-firstcall", "true")
+    if (port != 18011) {
+      parms <- c(parms, "-port", port)
+    }
+    if (exists("extensionPath", envir = cacheEnv)) {
+      parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
+    }
+    # if (file.exists("./inst/repicea.jar")) {  ### debug mode
+    #   rootPath <- "./inst"
+    # } else {
+    rootPath <- find.package("R4J")
+    # }
+    path <- paste(rootPath,"repicea.jar",sep="/")
+    completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
+    system(completeCommand, wait=FALSE)
+    Sys.sleep(2)
+    print(paste("Connecting on port", port))
+    assign("r4jSocket", utils::make.socket("localhost", port),envir = cacheEnv)
+    utils::read.socket(.getMainSocket())
   }
 }
 
