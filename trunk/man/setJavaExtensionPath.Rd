@@ -20,3 +20,6 @@ connectToJava()
 shutdownJava()
 
 }
+\seealso{
+\href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+}

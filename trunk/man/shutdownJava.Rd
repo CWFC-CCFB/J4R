@@ -9,3 +9,6 @@ shutdownJava()
 \description{
 This function shuts down Java and the gateway server.
 }
+\seealso{
+\href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+}

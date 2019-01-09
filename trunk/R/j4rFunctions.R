@@ -63,6 +63,8 @@ connectToJava <- function(port = 18011) {
 #' ## your code ##
 #' shutdownJava()
 #'
+#' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+#'
 #' @export
 setJavaExtensionPath <- function(path) {
   assign("extensionPath", path, envir = cacheEnv)
@@ -117,6 +119,8 @@ setJavaExtensionPath <- function(path) {
 #'
 #' ### shutting down Java
 #' shutdownJava()
+#'
+#' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
 createJavaObject <- function(class, ...) {
@@ -195,6 +199,8 @@ createJavaObject <- function(class, ...) {
 #' ### shutting down Java
 #' shutdownJava()
 #'
+#' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+#'
 #' @export
 callJavaMethod <- function(javaObject, methodName, ...) {
   parameters <- list(...)
@@ -260,6 +266,8 @@ callJavaMethod <- function(javaObject, methodName, ...) {
 #'
 #' This function shuts down Java and the gateway server.
 #'
+#' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+#'
 #' @export
 shutdownJava <- function() {
   if (exists("j4rSocket", envir = cacheEnv)) {
@@ -286,6 +294,8 @@ shutdownJava <- function() {
 #' to in the R environment.
 #'
 #' To avoid a memory leak, the function should be called on a regular basis.
+#'
+#' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
 callJavaGC <- function() {

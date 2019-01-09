@@ -13,3 +13,6 @@ callJavaGC()
 \description{
 To avoid a memory leak, the function should be called on a regular basis.
 }
+\seealso{
+\href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+}

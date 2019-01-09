@@ -35,3 +35,6 @@ createJavaObject("java.util.ArrayList", c(as.integer(3), as.integer(4)))
 shutdownJava()
 
 }
+\seealso{
+\href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+}

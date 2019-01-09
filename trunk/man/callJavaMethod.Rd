@@ -39,3 +39,6 @@ callJavaMethod(myList, "add", 3)
 shutdownJava()
 
 }
+\seealso{
+\href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+}
