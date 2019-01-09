@@ -23,8 +23,8 @@ cacheEnv <- new.env()
 #'
 #' @export
 connectToJava <- function(port = 18011) {
-  if (exists("r4jSocket", envir = cacheEnv)) {
-    print("The object r4jSocket already exists! It seems R is already connected to the Java server.")
+  if (exists("j4rSocket", envir = cacheEnv)) {
+    print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
     print("Starting Java server...")
     parms <- c("-firstcall", "true")
@@ -37,14 +37,14 @@ connectToJava <- function(port = 18011) {
     # if (file.exists("./inst/repicea.jar")) {  ### debug mode
     #   rootPath <- "./inst"
     # } else {
-    rootPath <- find.package("R4J")
+    rootPath <- find.package("J4R")
     # }
     path <- paste(rootPath,"repicea.jar",sep="/")
     completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
     system(completeCommand, wait=FALSE)
     Sys.sleep(2)
     print(paste("Connecting on port", port))
-    assign("r4jSocket", utils::make.socket("localhost", port),envir = cacheEnv)
+    assign("j4rSocket", utils::make.socket("localhost", port),envir = cacheEnv)
     utils::read.socket(.getMainSocket())
   }
 }
@@ -69,7 +69,7 @@ setJavaExtensionPath <- function(path) {
 }
 
 .getMainSocket <- function() {
-  return(get("r4jSocket", envir = cacheEnv))
+  return(get("j4rSocket", envir = cacheEnv))
 }
 
 .getClass <- function(obj) {
@@ -262,10 +262,10 @@ callJavaMethod <- function(javaObject, methodName, ...) {
 #'
 #' @export
 shutdownJava <- function() {
-  if (exists("r4jSocket", envir = cacheEnv)) {
+  if (exists("j4rSocket", envir = cacheEnv)) {
     utils::write.socket(.getMainSocket(), "closeConnection")
     print("Closing connection and removing socket...")
-    rm("r4jSocket", envir = cacheEnv)
+    rm("j4rSocket", envir = cacheEnv)
   }
   print("Removing Java objects from global environment...")
   for (objectName in ls(envir = globalenv())) {
