@@ -4,6 +4,15 @@
 ########################################################
 
 #'
+#' The cache environment of this package
+#'
+#' This environment contains the objects that enable the connection to
+#' the gateway server.
+#'
+#'@export
+cacheEnv <- new.env()
+
+#'
 #' Connects to Java environment
 #'
 #' This function connects the R environment to a gateway server that runs in Java.
@@ -14,35 +23,37 @@
 #'
 #' @export
 connectToJava <- function(port = 18011) {
-  if (exists("mainSocket", envir = globalenv())) {
-    print("The object mainSocket already exists! It seems R is already connected to the Java server.")
+  if (exists("r4jSocket", envir = cacheEnv)) {
+    print("The object r4jSocket already exists! It seems R is already connected to the Java server.")
   } else {
     tryCatch({
       print("Trying to connect to Java server...")
-      mainSocket <<- utils::make.socket("localhost", port)
-      callBack <- utils::read.socket(mainSocket)
+      assign("r4jSocket", utils::make.socket("localhost", port), envir = cacheEnv)
+      callBack <- utils::read.socket(.getMainSocket())
       if (callBack != "CallAccepted") {
         print("The Java server is on, but the call has not been accepted!")
-        utils::close.socket(mainSocket)
-        rm("mainSocket", envir = globalenv())
+        utils::close.socket(.getMainSocket())
+        rm("r4jSocket", envir = cacheEnv)
       }
     }, error = function(err) {
       parms <- c("-firstcall", "true")
-      if (exists(".extensionPath", envir = globalenv())) {
-        parms <- c(parms, "-ext", .extensionPath)
+      if (exists("extensionPath", envir = cacheEnv)) {
+        parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
       }
-      if (file.exists("./inst/repicea.jar")) {  ### debug mode
-        rootPath <- "./inst"
-      } else {
+      # if (file.exists("./inst/repicea.jar")) {  ### debug mode
+      #   rootPath <- "./inst"
+      # } else {
         rootPath <- find.package("R4J")
-      }
+      # }
       path <- paste(rootPath,"repicea.jar",sep="/")
       completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
+#      handle <- subprocess::spawn_process(path)
       system(completeCommand, wait=FALSE)
+#      assign("r4jConnection", connection, envir = cacheEnv)
       Sys.sleep(2)
-      print("Connecting to Java server...")
-      mainSocket <<- utils::make.socket("localhost", port)
-      utils::read.socket(mainSocket)
+      print(paste("Connecting to Java server on port", port))
+      assign("r4jSocket", utils::make.socket("localhost", port),envir = cacheEnv)
+      utils::read.socket(.getMainSocket())
     })
   }
 }
@@ -63,12 +74,11 @@ connectToJava <- function(port = 18011) {
 #'
 #' @export
 setJavaExtensionPath <- function(path) {
-  .extensionPath <<- path
+  assign("extensionPath", path, envir = cacheEnv)
 }
 
-
 .getMainSocket <- function() {
-  return(mainSocket)
+  return(get("r4jSocket", envir = cacheEnv))
 }
 
 .getClass <- function(obj) {
@@ -261,10 +271,10 @@ callJavaMethod <- function(javaObject, methodName, ...) {
 #'
 #' @export
 shutdownJava <- function() {
-  if (exists("mainSocket", envir = globalenv())) {
+  if (exists("r4jSocket", envir = cacheEnv)) {
     utils::write.socket(.getMainSocket(), "closeConnection")
     print("Closing connection and removing socket...")
-    rm("mainSocket", envir = globalenv())
+    rm("r4jSocket", envir = cacheEnv)
   }
   print("Removing Java objects from global environment...")
   for (objectName in ls(envir = globalenv())) {
@@ -273,6 +283,7 @@ shutdownJava <- function() {
       rm(list = objectName, envir = globalenv())
     }
   }
+  Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
   print("Done.")
 }
 
