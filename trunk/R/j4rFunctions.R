@@ -22,33 +22,31 @@ cacheEnv <- new.env()
 #' @return nothing
 #'
 #' @export
-connectToJava <- function(port = 18011, local=TRUE) {
+connectToJava <- function(port = 18011) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
-    if (local) {
-      print("Starting Java server...")
-      parms <- c("-firstcall", "true")
-      if (port != 18011) {
-        parms <- c(parms, "-port", port)
-      }
-      if (exists("extensionPath", envir = cacheEnv)) {
-        parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
-      }
-      # if (file.exists("./inst/repicea.jar")) {  ### debug mode
-      #   rootPath <- "./inst"
-      # } else {
-      rootPath <- find.package("J4R")
-      # }
-      path <- paste(rootPath,"repicea.jar",sep="/")
-      completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
-      system(completeCommand, wait=FALSE)
-      Sys.sleep(2)
+    print("Starting Java server...")
+    parms <- c("-firstcall", "true")
+    if (port != 18011) {
+      parms <- c(parms, "-port", port)
     }
-    print(paste("Connecting on port", port))
-    assign("j4rSocket", utils::make.socket("localhost", port),envir = cacheEnv)
-    utils::read.socket(.getMainSocket())
+    if (exists("extensionPath", envir = cacheEnv)) {
+      parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
+    }
+    # if (file.exists("./inst/repicea.jar")) {  ### debug mode
+    #   rootPath <- "./inst"
+    # } else {
+    rootPath <- find.package("J4R")
+    # }
+    path <- paste(rootPath,"repicea.jar",sep="/")
+    completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
+    system(completeCommand, wait=FALSE)
+    Sys.sleep(2)
   }
+  print(paste("Connecting on port", port))
+  assign("j4rSocket", utils::make.socket("localhost", port),envir = cacheEnv)
+  utils::read.socket(.getMainSocket())
 }
 
 
@@ -207,13 +205,17 @@ createJavaObject <- function(class, ...) {
 callJavaMethod <- function(javaObject, methodName, ...) {
   parameters <- list(...)
   command <- paste("method", paste("java.object",.translateJavaObject(javaObject),sep=""), methodName, sep=";")
-  command <- paste(command, .marshallCommand(parameters), sep=";")
+  if (length(parameters) > 0) {
+    command <- paste(command, .marshallCommand(parameters), sep=";")
+  }
   utils::write.socket(.getMainSocket(), command)
   callback <- utils::read.socket(.getMainSocket(), maxlen=10000)
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
   } else if (regexpr("JavaObject", callback) >= 0) {
     returnObject <- .createFakeJavaObject(callback)
+  } else if (regexpr("RequestReceivedAndProcessed", callback) >= 0) {
+    returnObject <- NULL
   } else {
     returnObject <- .translatePrimitiveType(callback)
   }
