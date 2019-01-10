@@ -2,6 +2,8 @@
 # Home made tests for J4R
 ###################################
 
+context("Simple tests in J4R")
+
 #### Starting the Java server and connecting to it ####
 
 library(J4R)
@@ -14,12 +16,20 @@ connectToJava()
 mySimpleJavaObject <- createJavaObject("java.util.ArrayList")
 mySimpleJavaObject
 
+test_that("Returned object is of class java.object", {
+  expect_equal(class(mySimpleJavaObject)[length(class(mySimpleJavaObject))], "java.object")
+})
+
 #### Creating a single object with a parameterized constructor ####
 
 # Here, an ArrayList instance with a capacity of 3 is created, since R calls the constructor ArrayList(int i). Again, a reference is returned to the R environment and stored in mySimpleJavaObject.
 
 mySimpleJavaObject <- createJavaObject("java.util.ArrayList", as.integer(3))
 mySimpleJavaObject
+
+test_that("Returned object is of class java.object", {
+  expect_equal(class(mySimpleJavaObject)[length(class(mySimpleJavaObject))], "java.object")
+})
 
 #### Creating many objects with a parameterized constructor ####
 
@@ -28,12 +38,23 @@ mySimpleJavaObject
 myArrayLists <- createJavaObject("java.util.ArrayList", 3:5)
 myArrayLists
 
+test_that("myArrayLists object has three java.object instances", {
+  expect_equal(class(myArrayLists)[length(class(myArrayLists))], "java.arraylist")
+  expect_equal(length(myArrayLists), 3)
+  expect_equal(class(myArrayLists[[1]])[length(class(myArrayLists[[1]]))], "java.object")
+  expect_equal(class(myArrayLists[[2]])[length(class(myArrayLists[[2]]))], "java.object")
+  expect_equal(class(myArrayLists[[3]])[length(class(myArrayLists[[3]]))], "java.object")
+})
+
 #### Calling a method on a Java object ####
 
 # In this example, the value of 15 is added to the ArrayList instance that was previously created. The method add returns a boolean. Then we call the method .get(0) on the same object. The value of 15 is then returned to R.
 
 callJavaMethod(mySimpleJavaObject, "add", 15)
-callJavaMethod(mySimpleJavaObject, "get", as.integer(0))
+
+test_that("Adding 15 to mySimpleJavaObject instance", {
+  expect_equal(callJavaMethod(mySimpleJavaObject, "get", as.integer(0)), 15)
+})
 
 #### Calling a method several times on a Java object ####
 
@@ -43,13 +64,17 @@ callJavaMethod(mySimpleJavaObject, "add", 15:17)
 
 # The following code returns those four elements:
 
-callJavaMethod(mySimpleJavaObject, "get", 0:3)
+test_that("Adding 15 to mySimpleJavaObject instance", {
+  expect_equal(callJavaMethod(mySimpleJavaObject, "get", 0:3), c(15,15,16,17))
+})
 
 #### Calling a method on several Java objects of the same class ####
 
 callJavaMethod(myArrayLists, "add", 15)
 
-callJavaMethod(myArrayLists, "get", as.integer(0))
+test_that("Adding 15 to each ArrayList instances in myArrayLists object", {
+  expect_equal(callJavaMethod(myArrayLists, "get", as.integer(0)), c(15,15,15))
+})
 
 callJavaMethod(myArrayLists, "clear")
 
@@ -57,7 +82,9 @@ callJavaMethod(myArrayLists, "clear")
 
 callJavaMethod(myArrayLists, "add", 15:17)
 
-callJavaMethod(myArrayLists, "get", as.integer(0))
+test_that("Adding 15, 16 and 17 to the first, second and third instances of ArrayList in myArrayLists", {
+  expect_equal(callJavaMethod(myArrayLists, "get", as.integer(0)), c(15,16,17))
+})
 
 ####  Shutting down Java ####
 

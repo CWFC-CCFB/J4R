@@ -34,11 +34,12 @@ connectToJava <- function(port = 18011) {
     if (exists("extensionPath", envir = cacheEnv)) {
       parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
     }
-    # if (file.exists("./inst/repicea.jar")) {  ### debug mode
-    #   rootPath <- "./inst"
-    # } else {
-    rootPath <- find.package("J4R")
-    # }
+    if (file.exists(paste(find.package("J4R"),"inst/repicea.jar", sep="/"))) {  ### test mode
+      rootPath <- paste(find.package("J4R"),"inst", sep="/")
+    } else {  ### normal mode
+      rootPath <- find.package("J4R")
+    }
+    print(rootPath)
     path <- paste(rootPath,"repicea.jar",sep="/")
     completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
     system(completeCommand, wait=FALSE)
