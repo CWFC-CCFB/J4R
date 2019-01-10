@@ -22,27 +22,29 @@ cacheEnv <- new.env()
 #' @return nothing
 #'
 #' @export
-connectToJava <- function(port = 18011) {
+connectToJava <- function(port = 18011, local=TRUE) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
-    print("Starting Java server...")
-    parms <- c("-firstcall", "true")
-    if (port != 18011) {
-      parms <- c(parms, "-port", port)
+    if (local) {
+      print("Starting Java server...")
+      parms <- c("-firstcall", "true")
+      if (port != 18011) {
+        parms <- c(parms, "-port", port)
+      }
+      if (exists("extensionPath", envir = cacheEnv)) {
+        parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
+      }
+      # if (file.exists("./inst/repicea.jar")) {  ### debug mode
+      #   rootPath <- "./inst"
+      # } else {
+      rootPath <- find.package("J4R")
+      # }
+      path <- paste(rootPath,"repicea.jar",sep="/")
+      completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
+      system(completeCommand, wait=FALSE)
+      Sys.sleep(2)
     }
-    if (exists("extensionPath", envir = cacheEnv)) {
-      parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
-    }
-    # if (file.exists("./inst/repicea.jar")) {  ### debug mode
-    #   rootPath <- "./inst"
-    # } else {
-    rootPath <- find.package("J4R")
-    # }
-    path <- paste(rootPath,"repicea.jar",sep="/")
-    completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
-    system(completeCommand, wait=FALSE)
-    Sys.sleep(2)
     print(paste("Connecting on port", port))
     assign("j4rSocket", utils::make.socket("localhost", port),envir = cacheEnv)
     utils::read.socket(.getMainSocket())
