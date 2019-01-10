@@ -5,7 +5,7 @@
 #### Starting the Java server and connecting to it ####
 
 library(J4R)
-connectToJava(local = FALSE)
+connectToJava()
 
 ####  Creating a single object with a basic constructor ####
 
@@ -61,6 +61,6 @@ callJavaMethod(myArrayLists, "get", as.integer(0))
 
 ####  Shutting down Java ####
 
-# The server is shutted down through the shutdownJava method:
+# The server is shutted down through the shutdownJava function:
 
 shutdownJava()
