@@ -39,7 +39,7 @@ connectToJava <- function(port = 18011) {
     } else {  ### normal mode
       rootPath <- find.package("J4R")
     }
-    print(rootPath)
+#    print(rootPath)
     path <- paste(rootPath,"repicea.jar",sep="/")
     completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
     system(completeCommand, wait=FALSE)
