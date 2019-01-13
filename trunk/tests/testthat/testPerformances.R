@@ -4,8 +4,8 @@
 
 context("Testing performance")
 
-library(J4R)
 library(rJava)
+library(J4R)
 
 connectToJava()
 .jinit()
