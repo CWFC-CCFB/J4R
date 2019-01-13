@@ -27,28 +27,28 @@ createObjects <- function(n) {
     elapsedTimeRJava <- c(elapsedTimeRJava, as.numeric(Sys.time() - start, units="secs"))
   }
 
-  return(c(mean(elapsedTimeJ4R),mean(elapsedTimeRJava)))
+  return(c(mean(elapsedTimeJ4R), mean(elapsedTimeRJava)))
 }
 
-#### Average time to create 50, 100, 200 and 300 objects in J4R and rJava
+#### Average time to create 1, 5, 10, and 50 objects in J4R and rJava
 
-elapsedTimes <- createObjects(50)
-test_that("rJava is faster for the instantiation of 50 objects", {
+elapsedTimes <- createObjects(1)
+test_that("rJava is faster for the instantiation of 1 object", {
   expect_equal(elapsedTimes[1] > elapsedTimes[2], TRUE)
 })
 
-createObjects(100)
-test_that("rJava is faster for the instantiation of 100 objects", {
-  expect_equal(elapsedTimes[1] > elapsedTimes[2], TRUE)
-})
-
-createObjects(200)
-test_that("rJava is faster for the instantiation of 200 objects", {
+elapsedTimes <- createObjects(5)
+test_that("rJava is faster for the instantiation of 5 objects", {
   expect_equal(elapsedTimes[1] < elapsedTimes[2], TRUE)
 })
 
-createObjects(300)
-test_that("rJava is faster for the instantiation of 300 objects", {
+elapsedTimes <- createObjects(10)
+test_that("rJava is faster for the instantiation of 10 objects", {
+  expect_equal(elapsedTimes[1] < elapsedTimes[2], TRUE)
+})
+
+elapsedTimes <- createObjects(50)
+test_that("rJava is faster for the instantiation of 50 objects", {
   expect_equal(elapsedTimes[1] < elapsedTimes[2], TRUE)
 })
 
