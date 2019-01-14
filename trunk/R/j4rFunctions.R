@@ -49,7 +49,7 @@ connectToJava <- function(port = 18011) {
     }
   }
   print(paste("Connecting on port", port))
-  assign("j4rSocket", utils::make.socket("localhost", port),envir = cacheEnv)
+  assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
   utils::read.socket(.getMainSocket())
 }
 
