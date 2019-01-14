@@ -13,7 +13,7 @@
 cacheEnv <- new.env()
 
 #'
-#' Connects to Java environment
+#' Connect to Java environment
 #'
 #' This function connects the R environment to a gateway server that runs in Java.
 #' The extension path must be set before calling this function. See setJavaExtensionPath.
