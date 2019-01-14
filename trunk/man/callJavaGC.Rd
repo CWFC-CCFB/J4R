@@ -8,7 +8,13 @@ environment. This function scans the R environment for the java.object instance 
 commands the gateway server to get rid of the Java instances that are not longer referred
 to in the R environment.}
 \usage{
-callJavaGC()
+callJavaGC(currentEnv = NULL)
+}
+\arguments{
+\item{currentEnv}{the current environment if the method is called within a function}
+}
+\value{
+An integer which is the number of Java objects still registered in the Java environment
 }
 \description{
 To avoid a memory leak, the function should be called on a regular basis.

@@ -86,8 +86,35 @@ test_that("Adding 15, 16 and 17 to the first, second and third instances of Arra
   expect_equal(callJavaMethod(myArrayLists, "get", as.integer(0)), c(15,16,17))
 })
 
+#### Calling the garbage collector ####
+
+myArrayLists[[2]] <- NULL
+
+nbObjects <- callJavaGC(environment())
+
+test_that("Removing one object from the java.arraylist object and synchronizing yield 3 objects registered in the Java environment", {
+  expect_equal(nbObjects, 3)
+})
+
+rm("myArrayLists")
+
+nbObjects <- callJavaGC(environment())
+
+test_that("Removing the java.arraylist object and synchronizing yield a single object left in the Java environment", {
+  expect_equal(nbObjects, 1)
+})
+
+rm(list = ls(envir = environment()))
+
+nbObjects <- callJavaGC(environment())
+
+test_that("Removing all the java.arraylist object and synchronizing yield no object left in the Java environment", {
+  expect_equal(nbObjects, 0)
+})
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:
 
 shutdownJava()
+

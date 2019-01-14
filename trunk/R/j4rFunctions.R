@@ -214,6 +214,10 @@ callJavaMethod <- function(javaObject, methodName, ...) {
   }
   utils::write.socket(.getMainSocket(), command)
   callback <- utils::read.socket(.getMainSocket(), maxlen=10000)
+  return(.processCallback(callback))
+}
+
+.processCallback <- function(callback) {
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
   } else if (regexpr("JavaObject", callback) >= 0) {
@@ -225,6 +229,7 @@ callJavaMethod <- function(javaObject, methodName, ...) {
   }
   return(returnObject)
 }
+
 
 .translatePrimitiveType <- function(str) {
   if (regexpr("JavaList;", str) == 1) {
@@ -303,21 +308,30 @@ shutdownJava <- function() {
 #'
 #' To avoid a memory leak, the function should be called on a regular basis.
 #'
+#' @param currentEnv the current environment if the method is called within a function
+#' @return An integer which is the number of Java objects still registered in the Java environment
+#'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-callJavaGC <- function() {
-  command <- NULL
+callJavaGC <- function(currentEnv = NULL) {
+  command <- "sync"
   for (objectName in ls(envir = globalenv())) {
-    object <- get(objectName)
-    if ("java.object" %in% class(object)) {
-      if (is.null(command)) {
-        command <- paste("sync", paste("java.object",.translateJavaObject(object),sep=""), sep=";")
-      } else {
+    object <- get(objectName, envir = globalenv())
+    if (.getClass(object) %in% c("java.object", "java.arraylist")) {
+      command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=";")
+    }
+  }
+  if (!is.null(currentEnv) && !identical(currentEnv, globalenv())) {
+    for (objectName in ls(envir = currentEnv)) {
+      object <- get(objectName, envir = currentEnv)
+      if (.getClass(object) %in% c("java.object", "java.arraylist")) {
         command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=";")
       }
     }
   }
   utils::write.socket(.getMainSocket(), command)
+  callback <- utils::read.socket(.getMainSocket(), maxlen=10000)
+  return(.processCallback(callback))
 }
 
