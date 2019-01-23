@@ -66,7 +66,9 @@ callJavaMethod(mySimpleJavaObject, "add", 15:17)
 
 test_that("Getting the four first element of my ArrayList object", {
   expect_equal(callJavaMethod(mySimpleJavaObject, "get", 0:3), c(15,15,16,17))
+  expect_equal(getAllValuesFromListObject(mySimpleJavaObject), c(15,15,16,17))
 })
+
 
 #### Calling a method on several Java objects of the same class ####
 

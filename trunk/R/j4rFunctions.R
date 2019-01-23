@@ -411,10 +411,3 @@ callJavaGC <- function(currentEnv = NULL) {
   return(.processCallback(callback))
 }
 
-# getAllValuesFromList <- function(object) {
-#   if (.getClass(object) != "java.object") {
-#     stop("The object must be an instance of java.object")
-#   } else {
-#     object$class ### check if it implements List
-#   }
-# }
