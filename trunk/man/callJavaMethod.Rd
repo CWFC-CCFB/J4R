@@ -4,10 +4,11 @@
 \alias{callJavaMethod}
 \title{Call a Java method}
 \usage{
-callJavaMethod(javaObject, methodName, ...)
+callJavaMethod(source, methodName, ...)
 }
 \arguments{
-\item{javaObject}{this should be either a list of instances or a single instance of java.object.}
+\item{source}{this should be either a java.arraylist instance or a single java.object instance for non-static methods or
+a string representing the Java class name in case of static method}
 
 \item{methodName}{the name of the method}
 

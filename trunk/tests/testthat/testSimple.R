@@ -50,7 +50,7 @@ test_that("myArrayLists object has three java.object instances", {
 
 # In this example, the value of 15 is added to the ArrayList instance that was previously created. The method add returns a boolean. Then we call the method .get(0) on the same object. The value of 15 is then returned to R.
 
-callJavaMethod(mySimpleJavaObject, "add", 15)
+callJavaMethod(mySimpleJavaObject, "add", as.integer(15))
 
 test_that("Adding 15 to mySimpleJavaObject instance", {
   expect_equal(callJavaMethod(mySimpleJavaObject, "get", as.integer(0)), 15)
@@ -64,7 +64,7 @@ callJavaMethod(mySimpleJavaObject, "add", 15:17)
 
 # The following code returns those four elements:
 
-test_that("Adding 15 to mySimpleJavaObject instance", {
+test_that("Getting the four first element of my ArrayList object", {
   expect_equal(callJavaMethod(mySimpleJavaObject, "get", 0:3), c(15,15,16,17))
 })
 
@@ -110,6 +110,47 @@ nbObjects <- callJavaGC(environment())
 
 test_that("Removing all the java.arraylist object and synchronizing yield no object left in the Java environment", {
   expect_equal(nbObjects, 0)
+})
+
+#### Instantiating an Enum variable ####
+
+# In this example, the Enum variable Species.Fagus_sylvatica is instantiated. Then calling the method name() on
+# this enum returns:
+
+beechEnum <- createJavaObject("repicea.simulation.species.REpiceaSpecies$Species", "Fagus_sylvatica")
+resultNameFunction <- callJavaMethod(beechEnum, "name")
+
+test_that("Testing the method name() on a Species enum variable", {
+  expect_equal(resultNameFunction, "Fagus_sylvatica")
+})
+
+#### Instantiating many enum variables ####
+
+enumValue <- rep("alive", J4R::maxVectorLength)
+enumList <- createJavaObject("repicea.simulation.covariateproviders.treelevel.TreeStatusProvider$StatusClass", enumValue)
+
+test_that(paste("Instantiating", J4R::maxVectorLength,  "times an enum variable", sep=" "), {
+  expect_equal(length(enumList), J4R::maxVectorLength)
+})
+
+#### Calling static method several time ####
+
+result <- callJavaMethod("java.lang.Math", "sqrt", c(3.5,4))
+result
+
+test_that("Call on the sqrt method in the Math class", {
+  expect_equal(result[1], 3.5^.5)
+  expect_equal(result[2], 4^.5)
+})
+
+
+#### Creating a null instance ####
+
+result <- createJavaObject("java.util.ArrayList", isNullObject = TRUE)
+result
+
+test_that("Create a NullWrapper instance", {
+  expect_equal(result$class, "repicea.lang.codetranslator.REnvironment$NullWrapper")
 })
 
 ####  Shutting down Java ####

@@ -13,17 +13,34 @@
 cacheEnv <- new.env()
 
 #'
+#' Length of the buffer when reading from the socket connection.
+#'
+#' The buffer has a length of 100Kb by default.
+#'
+#' @export
+bufferLength <- 100000
+
+#'
+#' Maximum length of the vector in the parameters.
+#'
+#' A maximum length of the vector is set in order to avoid buffer size issues when reading
+#'
+#' @export
+maxVectorLength <- 700
+
+#'
 #' Connect to Java environment
 #'
 #' This function connects the R environment to a gateway server that runs in Java.
 #' The extension path must be set before calling this function. See setJavaExtensionPath.
 #'
 #' @param port the local port (the port is set to 18011 by default)
+#' @param local for debugging only (should be left as is)
+#'
 #' @return nothing
 #'
 #' @export
-connectToJava <- function(port = 18011) {
-  local <- TRUE
+connectToJava <- function(port = 18011, local = TRUE) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
@@ -50,9 +67,8 @@ connectToJava <- function(port = 18011) {
   }
   print(paste("Connecting on port", port))
   assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
-  utils::read.socket(.getMainSocket())
+  utils::read.socket(.getMainSocket(), maxlen = bufferLength)
 }
-
 
 #'
 #' Set a path for jar extensions.
@@ -107,6 +123,7 @@ setJavaExtensionPath <- function(path) {
 #'
 #' @param class the Java class of the object (e.g. java.util.ArrayList)
 #' @param ... the parameters to be passed to the constructor of the object
+#' @param isNullObject a logical that indicates whether the instance should be null (by default it is set to FALSE)
 #' @return a java.object or java.list instance in the R environment
 #' @examples
 #' ### starting Java
@@ -127,14 +144,19 @@ setJavaExtensionPath <- function(path) {
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-createJavaObject <- function(class, ...) {
+createJavaObject <- function(class, ..., isNullObject=FALSE) {
   parameters <- list(...)
-  command <- paste("create", class, sep=";")
+  .checkParameterLength(parameters)
+  firstCommand <- "create"
+  if (isNullObject) {
+    firstCommand <- "createnull"
+  }
+  command <- paste(firstCommand, class, sep=";")
   if (length(parameters) > 0) {
     command <- paste(command, .marshallCommand(parameters), sep=";")
   }
   utils::write.socket(.getMainSocket(), command)
-  callback <- utils::read.socket(.getMainSocket(), maxlen = 10000)
+  callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
   } else {
@@ -186,7 +208,8 @@ createJavaObject <- function(class, ...) {
 #' There is no need to cast a particular parameter to a super class. Actually, the Java server tries to find the method
 #' that best matches the types of the parameters
 #'
-#' @param javaObject this should be either a list of instances or a single instance of java.object.
+#' @param source this should be either a java.arraylist instance or a single java.object instance for non-static methods or
+#' a string representing the Java class name in case of static method
 #' @param methodName the name of the method
 #' @param ... the parameters of the method
 #' @return It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.
@@ -206,21 +229,38 @@ createJavaObject <- function(class, ...) {
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-callJavaMethod <- function(javaObject, methodName, ...) {
+callJavaMethod <- function(source, methodName, ...) {
   parameters <- list(...)
-  command <- paste("method", paste("java.object",.translateJavaObject(javaObject),sep=""), methodName, sep=";")
+  .checkParameterLength(parameters)
+  if (.getClass(source) %in% c("java.object", "java.arraylist")) {   ### non-static method
+    command <- paste("method", paste("java.object", .translateJavaObject(source), sep=""), methodName, sep=";")
+  } else {  ### static method
+    command <- paste("method", paste("java.class", source, sep=""), methodName, sep=";")
+  }
   if (length(parameters) > 0) {
     command <- paste(command, .marshallCommand(parameters), sep=";")
   }
   utils::write.socket(.getMainSocket(), command)
-  callback <- utils::read.socket(.getMainSocket(), maxlen=10000)
+  callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
   return(.processCallback(callback))
+}
+
+.checkParameterLength <- function(parameters) {
+  if (length(parameters) > 0) {
+    for (i in 1:length(parameters)) {
+      if (length(parameters[[i]]) >  maxVectorLength) {
+        stop(paste("The J4R package allows for vectors than do not exceed", maxVectorLength, "in length. You can use a loop instead.", sep=" "))
+      }
+    }
+  }
 }
 
 .processCallback <- function(callback) {
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
-  } else if (regexpr("JavaObject", callback) >= 0) {
+  } else if (regexpr("JavaObject", callback) >= 0) {  ## a single Java object
+    returnObject <- .createFakeJavaObject(callback)
+  } else if (regexpr("JavaList", callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
     returnObject <- .createFakeJavaObject(callback)
   } else if (regexpr("RequestReceivedAndProcessed", callback) >= 0) {
     returnObject <- NULL
@@ -236,22 +276,58 @@ callJavaMethod <- function(javaObject, methodName, ...) {
     str <- substring(str, 10)
   }
   inputList <- strsplit(str,",")[[1]]
-  outputVector <- c()
+  # outputVector <- c()
+  # for (i in 1:length(inputList)) {
+  #   str <- inputList[i]
+  #   if (regexpr("numeric", str) == 1) { # starts with numeric
+  #     outputVector <- c(outputVector, as.numeric(substring(str,8)))
+  #   } else if (regexpr("integer", str) == 1) { # starts with integer
+  #     outputVector <- c(outputVector, as.integer(substring(str,8)))
+  #   } else if (regexpr("logical", str) == 1) { # starts with logical
+  #     outputVector <- c(outputVector, as.logical(substring(str,8)))
+  #   } else if (regexpr("character", str) == 1) { # starts with character
+  #     outputVector <- c(outputVector, as.character(substring(str, 10)))
+  #   } else {
+  #     stop("This primitive type is not recognized!")
+  #   }
+  # }
+  outputVector <- list()
   for (i in 1:length(inputList)) {
     str <- inputList[i]
     if (regexpr("numeric", str) == 1) { # starts with numeric
-      outputVector <- c(outputVector, as.numeric(substring(str,8)))
+      outputVector[[i]] <- as.numeric(substring(str,8))
     } else if (regexpr("integer", str) == 1) { # starts with integer
-      outputVector <- c(outputVector, as.integer(substring(str,8)))
+      outputVector[[i]] <- as.integer(substring(str,8))
     } else if (regexpr("logical", str) == 1) { # starts with logical
-      outputVector <- c(outputVector, as.logical(substring(str,8)))
+      outputVector[[i]] <- as.logical(substring(str,8))
     } else if (regexpr("character", str) == 1) { # starts with character
-      outputVector <- c(outputVector, as.character(substring(str, 10)))
+      outputVector[[i]] <- as.character(substring(str, 10))
     } else {
       stop("This primitive type is not recognized!")
     }
   }
-  return(outputVector)
+
+  return(.convertListToVectorIfPossible(outputVector))
+}
+
+
+.convertListToVectorIfPossible <- function(myList) {
+  if (length(myList) > 0) {
+    outputVec <- c()
+    for (i in 1:length(myList)) {
+      if (i == 1) {
+        refClass <- class(myList[[i]])
+      } else {
+        if (class(myList[[i]]) != refClass) {
+          return(myList)
+        }
+      }
+      outputVec <- c(outputVec, myList[[i]])
+    }
+    return(outputVec)
+  } else {
+    return(myList)
+  }
 }
 
 .createFakeJavaObject <- function(str) {
@@ -331,7 +407,14 @@ callJavaGC <- function(currentEnv = NULL) {
     }
   }
   utils::write.socket(.getMainSocket(), command)
-  callback <- utils::read.socket(.getMainSocket(), maxlen=10000)
+  callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
   return(.processCallback(callback))
 }
 
+# getAllValuesFromList <- function(object) {
+#   if (.getClass(object) != "java.object") {
+#     stop("The object must be an instance of java.object")
+#   } else {
+#     object$class ### check if it implements List
+#   }
+# }

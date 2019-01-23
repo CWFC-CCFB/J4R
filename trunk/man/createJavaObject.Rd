@@ -4,12 +4,14 @@
 \alias{createJavaObject}
 \title{Create Java objects}
 \usage{
-createJavaObject(class, ...)
+createJavaObject(class, ..., isNullObject = FALSE)
 }
 \arguments{
 \item{class}{the Java class of the object (e.g. java.util.ArrayList)}
 
 \item{...}{the parameters to be passed to the constructor of the object}
+
+\item{isNullObject}{a logical that indicates whether the instance should be null (by default it is set to FALSE)}
 }
 \value{
 a java.object or java.list instance in the R environment
