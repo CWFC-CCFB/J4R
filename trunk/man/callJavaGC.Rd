@@ -2,21 +2,24 @@
 % Please edit documentation in R/j4rFunctions.R
 \name{callJavaGC}
 \alias{callJavaGC}
-\title{This function synchronizes the Java environment with the R environment. Objects that
-are removed from the R environment are not automatically removed from the Java
-environment. This function scans the R environment for the java.object instance and
-commands the gateway server to get rid of the Java instances that are not longer referred
-to in the R environment.}
+\title{Synchronize the Java environment with the R environment}
 \usage{
-callJavaGC(currentEnv = NULL)
+callJavaGC(...)
 }
 \arguments{
-\item{currentEnv}{the current environment if the method is called within a function}
+\item{...}{a list of environment instances if the method is called within a function}
 }
 \value{
 An integer which is the number of Java objects still registered in the Java environment
 }
 \description{
+This function synchronizes the Java environment with the R environment. Objects that
+are removed from the R environment are not automatically removed from the Java
+environment. This function scans the R environment for the java.object instance and
+commands the gateway server to get rid of the Java instances that are not longer referred
+to in the R environment.
+}
+\details{
 To avoid a memory leak, the function should be called on a regular basis.
 }
 \seealso{

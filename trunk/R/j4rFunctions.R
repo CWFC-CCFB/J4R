@@ -376,6 +376,8 @@ shutdownJava <- function() {
 }
 
 #'
+#' Synchronize the Java environment with the R environment
+#'
 #' This function synchronizes the Java environment with the R environment. Objects that
 #' are removed from the R environment are not automatically removed from the Java
 #' environment. This function scans the R environment for the java.object instance and
@@ -384,13 +386,14 @@ shutdownJava <- function() {
 #'
 #' To avoid a memory leak, the function should be called on a regular basis.
 #'
-#' @param currentEnv the current environment if the method is called within a function
+#' @param ... a list of environment instances if the method is called within a function
 #' @return An integer which is the number of Java objects still registered in the Java environment
 #'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-callJavaGC <- function(currentEnv = NULL) {
+callJavaGC <- function(...) {
+  environments <- list(...)
   command <- "sync"
   for (objectName in ls(envir = globalenv())) {
     object <- get(objectName, envir = globalenv())
@@ -398,11 +401,18 @@ callJavaGC <- function(currentEnv = NULL) {
       command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=";")
     }
   }
-  if (!is.null(currentEnv) && !identical(currentEnv, globalenv())) {
-    for (objectName in ls(envir = currentEnv)) {
-      object <- get(objectName, envir = currentEnv)
-      if (.getClass(object) %in% c("java.object", "java.arraylist")) {
-        command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=";")
+  if (length(environments) > 0) {
+    for (environment in environments) {
+      if (class(environment) == "environment") {
+#        if (!is.null(currentEnv) && !identical(currentEnv, globalenv())) {
+        if (!identical(environment, globalenv())) {
+          for (objectName in ls(envir = environment)) {
+            object <- get(objectName, envir = environment)
+            if (.getClass(object) %in% c("java.object", "java.arraylist")) {
+              command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=";")
+            }
+          }
+        }
       }
     }
   }
