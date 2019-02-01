@@ -155,6 +155,21 @@ test_that("Create a NullWrapper instance", {
   expect_equal(result$class, "repicea.lang.codetranslator.REnvironment$NullWrapper")
 })
 
+#### Creating a 3x3 array of integers
+myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
+
+test_that("Check the class of the array", {
+  expect_equal(myArray$class, "[[I")
+})
+
+#### Creating two arrays of length 3 ####
+
+myArrays <- createJavaObject("int", c(3,3), isArray = TRUE)
+test_that("Check the class of the first and the second array", {
+  expect_equal(myArrays[[1]]$class, "[I")
+  expect_equal(myArrays[[2]]$class, "[I")
+})
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:

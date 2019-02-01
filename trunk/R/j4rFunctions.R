@@ -35,16 +35,16 @@ maxVectorLength <- 700
 #' The extension path must be set before calling this function. See setJavaExtensionPath.
 #'
 #' @param port the local port (the port is set to 18011 by default)
-#' @param local for debugging only (should be left as is)
+#' @param debug for debugging only (should be left as is)
 #'
 #' @return nothing
 #'
 #' @export
-connectToJava <- function(port = 18011, local = TRUE) {
+connectToJava <- function(port = 18011, debug = FALSE) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
-    if (local) {
+    if (!debug) {
       print("Starting Java server...")
       parms <- c("-firstcall", "true")
       if (port != 18011) {
@@ -124,6 +124,7 @@ setJavaExtensionPath <- function(path) {
 #' @param class the Java class of the object (e.g. java.util.ArrayList)
 #' @param ... the parameters to be passed to the constructor of the object
 #' @param isNullObject a logical that indicates whether the instance should be null (by default it is set to FALSE)
+#' @param isArray a logical that indicates whether the instance is an array. By default, it is set to FALSE. When creating an array, the parameters must be integers that define the dimensions of the array
 #' @return a java.object or java.list instance in the R environment
 #' @examples
 #' ### starting Java
@@ -138,18 +139,26 @@ setJavaExtensionPath <- function(path) {
 #' ### creating two ArrayList with different capacities
 #' createJavaObject("java.util.ArrayList", c(as.integer(3), as.integer(4)))
 #'
+#' ### creating a 3x3 array of integers
+#' myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
+#'
+#' ### creating two arrays of integers with length 3
+#' myArrays <- createJavaObject("int", c(3,3), isArray = TRUE)
+#'
 #' ### shutting down Java
 #' shutdownJava()
 #'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-createJavaObject <- function(class, ..., isNullObject=FALSE) {
+createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) {
   parameters <- list(...)
   .checkParameterLength(parameters)
   firstCommand <- "create"
   if (isNullObject) {
     firstCommand <- "createnull"
+  } else if (isArray) {
+    firstCommand <- "createarray"
   }
   command <- paste(firstCommand, class, sep=";")
   if (length(parameters) > 0) {

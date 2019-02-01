@@ -4,7 +4,7 @@
 \alias{createJavaObject}
 \title{Create Java objects}
 \usage{
-createJavaObject(class, ..., isNullObject = FALSE)
+createJavaObject(class, ..., isNullObject = FALSE, isArray = FALSE)
 }
 \arguments{
 \item{class}{the Java class of the object (e.g. java.util.ArrayList)}
@@ -12,6 +12,8 @@ createJavaObject(class, ..., isNullObject = FALSE)
 \item{...}{the parameters to be passed to the constructor of the object}
 
 \item{isNullObject}{a logical that indicates whether the instance should be null (by default it is set to FALSE)}
+
+\item{isArray}{a logical that indicates whether the instance is an array. By default, it is set to FALSE. When creating an array, the parameters must be integers that define the dimensions of the array}
 }
 \value{
 a java.object or java.list instance in the R environment
@@ -32,6 +34,12 @@ createJavaObject("java.util.ArrayList", as.integer(3))
 
 ### creating two ArrayList with different capacities
 createJavaObject("java.util.ArrayList", c(as.integer(3), as.integer(4)))
+
+### creating a 3x3 array of integers
+myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
+
+### creating two arrays of integers with length 3
+myArrays <- createJavaObject("int", c(3,3), isArray = TRUE)
 
 ### shutting down Java
 shutdownJava()
