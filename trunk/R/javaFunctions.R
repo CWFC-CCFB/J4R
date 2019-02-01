@@ -96,7 +96,7 @@ getValueFromArray <- function(object, index) {
 #' This method returns an integer that is the
 #' length of the Array.
 #'
-#' @param object
+#' @param object a java.object instance that represents an array
 #' @return an integer that is the length of the array
 #'
 #' @export
@@ -107,3 +107,37 @@ getArrayLength <- function(object) {
   return(J4R::callJavaMethod("java.lang.reflect.Array", "getLength", object))
 }
 
+
+
+#'
+#' Returns all the elements of an array
+#'
+#' All the elements of an array are returned.
+#'
+#' @param object a java.object that represents a Java List instance
+#'
+#' @return either an R list or an R vector
+#'
+#' @export
+getAllValuesFromArray <- function(object) {
+  if (!isArray(object)) {
+    stop("The object parameter must represent an array!")
+  }
+  length <- getArrayLength(object)
+  return(J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1)))
+}
+
+
+#'
+#' Retrieve the URLs of the current classloader
+#'
+#' This functions returns the URLs that are currently included
+#' in the System classloader.
+#'
+#' @export
+getClassLoaderURLs <- function() {
+  classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
+  urls <- callJavaMethod(classLoader, "getURLs")
+  urlsList <- getAllValuesFromArray(urls)
+  return(callJavaMethod(urlsList, "toString"))
+}

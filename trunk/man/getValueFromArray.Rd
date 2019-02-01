@@ -17,5 +17,5 @@ the value at the location
 }
 \description{
 This function returns the value at location given by
-the index parameter
+the index parameter.
 }

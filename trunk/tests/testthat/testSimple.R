@@ -160,6 +160,8 @@ myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
 
 test_that("Check the class of the array", {
   expect_equal(myArray$class, "[[I")
+  expect_equal(getArrayLength(myArray), 3)
+  expect_equal(getArrayLength(getValueFromArray(myArray,0)), 3)
 })
 
 #### Creating two arrays of length 3 ####
@@ -168,6 +170,8 @@ myArrays <- createJavaObject("int", c(3,3), isArray = TRUE)
 test_that("Check the class of the first and the second array", {
   expect_equal(myArrays[[1]]$class, "[I")
   expect_equal(myArrays[[2]]$class, "[I")
+  expect_equal(getArrayLength(myArrays[[1]]), 3)
+  expect_equal(getArrayLength(myArrays[[2]]), 3)
 })
 
 for (i in 0:2) {
