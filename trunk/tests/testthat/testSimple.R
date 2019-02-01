@@ -170,6 +170,16 @@ test_that("Check the class of the first and the second array", {
   expect_equal(myArrays[[2]]$class, "[I")
 })
 
+for (i in 0:2) {
+  setValueInArray(myArrays[[1]], i, i)
+}
+test_that("Check values in the array", {
+  expect_equal(getValueFromArray(myArrays[[1]], 0), 0)
+  expect_equal(getValueFromArray(myArrays[[1]], 1), 1)
+  expect_equal(getValueFromArray(myArrays[[1]], 2), 2)
+})
+
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:
