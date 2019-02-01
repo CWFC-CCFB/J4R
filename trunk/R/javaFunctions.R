@@ -29,3 +29,7 @@ getAllValuesFromListObject <- function(object) {
     }
   }
 }
+
+
+
+
