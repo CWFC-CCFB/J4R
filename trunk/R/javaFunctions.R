@@ -55,7 +55,7 @@ isArray <- function(object) {
 #' Set a value in an array
 #'
 #' This function sets the value at the location given by the index
-#' parameter.
+#' parameter. It relies on the reflexive methods the Java class Array.
 #'
 #' @param object a java.object that represents an array
 #' @param value the value to be set
@@ -128,16 +128,3 @@ getAllValuesFromArray <- function(object) {
 }
 
 
-#'
-#' Retrieve the URLs of the current classloader
-#'
-#' This functions returns the URLs that are currently included
-#' in the System classloader.
-#'
-#' @export
-getClassLoaderURLs <- function() {
-  classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
-  urls <- callJavaMethod(classLoader, "getURLs")
-  urlsList <- getAllValuesFromArray(urls)
-  return(callJavaMethod(urlsList, "toString"))
-}

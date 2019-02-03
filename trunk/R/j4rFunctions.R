@@ -71,25 +71,6 @@ connectToJava <- function(port = 18011, extensionPath = NULL, debug = FALSE) {
   utils::read.socket(.getMainSocket(), maxlen = bufferLength)
 }
 
-#' #'
-#' #' Set a path for jar extensions.
-#' #'
-#' #' This function sets a path for eventual extensions, i.e. jar files. These
-#' #' extensions are loaded through a custom classloader.
-#' #'
-#' #' @param path the path to the jar files to be loaded by the Java classloader
-#' #' @examples
-#' #' setJavaExtensionPath("/home/fortin/myExternalLibraries")
-#' #' connectToJava()
-#' #' ## your code ##
-#' #' shutdownJava()
-#' #'
-#' #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
-#' #'
-#' #' @export
-#' setJavaExtensionPath <- function(path) {
-#'   assign("extensionPath", path, envir = cacheEnv)
-#' }
 
 .getMainSocket <- function() {
   return(get("j4rSocket", envir = cacheEnv))
@@ -431,3 +412,16 @@ callJavaGC <- function(...) {
   return(.processCallback(callback))
 }
 
+#'
+#' Retrieve the URLs of the current classloader
+#'
+#' This functions returns the URLs that are currently included
+#' in the System classloader.
+#'
+#' @export
+getClassLoaderURLs <- function() {
+  classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
+  urls <- callJavaMethod(classLoader, "getURLs")
+  urlsList <- getAllValuesFromArray(urls)
+  return(callJavaMethod(urlsList, "toString"))
+}

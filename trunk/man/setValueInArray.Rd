@@ -16,5 +16,5 @@ the first index is 0}
 }
 \description{
 This function sets the value at the location given by the index
-parameter.
+parameter. It relies on the reflexive methods the Java class Array.
 }
