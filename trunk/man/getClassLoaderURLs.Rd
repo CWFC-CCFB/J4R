@@ -8,5 +8,5 @@ getClassLoaderURLs()
 }
 \description{
 This functions returns the URLs that are currently included
-in the System classloader
+in the System classloader.
 }

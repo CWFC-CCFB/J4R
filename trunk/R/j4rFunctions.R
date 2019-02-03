@@ -35,12 +35,13 @@ maxVectorLength <- 700
 #' The extension path must be set before calling this function. See setJavaExtensionPath.
 #'
 #' @param port the local port (the port is set to 18011 by default)
+#' @param extensionPath the path to jar files that can be loaded by the system classloader
 #' @param debug for debugging only (should be left as is)
 #'
 #' @return nothing
 #'
 #' @export
-connectToJava <- function(port = 18011, debug = FALSE) {
+connectToJava <- function(port = 18011, extensionPath = NULL, debug = FALSE) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
@@ -50,8 +51,8 @@ connectToJava <- function(port = 18011, debug = FALSE) {
       if (port != 18011) {
         parms <- c(parms, "-port", port)
       }
-      if (exists("extensionPath", envir = cacheEnv)) {
-        parms <- c(parms, "-ext", get("extensionPath", envir = cacheEnv))
+      if (!is.null(extensionPath)) {
+        parms <- c(parms, "-ext", extensionPath)
       }
       if (file.exists(paste(find.package("J4R"),"inst/repicea.jar", sep="/"))) {  ### test mode
         rootPath <- paste(find.package("J4R"),"inst", sep="/")
@@ -70,25 +71,25 @@ connectToJava <- function(port = 18011, debug = FALSE) {
   utils::read.socket(.getMainSocket(), maxlen = bufferLength)
 }
 
-#'
-#' Set a path for jar extensions.
-#'
-#' This function sets a path for eventual extensions, i.e. jar files. These
-#' extensions are loaded through a custom classloader.
-#'
-#' @param path the path to the jar files to be loaded by the Java classloader
-#' @examples
-#' setJavaExtensionPath("/home/fortin/myExternalLibraries")
-#' connectToJava()
-#' ## your code ##
-#' shutdownJava()
-#'
-#' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
-#'
-#' @export
-setJavaExtensionPath <- function(path) {
-  assign("extensionPath", path, envir = cacheEnv)
-}
+#' #'
+#' #' Set a path for jar extensions.
+#' #'
+#' #' This function sets a path for eventual extensions, i.e. jar files. These
+#' #' extensions are loaded through a custom classloader.
+#' #'
+#' #' @param path the path to the jar files to be loaded by the Java classloader
+#' #' @examples
+#' #' setJavaExtensionPath("/home/fortin/myExternalLibraries")
+#' #' connectToJava()
+#' #' ## your code ##
+#' #' shutdownJava()
+#' #'
+#' #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+#' #'
+#' #' @export
+#' setJavaExtensionPath <- function(path) {
+#'   assign("extensionPath", path, envir = cacheEnv)
+#' }
 
 .getMainSocket <- function() {
   return(get("j4rSocket", envir = cacheEnv))
