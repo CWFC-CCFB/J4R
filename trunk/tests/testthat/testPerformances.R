@@ -40,8 +40,20 @@ test_that("Time to create one additional object", {
 
 shutdownJava()
 
+connectToJava(memorySize = 1000)
 
+test_that("Increased memory to 1000 Mb", {
+  expect_equal(as.numeric(getMemorySettings()[1]) > 800, TRUE)
+})
 
+shutdownJava()
 
+connectToJava(memorySize = 3000)
+
+test_that("Increased memory to 1000 Mb", {
+  expect_equal(as.numeric(getMemorySettings()[1]) > 2500, TRUE)
+})
+
+shutdownJava()
 
 

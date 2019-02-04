@@ -36,12 +36,13 @@ maxVectorLength <- 700
 #'
 #' @param port the local port (the port is set to 18011 by default)
 #' @param extensionPath the path to jar files that can be loaded by the system classloader
+#' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
 #' @param debug for debugging only (should be left as is)
 #'
 #' @return nothing
 #'
 #' @export
-connectToJava <- function(port = 18011, extensionPath = NULL, debug = FALSE) {
+connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
@@ -53,6 +54,12 @@ connectToJava <- function(port = 18011, extensionPath = NULL, debug = FALSE) {
       }
       if (!is.null(extensionPath)) {
         parms <- c(parms, "-ext", extensionPath)
+      }
+      if (!is.null(memorySize)) {
+        if (!is.numeric(memorySize) && !is.integer(memorySize)) {
+          stop("The memorySize parameter should be either a numeric or an integer!")
+        }
+        parms <- c(parms, "-mem", as.integer(memorySize))
       }
       if (file.exists(paste(find.package("J4R"),"inst/repicea.jar", sep="/"))) {  ### test mode
         rootPath <- paste(find.package("J4R"),"inst", sep="/")
@@ -288,7 +295,11 @@ callJavaMethod <- function(source, methodName, ...) {
     if (regexpr("numeric", str) == 1) { # starts with numeric
       outputVector[[i]] <- as.numeric(substring(str,8))
     } else if (regexpr("integer", str) == 1) { # starts with integer
-      outputVector[[i]] <- as.integer(substring(str,8))
+      value <- as.double(substring(str,8))  ### to avoid coercion
+      if (abs(value) < 2*10^9) {
+        value <- as.integer(value)
+      }
+      outputVector[[i]] <- value
     } else if (regexpr("logical", str) == 1) { # starts with logical
       outputVector[[i]] <- as.logical(substring(str,8))
     } else if (regexpr("character", str) == 1) { # starts with character
@@ -424,4 +435,22 @@ getClassLoaderURLs <- function() {
   urls <- callJavaMethod(classLoader, "getURLs")
   urlsList <- getAllValuesFromArray(urls)
   return(callJavaMethod(urlsList, "toString"))
+}
+
+
+#'
+#' Returns the maximum, total and free memory in Mb
+#'
+#' This function calls the Runtime static methods maxMemory(),
+#' totalMemory() and freeMemory(). The results are divided by
+#' 1024 in order to report the memory sizes in Mb.
+#' @return a data.frame object with the maximum, total and free memory in Mb.
+#'
+#' @export
+getMemorySettings <- function() {
+  runtime <- callJavaMethod("java.lang.Runtime", "getRuntime")
+  maxMemory <- callJavaMethod(runtime, "maxMemory") / 1024^2
+  totalMemory <- callJavaMethod(runtime, "totalMemory")  / 1024^2
+  freeMemory <- callJavaMethod(runtime, "freeMemory")  / 1024^2
+  return(data.frame(maxMemory, totalMemory, freeMemory))
 }
