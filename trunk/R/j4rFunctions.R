@@ -44,10 +44,10 @@ maxVectorLength <- 700
 #' @export
 connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (exists("j4rSocket", envir = cacheEnv)) {
-    print("The object j4rSocket already exists! It seems R is already connected to the Java server.")
+    message("The object j4rSocket already exists! It seems R is already connected to the Java server.")
   } else {
     if (!debug) {
-      print("Starting Java server...")
+      message("Starting Java server...")
       parms <- c("-firstcall", "true")
       if (port != 18011) {
         parms <- c(parms, "-port", port)
@@ -66,14 +66,14 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
       } else {  ### normal mode
         rootPath <- find.package("J4R")
       }
-      #    print(rootPath)
+      #    message(rootPath)
       path <- paste(rootPath,"repicea.jar",sep="/")
       completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
       system(completeCommand, wait=FALSE)
       Sys.sleep(2)
     }
   }
-  print(paste("Connecting on port", port))
+  message(paste("Connecting on port", port))
   assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
   utils::read.socket(.getMainSocket(), maxlen = bufferLength)
 }
@@ -361,21 +361,26 @@ callJavaMethod <- function(source, methodName, ...) {
 #'
 #' @export
 shutdownJava <- function() {
+  .internalShutdown()
+  Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
+  message("Done.")
+}
+
+.internalShutdown <- function() {
   if (exists("j4rSocket", envir = cacheEnv)) {
     utils::write.socket(.getMainSocket(), "closeConnection")
-    print("Closing connection and removing socket...")
+    message("Closing connection and removing socket...")
     rm("j4rSocket", envir = cacheEnv)
   }
-  print("Removing Java objects from global environment...")
+  message("Removing Java objects from global environment...")
   for (objectName in ls(envir = globalenv())) {
     object <- get(objectName)
     if ("java.object" %in% class(object)) {
       rm(list = objectName, envir = globalenv())
     }
   }
-  Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
-  print("Done.")
 }
+
 
 #'
 #' Synchronize the Java environment with the R environment
@@ -453,4 +458,12 @@ getMemorySettings <- function() {
   totalMemory <- callJavaMethod(runtime, "totalMemory")  / 1024^2
   freeMemory <- callJavaMethod(runtime, "freeMemory")  / 1024^2
   return(data.frame(maxMemory, totalMemory, freeMemory))
+}
+
+.onUnload <- function(libpath) {
+  .internalShutdown()
+}
+
+.onDetach <- function(libpath) {
+  .internalShutdown()
 }
