@@ -256,6 +256,8 @@ callJavaMethod <- function(source, methodName, ...) {
 .processCallback <- function(callback) {
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
+  } else if(regexpr("Error", callback) >= 0) {
+    stop(callback)
   } else if (regexpr("JavaObject", callback) >= 0) {  ## a single Java object
     returnObject <- .createFakeJavaObject(callback)
   } else if (regexpr("JavaList", callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
@@ -305,7 +307,7 @@ callJavaMethod <- function(source, methodName, ...) {
     } else if (regexpr("character", str) == 1) { # starts with character
       outputVector[[i]] <- as.character(substring(str, 10))
     } else {
-      stop("This primitive type is not recognized!")
+      stop(paste("This primitive type is not recognized:", str, sep = " "))
     }
   }
 
