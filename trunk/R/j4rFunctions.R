@@ -375,7 +375,8 @@ shutdownJava <- function() {
   message("Removing Java objects from global environment...")
   for (objectName in ls(envir = globalenv())) {
     object <- get(objectName)
-    if ("java.object" %in% class(object)) {
+    # if ("java.object" %in% class(object)) {
+    if (.getClass(object) %in% c("java.object", "java.arraylist")) {
       rm(list = objectName, envir = globalenv())
     }
   }
