@@ -1,8 +1,8 @@
 #########################################################
-# R function for easier object handling
-# Author Mathieu Fortin - January 2019
+# R functions for easier object handling
+# Author: Mathieu Fortin, Canadian Wood Fibre Centre
+# Date: January 2019
 ########################################################
-
 
 
 #'

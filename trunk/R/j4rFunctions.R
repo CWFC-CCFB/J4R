@@ -1,6 +1,7 @@
 ########################################################
 # R function for connection to Gateway Server in Java
-# Author Mathieu Fortin - January 2019
+# Author: Mathieu Fortin, Canadian Wood Fibre Centre
+# Date: January 2019
 ########################################################
 
 #'
@@ -374,10 +375,14 @@ shutdownJava <- function() {
     message("Closing connection and removing socket...")
     rm("j4rSocket", envir = cacheEnv)
   }
-  message("Removing Java objects from global environment...")
+  nbObjectRemoved <- 0
   for (objectName in ls(envir = globalenv())) {
     # if ("java.object" %in% class(object)) {
     if (.getClass(get(objectName, envir = globalenv())) %in% c("java.object", "java.arraylist")) {
+      nbObjectRemoved <- nbObjectRemoved + 1
+      if (nbObjectRemoved == 1) {
+        message("Removing Java objects from global environment...")
+      }
       rm(list = objectName, envir = globalenv())
     }
   }
@@ -468,4 +473,15 @@ getMemorySettings <- function() {
 
 .onDetach <- function(libpath) {
   .internalShutdown()
+}
+
+.welcomeMessage <- function() {
+  packageStartupMessage("Welcome to J4R!")
+  packageStartupMessage("Please, make sure that Java is part of the path.")
+  packageStartupMessage("For more information, visit https://sourceforge.net/p/repiceasource/wiki/J4R/ .")
+}
+
+
+.onLoad <- function(libname, pkgname) {
+  .welcomeMessage()
 }
