@@ -1,6 +1,8 @@
-#######################################
+########################################################
 # Testing performance compared to rJava
-########################################
+# Author: Mathieu Fortin, Canadian Wood Fibre Centre
+# Date: January 2019
+########################################################
 
 context("Testing performance")
 
