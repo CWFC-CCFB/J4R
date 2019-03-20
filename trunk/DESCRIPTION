@@ -4,14 +4,14 @@ Title: Create Java Objects and Execute Java Methods
 Version: 0.1.0
 Authors@R: person("Mathieu", "Fortin", role = c("aut","cre"), email = "mathieu.fortin.re@gmail.com")
 Maintainer: Mathieu Fortin <mathieu.fortin.re@gmail.com>
-Description: Makes it possible to create Java objects and to execute Java methods from the R environment. 
-    The Java Virtual Machine is handled by a gateway server. Commands are sent to the server 
-    through a socket connection from the R environment. Calls to Java methods allow for 
+Description: Makes it possible to create 'Java' objects and to execute 'Java' methods from the R environment. 
+    The 'Java' Virtual Machine is handled by a gateway server. Commands are sent to the server 
+    through a socket connection from the R environment. Calls to 'Java' methods allow for 
     vectors so that a particular method is iteratively run on each element of the vector. A 
-    score algorithm also makes the calls to Java methods less restrictive. The gateway server
-    relies on a Java library called REpicea which was created under a LGPL 3.0 license. The 
+    score algorithm also makes the calls to 'Java' methods less restrictive. The gateway server
+    relies on a 'Java' library called 'REpicea' which was created under a LGPL 3.0 license. The 
     sources are available at <https://sourceforge.net/projects/repiceasource/>. To start the gateway
-    server, Java must be part of the path.
+    server, 'Java' must be part of the path.
 URL: https://sourceforge.net/p/repiceasource/wiki/J4R/
 Imports:
     utils (>= 3.4.4)
@@ -20,5 +20,6 @@ BugReports: https://sourceforge.net/p/repiceasource/tickets/
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
+SystemRequirements: Java
 Suggests: 
     testthat

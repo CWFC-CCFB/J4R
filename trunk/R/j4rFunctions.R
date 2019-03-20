@@ -62,10 +62,10 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
         }
         parms <- c(parms, "-mem", as.integer(memorySize))
       }
-      if (file.exists(paste(find.package("J4R"),"inst/repicea.jar", sep="/"))) {  ### test mode
-        rootPath <- paste(find.package("J4R"),"inst", sep="/")
+      if (file.exists(paste(find.package("J4R"),"inst/java/repicea.jar", sep="/"))) {  ### test mode
+        rootPath <- paste(find.package("J4R"),"inst", "java", sep="/")
       } else {  ### normal mode
-        rootPath <- find.package("J4R")
+        rootPath <- paste(find.package("J4R"), "java", sep="/")
       }
       #    message(rootPath)
       path <- paste(rootPath,"repicea.jar",sep="/")
@@ -477,7 +477,7 @@ getMemorySettings <- function() {
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to J4R!")
-  packageStartupMessage("Please, make sure that Java (version 8 at least) is part of the path.")
+  packageStartupMessage("Please, make sure that Java (version 8 or greater) is part of the path.")
   packageStartupMessage("For more information, visit https://sourceforge.net/p/repiceasource/wiki/J4R/ .")
 }
 
