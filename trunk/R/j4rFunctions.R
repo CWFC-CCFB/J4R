@@ -482,6 +482,6 @@ getMemorySettings <- function() {
 }
 
 
-.onLoad <- function(libname, pkgname) {
+.onAttachLoad <- function(libname, pkgname) {
   .welcomeMessage()
 }
