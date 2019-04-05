@@ -21,6 +21,9 @@ cacheEnv <- new.env()
 #' @export
 bufferLength <- 100000
 
+MainSplitter <- "/;"
+SubSplitter <- "/,"
+
 #'
 #' Maximum length of the vector in the parameters.
 #'
@@ -101,7 +104,7 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
   } else {
     stop(".translateJavaObject: the argument should be an instance of java.object or java.arraylist")
   }
-  str <- paste("hashcode",paste(hashcode, collapse=","), sep="")
+  str <- paste("hashcode",paste(hashcode, collapse=SubSplitter), sep="")
   return(str)
 }
 
@@ -150,9 +153,9 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
   } else if (isArray) {
     firstCommand <- "createarray"
   }
-  command <- paste(firstCommand, class, sep=";")
+  command <- paste(firstCommand, class, sep=MainSplitter)
   if (length(parameters) > 0) {
-    command <- paste(command, .marshallCommand(parameters), sep=";")
+    command <- paste(command, .marshallCommand(parameters), sep=MainSplitter)
   }
   utils::write.socket(.getMainSocket(), command)
   callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
@@ -187,11 +190,11 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
       class <- "java.object"
       parm <- .translateJavaObject(parm)
     }
-    subCommand <- paste(class, paste(parm,collapse=","), sep="")
+    subCommand <- paste(class, paste(parm,collapse=SubSplitter), sep="")
     if (is.null(command)) {
       command <- subCommand
     } else {
-      command <- paste(command, subCommand, sep=";")
+      command <- paste(command, subCommand, sep=MainSplitter)
     }
   }
   return(command)
@@ -232,12 +235,12 @@ callJavaMethod <- function(source, methodName, ...) {
   parameters <- list(...)
   .checkParameterLength(parameters)
   if (.getClass(source) %in% c("java.object", "java.arraylist")) {   ### non-static method
-    command <- paste("method", paste("java.object", .translateJavaObject(source), sep=""), methodName, sep=";")
+    command <- paste("method", paste("java.object", .translateJavaObject(source), sep=""), methodName, sep=MainSplitter)
   } else {  ### static method
-    command <- paste("method", paste("java.class", source, sep=""), methodName, sep=";")
+    command <- paste("method", paste("java.class", source, sep=""), methodName, sep=MainSplitter)
   }
   if (length(parameters) > 0) {
-    command <- paste(command, .marshallCommand(parameters), sep=";")
+    command <- paste(command, .marshallCommand(parameters), sep=MainSplitter)
   }
   utils::write.socket(.getMainSocket(), command)
   callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
@@ -255,6 +258,7 @@ callJavaMethod <- function(source, methodName, ...) {
 }
 
 .processCallback <- function(callback) {
+#  print(paste("Processing this callback : ", callback, sep=""))
   if(regexpr("Exception", callback) >= 0) {
     stop(callback)
   } else if(regexpr("Error", callback) >= 0) {
@@ -271,27 +275,11 @@ callJavaMethod <- function(source, methodName, ...) {
   return(returnObject)
 }
 
-
 .translatePrimitiveType <- function(str) {
-  if (regexpr("JavaList;", str) == 1) {
-    str <- substring(str, 10)
+  if (regexpr(paste("JavaList", MainSplitter, sep=""), str) == 1) {
+    str <- substring(str, 11)
   }
-  inputList <- strsplit(str,",")[[1]]
-  # outputVector <- c()
-  # for (i in 1:length(inputList)) {
-  #   str <- inputList[i]
-  #   if (regexpr("numeric", str) == 1) { # starts with numeric
-  #     outputVector <- c(outputVector, as.numeric(substring(str,8)))
-  #   } else if (regexpr("integer", str) == 1) { # starts with integer
-  #     outputVector <- c(outputVector, as.integer(substring(str,8)))
-  #   } else if (regexpr("logical", str) == 1) { # starts with logical
-  #     outputVector <- c(outputVector, as.logical(substring(str,8)))
-  #   } else if (regexpr("character", str) == 1) { # starts with character
-  #     outputVector <- c(outputVector, as.character(substring(str, 10)))
-  #   } else {
-  #     stop("This primitive type is not recognized!")
-  #   }
-  # }
+  inputList <- strsplit(str,SubSplitter)[[1]]
   outputVector <- list()
   for (i in 1:length(inputList)) {
     str <- inputList[i]
@@ -336,8 +324,8 @@ callJavaMethod <- function(source, methodName, ...) {
 }
 
 .createFakeJavaObject <- function(str) {
-  inputList <- strsplit(str,";")
-  innerList <- strsplit(inputList[[1]][2], ",")
+  inputList <- strsplit(str,MainSplitter)
+  innerList <- strsplit(inputList[[1]][2], SubSplitter)
   outputList <- list()
   class(outputList) <- c(class(outputList), "java.arraylist")
   for (i in 1:length(innerList[[1]])) {
@@ -412,18 +400,17 @@ callJavaGC <- function(...) {
   for (objectName in ls(envir = globalenv())) {
     object <- get(objectName, envir = globalenv())
     if (.getClass(object) %in% c("java.object", "java.arraylist")) {
-      command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=";")
+      command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
     }
   }
   if (length(environments) > 0) {
     for (environment in environments) {
       if (class(environment) == "environment") {
-#        if (!is.null(currentEnv) && !identical(currentEnv, globalenv())) {
         if (!identical(environment, globalenv())) {
           for (objectName in ls(envir = environment)) {
             object <- get(objectName, envir = environment)
             if (.getClass(object) %in% c("java.object", "java.arraylist")) {
-              command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=";")
+              command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
             }
           }
         }
