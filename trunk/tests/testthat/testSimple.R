@@ -186,6 +186,13 @@ test_that("Check values in the array", {
 })
 
 
+#### Check if libraries are part of the path ####
+
+test_that("Check the return value of checkIfExtensionsContain", {
+  expect_equal(checkIfExtensionsContain("repicea.jar"), TRUE)
+  expect_equal(checkIfExtensionsContain("lerfob-foresttools.jar"), FALSE)
+})
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:

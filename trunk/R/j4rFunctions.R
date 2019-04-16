@@ -472,3 +472,59 @@ getMemorySettings <- function() {
 .onAttachLoad <- function(libname, pkgname) {
   .welcomeMessage()
 }
+
+#'
+#' Check if a Library has been loaded
+#'
+#' It checks if a particular library is part of the classpath.
+#'
+#' @param myJavaLibrary a character string that stands for the java library (e.g. repicea.jar)
+#' @param packageName a character string that stands for the package if the function is to be used
+#' by a package (it is null by default)
+#' @param automaticRestart a logical (FALSE by default) that enables an automatic restart of the Java
+#' server so that the library is included in the classpath
+#'
+#' @export
+checkIfExtensionsContain <- function(myJavaLibrary, packageName = NULL, automaticRestart = FALSE) {
+  if (exists("j4rSocket", envir = cacheEnv)) {
+    listURLs <- getClassLoaderURLs()
+    isLibIn <- FALSE
+    if (length(listURLs) > 1) {
+      for (i in 1:length(listURLs)) {
+        if (grepl(myJavaLibrary, listURLs[i])) {
+          isLibIn <- TRUE
+          break
+        }
+      }
+    } else {
+      isLibIn <- grepl(myJavaLibrary, listURLs)
+    }
+    if (!isLibIn && automaticRestart) {
+      message(paste("The", myJavaLibrary, "is not in the extension path! The Java server will shut down and start over again!", sep=" "))
+      shutdownJava()
+      if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
+        rootPath <- paste(find.package(packageName), "inst", sep="/")
+      } else {  ### normal mode
+        rootPath <- find.package(packageName)
+      }
+      connectToJava(extensionPath = rootPath)
+    } else {
+      return(isLibIn)
+    }
+  } else {
+    message("The Java server is not running.")
+    if (automaticRestart) {
+      message("The Java server will restart with proper extensions.")
+      if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
+        rootPath <- paste(find.package(packageName),"inst", sep="/")
+      } else {  ### normal mode
+        rootPath <- find.package(packageName)
+      }
+      connectToJava(extensionPath = rootPath)
+    }
+  }
+}
+
+
+
+
