@@ -30,7 +30,7 @@ SubSplitter <- "/,"
 #' A maximum length of the vector is set in order to avoid buffer size issues when reading
 #'
 #' @export
-maxVectorLength <- 700
+maxVectorLength <- 200
 
 #'
 #' Connect to Java environment
