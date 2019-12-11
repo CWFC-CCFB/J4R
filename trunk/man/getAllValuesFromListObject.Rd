@@ -10,7 +10,7 @@ getAllValuesFromListObject(object)
 \item{object}{a java.object that represents a Java List instance}
 }
 \value{
-either an R list or an R vector
+either a java.list object or an R vector
 }
 \description{
 All the elements of a Java List instance are returned.

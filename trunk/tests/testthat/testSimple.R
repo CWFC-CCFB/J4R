@@ -193,6 +193,43 @@ test_that("Check the return value of checkIfExtensionsContain", {
   expect_equal(checkIfExtensionsContain("lerfob-foresttools.jar"), FALSE)
 })
 
+myNewList <- createJavaObject("java.util.ArrayList")
+callJavaMethod(myNewList, "add", createJavaObject("java.util.HashMap"))
+output <- getAllValuesFromListObject(myNewList)
+
+test_that("Check if the getAllValuesFromListObject returns a list even if the original list contains a single object", {
+  expect_equal(length(output), 1)
+  expect_equal(output[[1]]$class, "java.util.HashMap")
+})
+
+
+myNewList <- createJavaObject("java.util.ArrayList")
+callJavaMethod(myNewList, "add", 5)
+output <- getAllValuesFromListObject(myNewList)
+
+test_that("Check if the getAllValuesFromListObject returns a numeric even if the original list contains a single object", {
+  expect_equal(length(output), 1)
+  expect_equal(output[[1]], 5)
+})
+
+myArray <- createJavaObject("java.util.HashMap", 1, isArray = TRUE)
+setValueInArray(myArray, createJavaObject("java.util.HashMap"),0)
+output <- getAllValuesFromArray(myArray)
+
+test_that("Check if the getAllValuesFromArray returns a list even if the original array contains a single object", {
+  expect_equal(length(output), 1)
+  expect_equal(output[[1]]$class, "java.util.HashMap")
+})
+
+myArray <- createJavaObject("int", 1, isArray = TRUE)
+setValueInArray(myArray, as.integer(5), 0)
+output <- getAllValuesFromArray(myArray)
+
+test_that("Check if the getAllValuesFromArray returns a numeric even if the original list contains a single object", {
+  expect_equal(length(output), 1)
+  expect_equal(output[[1]], 5)
+})
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:

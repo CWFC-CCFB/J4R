@@ -323,11 +323,18 @@ callJavaMethod <- function(source, methodName, ...) {
   }
 }
 
+.createJavaList <- function() {
+  outputList <- list()
+  class(outputList) <- c(class(outputList), "java.arraylist")
+  return(outputList)
+}
+
+
 .createFakeJavaObject <- function(str) {
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)
-  outputList <- list()
-  class(outputList) <- c(class(outputList), "java.arraylist")
+  outputList <- .createJavaList()
+#  class(outputList) <- c(class(outputList), "java.arraylist")
   for (i in 1:length(innerList[[1]])) {
     javaObject <- list()
     class(javaObject) <- c(class(javaObject), "java.object")

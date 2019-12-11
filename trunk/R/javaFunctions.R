@@ -12,7 +12,7 @@
 #'
 #' @param object a java.object that represents a Java List instance
 #'
-#' @return either an R list or an R vector
+#' @return either a java.list object or an R vector
 #'
 #' @export
 getAllValuesFromListObject <- function(object) {
@@ -23,7 +23,20 @@ getAllValuesFromListObject <- function(object) {
     listClass <- callJavaMethod(systemClassLoader, "loadClass", "java.util.List")
     if (callJavaMethod(listClass, "isInstance", object)) {
       size <- callJavaMethod(object, "size")
-      return(callJavaMethod(object, "get", 0:(size-1)))
+      if (size == 0) {
+        return(c()) ## an empty vector
+      } else if (size == 1) {
+        javaObj <- callJavaMethod(object, "get", 0:(size-1))
+        if (.getClass(javaObj) == "java.object") {
+          outputList <- .createJavaList()
+          outputList[[1]] <- javaObj
+          return(outputList)
+        } else {
+          return(c(javaObj))
+        }
+      } else {
+        return(callJavaMethod(object, "get", 0:(size-1)))
+      }
     } else {
       stop("The object is not an instance of List")
     }
@@ -116,7 +129,7 @@ getArrayLength <- function(object) {
 #'
 #' @param object a java.object that represents a Java List instance
 #'
-#' @return either an R list or an R vector
+#' @return either a java.arraylist object or an R vector
 #'
 #' @export
 getAllValuesFromArray <- function(object) {
@@ -124,7 +137,20 @@ getAllValuesFromArray <- function(object) {
     stop("The object parameter must represent an array!")
   }
   length <- getArrayLength(object)
-  return(J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1)))
+  if (length == 0) {
+    return(c())
+  } else if (length == 1) {
+    javaObj <- J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1))
+    if (.getClass(javaObj) == "java.object") {
+      outputList <- .createJavaList()
+      outputList[[1]] <- javaObj
+      return(outputList)
+    } else {
+      return(c(javaObj))
+    }
+  } else {
+    return(J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1)))
+  }
 }
 
 
