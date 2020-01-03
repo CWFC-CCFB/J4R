@@ -215,7 +215,11 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
       if (upperBoundIndex > l) {
         stop("The upperBoundIndex paramerer is larger than the size of the parameter!")
       }
-      parm <- parm[lowerBoundIndex:upperBoundIndex]
+      if (.getClass(parm) == "java.arraylist") {
+        parm <- .getSubsetOfJavaArrayList(parm, lowerBoundIndex, upperBoundIndex)
+      } else {
+        parm <- parm[lowerBoundIndex:upperBoundIndex]
+      }
     }
     class <- .getClass(parm)
     if (class == "java.object" || class == "java.arraylist") {

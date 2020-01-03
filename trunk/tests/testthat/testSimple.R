@@ -251,6 +251,15 @@ test_that("Check if an exception is raised when the number of parameters is inco
   expect_equal(out, "threw an exception")
 })
 
+#### Adding complex objects in a list ####
+
+myList <- createJavaObject("java.util.ArrayList")
+callJavaMethod(myList, "add", myArrayLists)
+
+test_that("Testing size of ArrayList object after adding two complex objects", {
+            expect_equal(callJavaMethod(myList, "size"), 3)
+          })
+
 
 #### Creating more than 200 instances ####
 
