@@ -146,44 +146,76 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
 #' @export
 createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) {
   parameters <- list(...)
-  .checkParameterLength(parameters)
+  parametersLength <- .getParametersLength(parameters)
   firstCommand <- "create"
   if (isNullObject) {
     firstCommand <- "createnull"
   } else if (isArray) {
     firstCommand <- "createarray"
   }
-  command <- paste(firstCommand, class, sep=MainSplitter)
-  if (length(parameters) > 0) {
-    command <- paste(command, .marshallCommand(parameters), sep=MainSplitter)
+
+  nbCalls <- ceiling(parametersLength / maxVectorLength)
+  if (nbCalls == 0) { ## to make sure it goes through the loop at least once
+    nbCalls <- 1
   }
-  utils::write.socket(.getMainSocket(), command)
-  callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-  if(regexpr("Exception", callback) >= 0) {
-    stop(callback)
-  } else {
-    javaObject <- .createFakeJavaObject(callback)
+  basicCommand <- paste(firstCommand, class, sep=MainSplitter)
+  javaList <- NULL
+  for (i in 1:nbCalls) {
+    if (parametersLength > 0) {
+      lowerIndex <- (i-1) * maxVectorLength + 1
+      upperIndex <- i * maxVectorLength
+      if (upperIndex > parametersLength) {
+        upperIndex <- parametersLength
+      }
+      command <- paste(basicCommand, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
+    } else {
+      command <- basicCommand
+    }
+    utils::write.socket(.getMainSocket(), command)
+    callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
+    if(regexpr("Exception", callback) >= 0) {
+      stop(callback)
+    } else {
+      if (parametersLength <= 1) {
+        return(.createFakeJavaObject(callback)) ## a single object
+      } else {
+        if (is.null(javaList)) {
+          javaList <- .createFakeJavaObject(callback)
+        } else {
+          javaList <- .dropAllIntoFirstList(javaList, .createFakeJavaObject(callback))
+        }
+      }
+    }
   }
-  return(javaObject)
+  return(javaList)
 }
 
-.marshallCommand <- function(list) {
+.dropAllIntoFirstList <- function(javaList, javaSomething) {
+  initialLength <- length(javaList)
+  if (.getClass(javaSomething) == "java.object") {
+    javaList[[initialLength + 1]] <- javaSomething
+  } else { ### dealing with a list of java object
+    lengthIncomingList <- length(javaSomething)
+    for (i in 1:lengthIncomingList) {
+      javaList[[initialLength + i]] <- javaSomething[[i]]
+    }
+  }
+  return(javaList)
+}
+
+.marshallCommand <- function(list, lowerBoundIndex, upperBoundIndex) {
   command <- NULL
-  lref <- 1
   for (i in 1:length(list)) {
     parm <- list[[i]]
     l <- length(parm)
-    if (.getClass(parm) == "java.object") {
+    if (.getClass(parm) == "java.object") { ## it should not be set to 2
       l <- 1
     }
     if (l > 1) {
-      if (lref == 1) {
-        lref = l
-      } else {
-        if (l != lref) {
-          stop("The parameters should have the same size!")
-        }
+      if (upperBoundIndex > l) {
+        stop("The upperBoundIndex paramerer is larger than the size of the parameter!")
       }
+      parm <- parm[lowerBoundIndex:upperBoundIndex]
     }
     class <- .getClass(parm)
     if (class == "java.object" || class == "java.arraylist") {
@@ -199,6 +231,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
   }
   return(command)
 }
+
 
 #'
 #' Call a Java method
@@ -233,28 +266,81 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
 #' @export
 callJavaMethod <- function(source, methodName, ...) {
   parameters <- list(...)
-  .checkParameterLength(parameters)
-  if (.getClass(source) %in% c("java.object", "java.arraylist")) {   ### non-static method
-    command <- paste("method", paste("java.object", .translateJavaObject(source), sep=""), methodName, sep=MainSplitter)
-  } else {  ### static method
-    command <- paste("method", paste("java.class", source, sep=""), methodName, sep=MainSplitter)
+  parametersLength <- .getParametersLength(parameters)
+  maxLength <- parametersLength
+  if (.getClass(source) == "java.arraylist") {   ### check if the size of the source is compatible with the parameters length
+    if (length(source) != parametersLength && parametersLength > 1) {
+      stop("The length of the list of java object the method is called upon is inconsistent with the length of the parameters!")
+    } else {
+      sourceLength <- length(source)
+    }
+  } else { ## either a java.object or a string that represents a class for static methods
+    sourceLength <- 1
   }
-  if (length(parameters) > 0) {
-    command <- paste(command, .marshallCommand(parameters), sep=MainSplitter)
-  }
-  utils::write.socket(.getMainSocket(), command)
-  callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
-  return(.processCallback(callback))
-}
 
-.checkParameterLength <- function(parameters) {
-  if (length(parameters) > 0) {
-    for (i in 1:length(parameters)) {
-      if (length(parameters[[i]]) >  maxVectorLength) {
-        stop(paste("The J4R package allows for vectors than do not exceed", maxVectorLength, "in length. You can use a loop instead.", sep=" "))
+  if (sourceLength > maxLength) {
+    maxLength <- sourceLength ### then the source drives the nb of calls
+  }
+
+  nbCalls <- ceiling(maxLength / maxVectorLength)
+
+  output <- NULL
+  for (i in 1:nbCalls) {
+    lowerIndex <- (i-1) * maxVectorLength + 1
+    upperIndex <- i * maxVectorLength
+    if (upperIndex > maxLength) {
+      upperIndex <- maxLength
+    }
+
+    if (.getClass(source) %in% c("java.object")) {   ### non-static method
+      command <- paste("method", paste("java.object", .translateJavaObject(source), sep=""), methodName, sep=MainSplitter)
+    } else if (.getClass(source) %in% c("java.arraylist")) {   ### non-static method
+      subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
+      command <- paste("method", paste("java.object", .translateJavaObject(subList), sep=""), methodName, sep=MainSplitter)
+    } else {  ### static method
+      command <- paste("method", paste("java.class", source, sep=""), methodName, sep=MainSplitter)
+    }
+    if (length(parameters) > 0) {
+      if (maxLength == 1) {
+        command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)
+      } else {
+        command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
+      }
+    }
+    utils::write.socket(.getMainSocket(), command)
+    callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
+    result <- .processCallback(callback)
+    if (maxLength == 1) {
+      return(result)
+    } else {
+      if (is.null(output)) {
+        output <- result
+      } else {
+        if (.getClass(output) == "java.arraylist") {
+          output <- .dropAllIntoFirstList(output, result)
+        } else {
+          output <- c(output, result)
+        }
       }
     }
   }
+  return(output)
+}
+
+.getParametersLength <- function(parameters) {
+  maxLength <- 0
+  if (length(parameters) > 0) {
+    for (i in 1:length(parameters)) {
+      thisParameterLength <- length(parameters[[i]])
+      if (thisParameterLength >= maxLength) {
+        maxLength <- length(parameters[[i]])
+#        stop(paste("The J4R package allows for vectors than do not exceed", maxVectorLength, "in length. You can use a loop instead.", sep=" "))
+      } else if (thisParameterLength > 1) {
+          stop("The parameters are not consistent! Those with sizes greater than 1 should all have the same size!")
+      }
+    }
+  }
+  return(maxLength)
 }
 
 .processCallback <- function(callback) {
@@ -327,6 +413,12 @@ callJavaMethod <- function(source, methodName, ...) {
   outputList <- list()
   class(outputList) <- c(class(outputList), "java.arraylist")
   return(outputList)
+}
+
+.getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
+  newList <- javaArrayList[start:end]
+  class(newList) <- c(class(newList), "java.arraylist")
+  return(newList)
 }
 
 

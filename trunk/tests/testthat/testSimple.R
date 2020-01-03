@@ -230,6 +230,49 @@ test_that("Check if the getAllValuesFromArray returns a numeric even if the orig
   expect_equal(output[[1]], 5)
 })
 
+
+#### Check if inconsistent numbers of parameters will throw an exception ####
+
+myArrayLists <- createJavaObject("java.util.ArrayList", 3:5)
+myArrayLists
+
+out <- tryCatch(
+  {
+    callJavaMethod(myArrayLists, "add", c(12,13))
+    "did not throw any exception"
+  },
+  error = function(cond) {
+    return("threw an exception")
+  }
+)
+
+test_that("Check if an exception is raised when the number of parameters is inconsistent
+          with the length of the source in the callJavaMethod function", {
+  expect_equal(out, "threw an exception")
+})
+
+
+#### Creating more than 200 instances ####
+
+largeNumberOfArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10),601))
+
+test_that("The size of a large java.arraylist object", {
+            expect_equal(length(largeNumberOfArrayLists), 601)
+          })
+
+largeNumberOfAdding <- callJavaMethod(largeNumberOfArrayLists, "add", 10)
+
+test_that("Adding ten to the 601 ArrayList instances", {
+  expect_equal(length(largeNumberOfAdding), 601)
+  expect_equal(callJavaMethod(largeNumberOfArrayLists[[1]], "size"), 1)
+})
+
+largeNumberOfAdding <- callJavaMethod(largeNumberOfArrayLists, "add", as.numeric(1:601))
+test_that("Adding 1 to 601 to the 601 ArrayList instances", {
+  expect_equal(length(largeNumberOfAdding), 601)
+  expect_equal(callJavaMethod(largeNumberOfArrayLists[[2]], "get", 0:1), c(10, 2))
+})
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:
