@@ -149,7 +149,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
   parametersLength <- .getParametersLength(parameters)
   firstCommand <- "create"
   if (isNullObject) {
-    firstCommand <- "createnull"
+    firstCommand <- "createnull"  ### TODO we should be able to create null array here perhaps inroduce the createnullarray
   } else if (isArray) {
     firstCommand <- "createarray"
   }
@@ -301,7 +301,7 @@ callJavaMethod <- function(source, methodName, ...) {
     } else if (.getClass(source) %in% c("java.arraylist")) {   ### non-static method
       subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
       command <- paste("method", paste("java.object", .translateJavaObject(subList), sep=""), methodName, sep=MainSplitter)
-    } else {  ### static method
+    } else {  ### static method ### TODO call static method with other method and implement calls to primitive wrappers
       command <- paste("method", paste("java.class", source, sep=""), methodName, sep=MainSplitter)
     }
     if (length(parameters) > 0) {
