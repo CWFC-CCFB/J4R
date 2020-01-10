@@ -274,7 +274,7 @@ callJavaMethod <- function(source, methodName, ...) {
   maxLength <- parametersLength
   if (.getClass(source) == "java.list") {   ### check if the size of the source is compatible with the parameters length
     if (length(source) != parametersLength && parametersLength > 1) {
-      stop("The length of the list of java object the method is called upon is inconsistent with the length of the parameters!")
+      stop("The length of the java.list object is inconsistent with the length of the parameters!")
     } else {
       sourceLength <- length(source)
     }
