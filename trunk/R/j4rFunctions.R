@@ -95,14 +95,14 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
 .translateJavaObject <- function(javaObject) {
   hashcode <- c()
   clazz <- .getClass(javaObject)
-  if (clazz == "java.arraylist") {
+  if (clazz == "java.list") {
     for (i in 1:length(javaObject)) {
       hashcode <- c(hashcode, as.character(javaObject[[i]]$hashcode))
     }
   } else if (clazz == "java.object") {
     hashcode <- as.character(javaObject$hashcode)
   } else {
-    stop(".translateJavaObject: the argument should be an instance of java.object or java.arraylist")
+    stop(".translateJavaObject: the argument should be an instance of java.object or java.list")
   }
   str <- paste("hashcode",paste(hashcode, collapse=SubSplitter), sep="")
   return(str)
@@ -215,14 +215,14 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
       if (upperBoundIndex > l) {
         stop("The upperBoundIndex paramerer is larger than the size of the parameter!")
       }
-      if (.getClass(parm) == "java.arraylist") {
+      if (.getClass(parm) == "java.list") {
         parm <- .getSubsetOfJavaArrayList(parm, lowerBoundIndex, upperBoundIndex)
       } else {
         parm <- parm[lowerBoundIndex:upperBoundIndex]
       }
     }
     class <- .getClass(parm)
-    if (class == "java.object" || class == "java.arraylist") {
+    if (class == "java.object" || class == "java.list") {
       class <- "java.object"
       parm <- .translateJavaObject(parm)
     }
@@ -247,7 +247,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
 #' There is no need to cast a particular parameter to a super class. Actually, the Java server tries to find the method
 #' that best matches the types of the parameters
 #'
-#' @param source this should be either a java.arraylist instance or a single java.object instance for non-static methods or
+#' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
 #' a string representing the Java class name in case of static method
 #' @param methodName the name of the method
 #' @param ... the parameters of the method
@@ -272,7 +272,7 @@ callJavaMethod <- function(source, methodName, ...) {
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
   maxLength <- parametersLength
-  if (.getClass(source) == "java.arraylist") {   ### check if the size of the source is compatible with the parameters length
+  if (.getClass(source) == "java.list") {   ### check if the size of the source is compatible with the parameters length
     if (length(source) != parametersLength && parametersLength > 1) {
       stop("The length of the list of java object the method is called upon is inconsistent with the length of the parameters!")
     } else {
@@ -298,7 +298,7 @@ callJavaMethod <- function(source, methodName, ...) {
 
     if (.getClass(source) %in% c("java.object")) {   ### non-static method
       command <- paste("method", paste("java.object", .translateJavaObject(source), sep=""), methodName, sep=MainSplitter)
-    } else if (.getClass(source) %in% c("java.arraylist")) {   ### non-static method
+    } else if (.getClass(source) %in% c("java.list")) {   ### non-static method
       subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
       command <- paste("method", paste("java.object", .translateJavaObject(subList), sep=""), methodName, sep=MainSplitter)
     } else {  ### static method ### TODO call static method with other method and implement calls to primitive wrappers
@@ -320,7 +320,7 @@ callJavaMethod <- function(source, methodName, ...) {
       if (is.null(output)) {
         output <- result
       } else {
-        if (.getClass(output) == "java.arraylist") {
+        if (.getClass(output) == "java.list") {
           output <- .dropAllIntoFirstList(output, result)
         } else {
           output <- c(output, result)
@@ -415,13 +415,13 @@ callJavaMethod <- function(source, methodName, ...) {
 
 .createJavaList <- function() {
   outputList <- list()
-  class(outputList) <- c(class(outputList), "java.arraylist")
+  class(outputList) <- c(class(outputList), "java.list")
   return(outputList)
 }
 
 .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
   newList <- javaArrayList[start:end]
-  class(newList) <- c(class(newList), "java.arraylist")
+  class(newList) <- c(class(newList), "java.list")
   return(newList)
 }
 
@@ -430,7 +430,7 @@ callJavaMethod <- function(source, methodName, ...) {
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)
   outputList <- .createJavaList()
-#  class(outputList) <- c(class(outputList), "java.arraylist")
+#  class(outputList) <- c(class(outputList), "java.list")
   for (i in 1:length(innerList[[1]])) {
     javaObject <- list()
     class(javaObject) <- c(class(javaObject), "java.object")
@@ -469,7 +469,7 @@ shutdownJava <- function() {
   nbObjectRemoved <- 0
   for (objectName in ls(envir = globalenv())) {
     # if ("java.object" %in% class(object)) {
-    if (.getClass(get(objectName, envir = globalenv())) %in% c("java.object", "java.arraylist")) {
+    if (.getClass(get(objectName, envir = globalenv())) %in% c("java.object", "java.list")) {
       nbObjectRemoved <- nbObjectRemoved + 1
       if (nbObjectRemoved == 1) {
         message("Removing Java objects from global environment...")
@@ -502,7 +502,7 @@ callJavaGC <- function(...) {
   command <- "sync"
   for (objectName in ls(envir = globalenv())) {
     object <- get(objectName, envir = globalenv())
-    if (.getClass(object) %in% c("java.object", "java.arraylist")) {
+    if (.getClass(object) %in% c("java.object", "java.list")) {
       command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
     }
   }
@@ -512,7 +512,7 @@ callJavaGC <- function(...) {
         if (!identical(environment, globalenv())) {
           for (objectName in ls(envir = environment)) {
             object <- get(objectName, envir = environment)
-            if (.getClass(object) %in% c("java.object", "java.arraylist")) {
+            if (.getClass(object) %in% c("java.object", "java.list")) {
               command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
             }
           }

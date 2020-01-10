@@ -35,13 +35,13 @@ test_that("Returned object is of class java.object", {
 
 #### Creating many objects with a parameterized constructor ####
 
-# Here, three ArrayList instances are created with a capacity of 3, 4, and 5 respectively. The reference returned to the R environment is a java.arraylist with three java.object instances in it.
+# Here, three ArrayList instances are created with a capacity of 3, 4, and 5 respectively. The reference returned to the R environment is a java.list with three java.object instances in it.
 
 myArrayLists <- createJavaObject("java.util.ArrayList", 3:5)
 myArrayLists
 
 test_that("myArrayLists object has three java.object instances", {
-  expect_equal(class(myArrayLists)[length(class(myArrayLists))], "java.arraylist")
+  expect_equal(class(myArrayLists)[length(class(myArrayLists))], "java.list")
   expect_equal(length(myArrayLists), 3)
   expect_equal(class(myArrayLists[[1]])[length(class(myArrayLists[[1]]))], "java.object")
   expect_equal(class(myArrayLists[[2]])[length(class(myArrayLists[[2]]))], "java.object")
@@ -96,7 +96,7 @@ myArrayLists[[2]] <- NULL
 
 nbObjects <- callJavaGC(environment())
 
-test_that("Removing one object from the java.arraylist object and synchronizing yield 3 objects registered in the Java environment", {
+test_that("Removing one object from the java.list object and synchronizing yield 3 objects registered in the Java environment", {
   expect_equal(nbObjects, 3)
 })
 
@@ -104,7 +104,7 @@ rm("myArrayLists")
 
 nbObjects <- callJavaGC(environment())
 
-test_that("Removing the java.arraylist object and synchronizing yield a single object left in the Java environment", {
+test_that("Removing the java.list object and synchronizing yield a single object left in the Java environment", {
   expect_equal(nbObjects, 1)
 })
 
@@ -112,7 +112,7 @@ rm(list = ls(envir = environment()))
 
 nbObjects <- callJavaGC(environment())
 
-test_that("Removing all the java.arraylist object and synchronizing yield no object left in the Java environment", {
+test_that("Removing all the java.list object and synchronizing yield no object left in the Java environment", {
   expect_equal(nbObjects, 0)
 })
 
@@ -265,7 +265,7 @@ test_that("Testing size of ArrayList object after adding two complex objects", {
 
 largeNumberOfArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10),601))
 
-test_that("The size of a large java.arraylist object", {
+test_that("The size of a large java.list object", {
             expect_equal(length(largeNumberOfArrayLists), 601)
           })
 
