@@ -108,6 +108,41 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
   return(str)
 }
 
+
+.getParametersLength <- function(parameters) {
+  maxLength <- 0
+  if (length(parameters) > 0) {
+    for (i in 1:length(parameters)) {
+      thisParameterLength <- length(parameters[[i]])
+      if (thisParameterLength >= maxLength) {
+        maxLength <- length(parameters[[i]])
+        #        stop(paste("The J4R package allows for vectors than do not exceed", maxVectorLength, "in length. You can use a loop instead.", sep=" "))
+      } else if (thisParameterLength > 1) {
+        stop("The parameters are not consistent! Those with sizes greater than 1 should all have the same size!")
+      }
+    }
+  }
+  return(maxLength)
+}
+
+
+.getSourceLength <- function(source, parametersLength) {
+  if (.getClass(source) == "java.object") {   ### a single java.object instance has a length of 1
+    sourceLength <- 1
+  } else { ## either a java.list or a vector
+    lengthSource <- length(source)
+    if (lengthSource > 1 && parametersLength > 1 && lengthSource != parametersLength) {
+      stop("The length of the java.list object or the vector is inconsistent with the length of the parameters!")
+    } else {
+      sourceLength <- length(source)
+    }
+  }
+  return(sourceLength)
+}
+
+
+
+
 #'
 #' Create Java objects
 #'
@@ -240,11 +275,143 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
   return(command)
 }
 
+.constructSourcePartCommand <- function(prefix, source, sourceLength, targetName, lowerIndex, upperIndex) {
+  if (.getClass(source) %in% c("java.object")) {   ### non-static method
+    command <- paste(prefix, paste("java.object", .translateJavaObject(source), sep=""), targetName, sep=MainSplitter)
+  } else if (.getClass(source) %in% c("java.list")) {   ### non-static method
+    subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
+    command <- paste(prefix, paste("java.object", .translateJavaObject(subList), sep=""), targetName, sep=MainSplitter)
+  } else {  ### static method
+    if (sourceLength == 1) {
+      command <- paste(prefix, paste(class(source), source, sep=""), targetName, sep=MainSplitter)
+    } else {
+      command <- paste(prefix, paste(class(source), paste(source[lowerIndex:upperIndex], collapse=SubSplitter), sep=""), targetName, sep=MainSplitter)
+    }
+  }
+  return(command)
+}
+
+#'
+#' Get public field
+#'
+#' This function gets the value of a particular field, which can be either static or not. If the field is static,
+#' the source should be a valid class name.
+#'
+#' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
+#' a string representing the Java class name in case of static method
+#' @param fieldName the name of the field to be set
+#'
+#' @export
+getJavaField <- function(source, fieldName) {
+  if (length(fieldName) != 1) {
+    stop("The function getJavaField can only take a single field name!" )
+  }
+  parametersLength <- 0
+  maxLength <- parametersLength
+  sourceLength <- .getSourceLength(source, parametersLength)
+  if (sourceLength > maxLength) {
+    maxLength <- sourceLength ### then the source drives the nb of calls
+  }
+
+  nbCalls <- ceiling(maxLength / maxVectorLength)
+
+  output <- NULL
+  for (i in 1:nbCalls) {
+    lowerIndex <- (i-1) * maxVectorLength + 1
+    upperIndex <- i * maxVectorLength
+    if (upperIndex > maxLength) {
+      upperIndex <- maxLength
+    }
+
+    command <- .constructSourcePartCommand("field", source, sourceLength, fieldName, lowerIndex, upperIndex)
+
+    utils::write.socket(.getMainSocket(), command)
+    callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
+    result <- .processCallback(callback)
+    if (maxLength == 1) {
+      return(result)
+    } else {
+      if (is.null(output)) {
+        output <- result
+      } else {
+        if (.getClass(output) == "java.list") {
+          output <- .dropAllIntoFirstList(output, result)
+        } else {
+          output <- c(output, result)
+        }
+      }
+    }
+  }
+  return(output)
+}
+
+
+
+#'
+#' Set public fields
+#'
+#' This function sets a particular field, which can be either static or not. If the field is static,
+#' the source should be a valid class name.
+#'
+#' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
+#' a string representing the Java class name in case of static method
+#' @param fieldName the name of the field to be set
+#' @param value the new value of the field
+#'
+#' @export
+setJavaField <- function(source, fieldName, value) {
+  parameters <- list(value)
+  parametersLength <- .getParametersLength(parameters)
+  maxLength <- parametersLength
+  sourceLength <- .getSourceLength(source, parametersLength)
+  if (sourceLength > maxLength) {
+    maxLength <- sourceLength ### then the source drives the nb of calls
+  }
+
+  nbCalls <- ceiling(maxLength / maxVectorLength)
+
+  output <- NULL
+  for (i in 1:nbCalls) {
+    lowerIndex <- (i-1) * maxVectorLength + 1
+    upperIndex <- i * maxVectorLength
+    if (upperIndex > maxLength) {
+      upperIndex <- maxLength
+    }
+
+    command <- .constructSourcePartCommand("field", source, sourceLength, fieldName, lowerIndex, upperIndex)
+
+    if (length(parameters) > 0) {
+      if (maxLength == 1) {
+        command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)
+      } else {
+        command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
+      }
+    }
+    utils::write.socket(.getMainSocket(), command)
+    callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
+    result <- .processCallback(callback)
+    if (maxLength == 1) {
+      return(result)
+    } else {
+      if (is.null(output)) {
+        output <- result
+      } else {
+        if (.getClass(output) == "java.list") {
+          output <- .dropAllIntoFirstList(output, result)
+        } else {
+          output <- c(output, result)
+        }
+      }
+    }
+  }
+  return(output)
+}
+
 
 #'
 #' Call a Java method
 #'
-#' This method calls a public method in a particular class of object. If the javaObject parameters or the additional
+#' This function calls a public method in a particular class of object. If the javaObject parameters or the additional
 #' parameters (...) include vectors, the method is called several times and a vector of primitive or a list of java
 #' instances can be returned.
 #'
@@ -276,16 +443,7 @@ callJavaMethod <- function(source, methodName, ...) {
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
   maxLength <- parametersLength
-  if (.getClass(source) == "java.object") {   ### a single java.object instance has a length of 1
-    sourceLength <- 1
-  } else { ## either a java.list or a vector
-    lengthSource <- length(source)
-    if (lengthSource > 1 && parametersLength > 1 && lengthSource != parametersLength) {
-      stop("The length of the java.list object or the vector is inconsistent with the length of the parameters!")
-    } else {
-      sourceLength <- length(source)
-    }
-  }
+  sourceLength <- .getSourceLength(source, parametersLength)
 
   if (sourceLength > maxLength) {
     maxLength <- sourceLength ### then the source drives the nb of calls
@@ -301,18 +459,8 @@ callJavaMethod <- function(source, methodName, ...) {
       upperIndex <- maxLength
     }
 
-    if (.getClass(source) %in% c("java.object")) {   ### non-static method
-      command <- paste("method", paste("java.object", .translateJavaObject(source), sep=""), methodName, sep=MainSplitter)
-    } else if (.getClass(source) %in% c("java.list")) {   ### non-static method
-      subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
-      command <- paste("method", paste("java.object", .translateJavaObject(subList), sep=""), methodName, sep=MainSplitter)
-    } else {  ### static method
-      if (sourceLength == 1) {
-        command <- paste("method", paste(class(source), source, sep=""), methodName, sep=MainSplitter)
-      } else {
-        command <- paste("method", paste(class(source), paste(source[lowerIndex:upperIndex], collapse=SubSplitter), sep=""), methodName, sep=MainSplitter)
-      }
-    }
+    command <- .constructSourcePartCommand("method", source, sourceLength, methodName, lowerIndex, upperIndex)
+
     if (length(parameters) > 0) {
       if (maxLength == 1) {
         command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)

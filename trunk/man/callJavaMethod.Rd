@@ -7,7 +7,7 @@
 callJavaMethod(source, methodName, ...)
 }
 \arguments{
-\item{source}{this should be either a java.arraylist instance or a single java.object instance for non-static methods or
+\item{source}{this should be either a java.list instance or a single java.object instance for non-static methods or
 a string representing the Java class name in case of static method}
 
 \item{methodName}{the name of the method}
@@ -18,7 +18,7 @@ a string representing the Java class name in case of static method}
 It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.
 }
 \description{
-This method calls a public method in a particular class of object. If the javaObject parameters or the additional
+This function calls a public method in a particular class of object. If the javaObject parameters or the additional
 parameters (...) include vectors, the method is called several times and a vector of primitive or a list of java
 instances can be returned.
 }

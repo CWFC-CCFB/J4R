@@ -336,6 +336,41 @@ test_that("Testing the substring method of String.class", {
 })
 
 
+#### Getting a public static field
+
+myFlowLayout <- getJavaField("java.awt.FlowLayout", "CENTER")
+test_that("Testing that the static field was correctly retrieved from FlowLayout", {
+  expect_equal(myFlowLayout, 1)
+})
+
+myBorderLayout <- getJavaField("java.awt.BorderLayout", "EAST")
+test_that("Testing that the static field was correctly retrieved BorderLayout", {
+  expect_equal(myBorderLayout, "East")
+})
+
+myMatrix <- createJavaObject("repicea.math.Matrix", as.integer(3), as.integer(3))
+nbColumns <- getJavaField(myMatrix, "m_iCols")
+test_that("Testing that the number of columns was correctly retrieved a Matrix instance", {
+  expect_equal(nbColumns, 3)
+})
+
+setJavaField(myMatrix, "m_iCols", as.integer(10))
+newNbColumns <- getJavaField(myMatrix, "m_iCols")
+test_that("Testing that the number of columns was correctly retrieved a Matrix instance", {
+  expect_equal(newNbColumns, 10)
+})
+
+myMatrices <- createJavaObject("repicea.math.Matrix", as.integer(c(3,3)), as.integer(c(3,3)))
+nbColumns <- getJavaField(myMatrices, "m_iCols")
+test_that("Testing that the number of columns was correctly retrieved a Matrix instance", {
+  expect_equal(nbColumns, c(3,3))
+})
+
+setJavaField(myMatrices, "m_iCols", as.integer(c(10,7)))
+newNbColumns <- getJavaField(myMatrices, "m_iCols")
+test_that("Testing that the number of columns was correctly retrieved a Matrix instance", {
+  expect_equal(newNbColumns, c(10,7))
+})
 
 ####  Shutting down Java ####
 
