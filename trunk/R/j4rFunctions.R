@@ -149,7 +149,11 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
   parametersLength <- .getParametersLength(parameters)
   firstCommand <- "create"
   if (isNullObject) {
-    firstCommand <- "createnull"  ### TODO we should be able to create null array here perhaps inroduce the createnullarray
+    if (isArray) {
+      firstCommand <- "createnullarray"
+    } else {
+      firstCommand <- "createnull"
+    }
   } else if (isArray) {
     firstCommand <- "createarray"
   }
@@ -272,14 +276,15 @@ callJavaMethod <- function(source, methodName, ...) {
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
   maxLength <- parametersLength
-  if (.getClass(source) == "java.list") {   ### check if the size of the source is compatible with the parameters length
-    if (length(source) != parametersLength && parametersLength > 1) {
-      stop("The length of the java.list object is inconsistent with the length of the parameters!")
+  if (.getClass(source) == "java.object") {   ### a single java.object instance has a length of 1
+    sourceLength <- 1
+  } else { ## either a java.list or a vector
+    lengthSource <- length(source)
+    if (lengthSource > 1 && parametersLength > 1 && lengthSource != parametersLength) {
+      stop("The length of the java.list object or the vector is inconsistent with the length of the parameters!")
     } else {
       sourceLength <- length(source)
     }
-  } else { ## either a java.object or a string that represents a class for static methods
-    sourceLength <- 1
   }
 
   if (sourceLength > maxLength) {
@@ -301,8 +306,12 @@ callJavaMethod <- function(source, methodName, ...) {
     } else if (.getClass(source) %in% c("java.list")) {   ### non-static method
       subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
       command <- paste("method", paste("java.object", .translateJavaObject(subList), sep=""), methodName, sep=MainSplitter)
-    } else {  ### static method ### TODO call static method with other method and implement calls to primitive wrappers
-      command <- paste("method", paste("java.class", source, sep=""), methodName, sep=MainSplitter)
+    } else {  ### static method
+      if (sourceLength == 1) {
+        command <- paste("method", paste(class(source), source, sep=""), methodName, sep=MainSplitter)
+      } else {
+        command <- paste("method", paste(class(source), paste(source[lowerIndex:upperIndex], collapse=SubSplitter), sep=""), methodName, sep=MainSplitter)
+      }
     }
     if (length(parameters) > 0) {
       if (maxLength == 1) {

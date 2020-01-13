@@ -282,6 +282,61 @@ test_that("Adding 1 to 601 to the 601 ArrayList instances", {
   expect_equal(callJavaMethod(largeNumberOfArrayLists[[2]], "get", 0:1), c(10, 2))
 })
 
+
+#### Creating a null array ####
+
+myNullDoubleArray <- createJavaObject("double", 3, 3, isArray=T, isNullObject = T)
+test_that("Testing if the array has been produced", {
+  expect_equal(myNullDoubleArray$class, "repicea.lang.codetranslator.REnvironment$NullWrapper")
+})
+
+#### Testing if a null array is still considered when invoking a method or a constructor
+
+out <- tryCatch(
+  {
+    createJavaObject("repicea.math.Matrix", myNullDoubleArray) ### should throw a null pointer exception as it gets to the consctructor but the array of double is null
+    "did not throw any exception"
+  },
+  error = function(cond) {
+    return("threw an exception")
+  }
+)
+
+test_that("If the null array has been considered then there should be an exception in the Matrix.init()", {
+            expect_equal(out, "threw an exception")
+          })
+
+#### Testing if the call to a non static method throws an exception when looking for a static method
+
+out <- tryCatch(
+  {
+    callJavaMethod("repicea.stats.REpiceaRandom", "nextDouble") ### should throw an exception that this is not a static method
+    "did not throw any exception"
+  },
+  error = function(cond) {
+    return("threw an exception")
+  }
+)
+
+test_that("If the method was non static, then there should be an exception", {
+  expect_equal(out, "threw an exception")
+})
+
+#### Calling methods in primitive wrapper in Java
+
+result <- callJavaMethod(c(3.0, 5), "intValue")
+
+test_that("Testing the intValue method of Double.class", {
+  expect_equal(result, c(3,5))
+})
+
+result <- callJavaMethod(rep("myString",10), "substring", as.integer(1), as.integer(5))
+test_that("Testing the substring method of String.class", {
+  expect_equal(result, rep("yStr", 10))
+})
+
+
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:
