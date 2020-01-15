@@ -36,7 +36,6 @@ maxVectorLength <- 200
 #' Connect to Java environment
 #'
 #' This function connects the R environment to a gateway server that runs in Java.
-#' The extension path must be set before calling this function. See setJavaExtensionPath.
 #'
 #' @param port the local port (the port is set to 18011 by default)
 #' @param extensionPath the path to jar files that can be loaded by the system classloader
