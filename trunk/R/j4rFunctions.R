@@ -491,22 +491,6 @@ callJavaMethod <- function(source, methodName, ...) {
   return(output)
 }
 
-.getParametersLength <- function(parameters) {
-  maxLength <- 0
-  if (length(parameters) > 0) {
-    for (i in 1:length(parameters)) {
-      thisParameterLength <- length(parameters[[i]])
-      if (thisParameterLength >= maxLength) {
-        maxLength <- length(parameters[[i]])
-#        stop(paste("The J4R package allows for vectors than do not exceed", maxVectorLength, "in length. You can use a loop instead.", sep=" "))
-      } else if (thisParameterLength > 1) {
-          stop("The parameters are not consistent! Those with sizes greater than 1 should all have the same size!")
-      }
-    }
-  }
-  return(maxLength)
-}
-
 .processCallback <- function(callback) {
 #  print(paste("Processing this callback : ", callback, sep=""))
   if(regexpr("Exception", callback) >= 0) {
