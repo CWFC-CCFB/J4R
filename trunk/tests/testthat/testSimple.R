@@ -372,6 +372,7 @@ test_that("Testing that the number of columns was correctly retrieved a Matrix i
   expect_equal(newNbColumns, c(10,7))
 })
 
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:

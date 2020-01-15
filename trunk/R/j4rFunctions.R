@@ -112,7 +112,11 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
   maxLength <- 0
   if (length(parameters) > 0) {
     for (i in 1:length(parameters)) {
-      thisParameterLength <- length(parameters[[i]])
+      if (.getClass(parameters[[i]]) == "java.object") {
+        thisParameterLength <- 1
+      } else {
+        thisParameterLength <- length(parameters[[i]])
+      }
       if (thisParameterLength >= maxLength) {
         maxLength <- length(parameters[[i]])
         #        stop(paste("The J4R package allows for vectors than do not exceed", maxVectorLength, "in length. You can use a loop instead.", sep=" "))
