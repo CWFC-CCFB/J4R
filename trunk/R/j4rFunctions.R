@@ -754,31 +754,40 @@ checkIfExtensionsContain <- function(myJavaLibrary, packageName = NULL, automati
       isLibIn <- grepl(myJavaLibrary, listURLs)
     }
     if (!isLibIn && automaticRestart) {
-      message(paste("The", myJavaLibrary, "is not in the extension path! The Java server will shut down and start over again!", sep=" "))
-      shutdownJava()
-      if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
-        rootPath <- paste(find.package(packageName), "inst", sep="/")
-      } else {  ### normal mode
-        rootPath <- find.package(packageName)
+      filePath <- .getLibraryPath(packageName, myJavaLibrary)
+      if (is.null(filePath)) {
+        stop("The library is not in the extension path and the .jar file seems to be missing.")
+      } else {
+        message(paste("The", myJavaLibrary, "is not in the extension path! The Java server will shut down and start over again!", sep=" "))
+        shutdownJava()
+        connectToJava(extensionPath = filePath)
       }
-      connectToJava(extensionPath = rootPath)
     } else {
       return(isLibIn)
     }
   } else {
     message("The Java server is not running.")
     if (automaticRestart) {
-      message("The Java server will restart with proper extensions.")
-      if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
-        rootPath <- paste(find.package(packageName),"inst", sep="/")
-      } else {  ### normal mode
-        rootPath <- find.package(packageName)
+      filePath <- .getLibraryPath(packageName, myJavaLibrary)
+      if (is.null(filePath)) {
+        stop("The .jar file seems to be missing.")
+      } else {
+        message("The Java server will restart with proper extensions.")
+        connectToJava(extensionPath = filePath)
       }
-      connectToJava(extensionPath = rootPath)
     }
   }
 }
 
-
+.getLibraryPath <- function(packageName, myJavaLibrary) {
+  if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
+    filePath <- paste(find.package(packageName), "inst", myJavaLibrary, sep="/")
+  } else if (file.exists(paste(find.package(packageName), myJavaLibrary, sep="/"))) {  ### normal mode
+    filePath <- paste(find.package(packageName), myJavaLibrary, sep="/")
+  } else {
+    filePath <- NULL
+  }
+  return(filePath)
+}
 
 
