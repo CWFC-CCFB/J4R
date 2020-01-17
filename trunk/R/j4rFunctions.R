@@ -679,10 +679,15 @@ callJavaGC <- function(...) {
 #'
 #' @export
 getClassLoaderURLs <- function() {
-  classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
-  urls <- callJavaMethod(classLoader, "getURLs")
+  # classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
+  # urls <- callJavaMethod(classLoader, "getURLs")    ### This method is no longer available in Java 11
+  # urlsList <- getAllValuesFromArray(urls)
+  # return(callJavaMethod(urlsList, "toString"))
+
+  pathSeparator <- callJavaMethod("java.lang.System", "getProperty", "path.separator")
+  urls <- callJavaMethod(callJavaMethod("java.lang.System", "getProperty", "java.class.path"), "split", pathSeparator)
   urlsList <- getAllValuesFromArray(urls)
-  return(callJavaMethod(urlsList, "toString"))
+  return(urlsList)
 }
 
 
