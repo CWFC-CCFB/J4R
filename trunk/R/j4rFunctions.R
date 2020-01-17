@@ -48,6 +48,7 @@ maxVectorLength <- 200
 connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     message("The object j4rSocket already exists! It seems R is already connected to the Java server.")
+    return(FALSE)
   } else {
     if (!debug) {
       message("Starting Java server...")
@@ -75,10 +76,11 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
       system(completeCommand, wait=FALSE)
       Sys.sleep(2)
     }
+    message(paste("Connecting on port", port))
+    assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
+    utils::read.socket(.getMainSocket(), maxlen = bufferLength)
+    return(TRUE)
   }
-  message(paste("Connecting on port", port))
-  assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
-  utils::read.socket(.getMainSocket(), maxlen = bufferLength)
 }
 
 

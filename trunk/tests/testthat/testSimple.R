@@ -372,6 +372,13 @@ test_that("Testing that the number of columns was correctly retrieved a Matrix i
   expect_equal(newNbColumns, c(10,7))
 })
 
+#### Testing that two calls to connectToJava will not affect the socket connection ####
+
+callback <- connectToJava()
+test_that("Testing that the second call to connectToJava returns FALSE", {
+  expect_equal(callback, FALSE)
+})
+
 
 ####  Shutting down Java ####
 
