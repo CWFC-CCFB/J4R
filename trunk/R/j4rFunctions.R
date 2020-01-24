@@ -794,9 +794,7 @@ checkIfExtensionsContain <- function(myJavaLibrary, packageName = NULL, automati
 #' Kills the JVM and removes all the java.object instances from the environment
 #'
 #' This function should be used when the control over the Java server has been lost.
-#' For instance, if the server is executing an endless task, one might use the
-#' cancelJavaTask function. However, if it does not work, then the JVM can be killed
-#' using this function. All references to Java objects are then lost.
+#' The JVM can be killed using this function. All references to Java objects are then lost.
 #'
 #' @export
 killJava <- function() {

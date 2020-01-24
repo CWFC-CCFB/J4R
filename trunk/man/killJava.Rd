@@ -8,7 +8,5 @@ killJava()
 }
 \description{
 This function should be used when the control over the Java server has been lost.
-For instance, if the server is executing an endless task, one might use the
-cancelJavaTask function. However, if it does not work, then the JVM can be killed
-using this function. All references to Java objects are then lost.
+The JVM can be killed using this function. All references to Java objects are then lost.
 }
