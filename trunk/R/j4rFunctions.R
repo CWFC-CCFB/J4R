@@ -802,6 +802,8 @@ killJava <- function() {
   utils::read.socket(emergencySocket, maxlen = bufferLength)
   utils::write.socket(socket = emergencySocket, "emergencyShutdown")
   .internalShutdown()
+  Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
+  message("Done.")
 }
 
 
