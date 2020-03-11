@@ -679,15 +679,21 @@ callJavaGC <- function(...) {
 #'
 #' @export
 getClassLoaderURLs <- function() {
-  # classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
-  # urls <- callJavaMethod(classLoader, "getURLs")    ### This method is no longer available in Java 11
-  # urlsList <- getAllValuesFromArray(urls)
-  # return(callJavaMethod(urlsList, "toString"))
-
   pathSeparator <- callJavaMethod("java.lang.System", "getProperty", "path.separator")
   urls <- callJavaMethod(callJavaMethod("java.lang.System", "getProperty", "java.class.path"), "split", pathSeparator)
   urlsList <- getAllValuesFromArray(urls)
   return(urlsList)
+}
+
+#'
+#' Returns the Java version
+#'
+#' @export
+getJavaVersion <- function() {
+  javaVersion <- callJavaMethod("java.lang.System","getProperty","java.version")
+  object <- callJavaMethod(javaVersion, "split", "\\.")
+  javaVersion <- getAllValuesFromArray(object)
+  return(javaVersion)
 }
 
 
@@ -808,3 +814,36 @@ killJava <- function() {
 
 
 
+#'
+#' Retrieves the revision of the REpicea library
+#'
+#' @export
+getREpiceaRevision <- function() {
+  version <- callJavaMethod("repicea.app.REpiceaJARSVNAppVersion", "getInstance")
+  revision <- callJavaMethod(version, "getRevision")
+  return(revision)
+}
+
+#'
+#' Dynamically adds an url to the classpath
+#'
+#' @export
+addUrlToClassPath <- function(urlString) {
+  javaVersion <- getJavaVersion()
+  url <- createJavaObject("java.net.URL", "urlString")
+  classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
+  classLoaderClass <- callJavaMethod(classLoader, "getClass")
+  classLoaderSuperClass <- callJavaMethod(classLoaderClass, "getSuperclass")
+  urlClass <- callJavaMethod(classLoader, "loadClass", "java.net.URL")
+  if (javaVersion[2] == "8") {
+    urlArray <- createJavaObject("java.lang.Class", 1, isArray = TRUE)
+    setValueInArray(urlArray, urlClass, 0)
+    addURLMethod <- callJavaMethod(classLoaderSuperClass, "getDeclaredMethod","addURL", urlArray)
+    callJavaMethod(addURLMethod, "setAccessible", T)
+    objectArray <- createJavaObject("java.lang.Object", 1, isArray = TRUE)
+    setValueInArray(objectArray, url, 0)
+    callJavaMethod(addURLMethod, "invoke", classLoader, objectArray)
+  }
+
+
+}
