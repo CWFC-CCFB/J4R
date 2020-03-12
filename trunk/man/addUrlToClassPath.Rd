@@ -6,10 +6,10 @@
 \usage{
 addUrlToClassPath(urlString)
 }
+\arguments{
+\item{urlString}{a character representing the complete path to the directory or the JAR file}
+}
 \description{
 This function makes it possible to add a directory or a JAR file
 to the class path.
-}
-\details{
-@param urlString a character representing the complete path to the directory or the JAR file
 }

@@ -4,7 +4,7 @@
 \alias{checkIfClasspathContains}
 \title{Check if a Library has been loaded}
 \usage{
-checkIfClasspathContains(myJavaLibrary, packageName = NULL)
+checkIfClasspathContains(myJavaLibrary)
 }
 \arguments{
 \item{myJavaLibrary}{a character string that stands for the java library (e.g. repicea.jar)}

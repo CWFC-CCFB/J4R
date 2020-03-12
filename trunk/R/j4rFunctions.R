@@ -83,7 +83,6 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
   }
 }
 
-
 .getMainSocket <- function() {
   return(get("j4rSocket", envir = cacheEnv))
 }
@@ -691,13 +690,12 @@ getClassLoaderURLs <- function() {
 getJavaVersion <- function() {
   if (exists("j4rSocket", envir = cacheEnv)) {
     javaVersion <- callJavaMethod("java.lang.System","getProperty","java.version")
-#    object <- callJavaMethod(javaVersion, "split", "\\.")
-#    javaVersion <- getAllValuesFromArray(object)
     return(javaVersion)
   } else {
     output <- system2("java", args = c("-version"), stdout = T, stderr = T, wait = F)
-    javaVersion <- substring(output[1], first=regexpr("version", output[1])[[1]] + 9, last = nchar(output[1]) - 1)
-    return(javaVersion) ### TODO check if this works with Java 11 and Java 13
+    javaVersion <- substring(output[1], first=regexpr("\"", output[1])[[1]] + 1)
+    javaVersion <- substring(javaVersion, first=1, last = regexpr("\"", javaVersion)[[1]] - 1)
+    return(javaVersion)
   }
 }
 
@@ -729,7 +727,7 @@ getMemorySettings <- function() {
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to J4R!")
-  packageStartupMessage("Please, make sure that Java (version 8 or greater) is part of the path.")
+  packageStartupMessage("Please, make sure that Java (version 8 or later) is part of the path.")
   packageStartupMessage("For more information, visit https://sourceforge.net/p/repiceasource/wiki/J4R/ .")
 }
 
@@ -746,7 +744,7 @@ getMemorySettings <- function() {
 #' @param myJavaLibrary a character string that stands for the java library (e.g. repicea.jar)
 #'
 #' @export
-checkIfClasspathContains <- function(myJavaLibrary, packageName = NULL) {
+checkIfClasspathContains <- function(myJavaLibrary) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     listURLs <- getClassLoaderURLs()
     isLibIn <- FALSE
@@ -811,7 +809,7 @@ getREpiceaRevision <- function() {
 #' This function makes it possible to add a directory or a JAR file
 #' to the class path.
 #'
-#'  @param urlString a character representing the complete path to the directory or the JAR file
+#' @param urlString a character representing the complete path to the directory or the JAR file
 #'
 #' @export
 addUrlToClassPath <- function(urlString) {
