@@ -2,10 +2,14 @@
 % Please edit documentation in R/j4rFunctions.R
 \name{addUrlToClassPath}
 \alias{addUrlToClassPath}
-\title{Dynamically adds an url to the classpath}
+\title{Dynamically adds an url to the classpath.}
 \usage{
-addUrlToClassPath(url)
+addUrlToClassPath(urlString)
 }
 \description{
-Dynamically adds an url to the classpath
+This function makes it possible to add a directory or a JAR file
+to the class path.
+}
+\details{
+@param urlString a character representing the complete path to the directory or the JAR file
 }

@@ -679,9 +679,8 @@ callJavaGC <- function(...) {
 #'
 #' @export
 getClassLoaderURLs <- function() {
-  pathSeparator <- callJavaMethod("java.lang.System", "getProperty", "path.separator")
-  urls <- callJavaMethod(callJavaMethod("java.lang.System", "getProperty", "java.class.path"), "split", pathSeparator)
-  urlsList <- getAllValuesFromArray(urls)
+  urls <- callJavaMethod("repicea.lang.REpiceaSystem", "getClassPathURLs")
+  urlsList <- getAllValuesFromListObject(urls)
   return(urlsList)
 }
 
@@ -690,10 +689,16 @@ getClassLoaderURLs <- function() {
 #'
 #' @export
 getJavaVersion <- function() {
-  javaVersion <- callJavaMethod("java.lang.System","getProperty","java.version")
-  object <- callJavaMethod(javaVersion, "split", "\\.")
-  javaVersion <- getAllValuesFromArray(object)
-  return(javaVersion)
+  if (exists("j4rSocket", envir = cacheEnv)) {
+    javaVersion <- callJavaMethod("java.lang.System","getProperty","java.version")
+#    object <- callJavaMethod(javaVersion, "split", "\\.")
+#    javaVersion <- getAllValuesFromArray(object)
+    return(javaVersion)
+  } else {
+    output <- system2("java", args = c("-version"), stdout = T, stderr = T, wait = F)
+    javaVersion <- substring(output[1], first=regexpr("version", output[1])[[1]] + 9, last = nchar(output[1]) - 1)
+    return(javaVersion) ### TODO check if this works with Java 11 and Java 13
+  }
 }
 
 
@@ -739,13 +744,9 @@ getMemorySettings <- function() {
 #' It checks if a particular library is part of the classpath.
 #'
 #' @param myJavaLibrary a character string that stands for the java library (e.g. repicea.jar)
-#' @param packageName a character string that stands for the package if the function is to be used
-#' by a package (it is null by default)
-#' @param automaticRestart a logical (FALSE by default) that enables an automatic restart of the Java
-#' server so that the library is included in the classpath
 #'
 #' @export
-checkIfExtensionsContain <- function(myJavaLibrary, packageName = NULL, automaticRestart = FALSE) {
+checkIfClasspathContains <- function(myJavaLibrary, packageName = NULL) {
   if (exists("j4rSocket", envir = cacheEnv)) {
     listURLs <- getClassLoaderURLs()
     isLibIn <- FALSE
@@ -759,29 +760,9 @@ checkIfExtensionsContain <- function(myJavaLibrary, packageName = NULL, automati
     } else {
       isLibIn <- grepl(myJavaLibrary, listURLs)
     }
-    if (!isLibIn && automaticRestart) {
-      filePath <- .getLibraryPath(packageName, myJavaLibrary)
-      if (is.null(filePath)) {
-        stop("The library is not in the extension path and the .jar file seems to be missing.")
-      } else {
-        message(paste("The", myJavaLibrary, "is not in the extension path! The Java server will shut down and start over again!", sep=" "))
-        shutdownJava()
-        connectToJava(extensionPath = filePath)
-      }
-    } else {
-      return(isLibIn)
-    }
+    return(isLibIn)
   } else {
     message("The Java server is not running.")
-    if (automaticRestart) {
-      filePath <- .getLibraryPath(packageName, myJavaLibrary)
-      if (is.null(filePath)) {
-        stop("The .jar file seems to be missing.")
-      } else {
-        message("The Java server will restart with proper extensions.")
-        connectToJava(extensionPath = filePath)
-      }
-    }
   }
 }
 
@@ -825,25 +806,14 @@ getREpiceaRevision <- function() {
 }
 
 #'
-#' Dynamically adds an url to the classpath
+#' Dynamically adds an url to the classpath.
+#'
+#' This function makes it possible to add a directory or a JAR file
+#' to the class path.
+#'
+#'  @param urlString a character representing the complete path to the directory or the JAR file
 #'
 #' @export
 addUrlToClassPath <- function(urlString) {
-  javaVersion <- getJavaVersion()
-  url <- createJavaObject("java.net.URL", "urlString")
-  classLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
-  classLoaderClass <- callJavaMethod(classLoader, "getClass")
-  classLoaderSuperClass <- callJavaMethod(classLoaderClass, "getSuperclass")
-  urlClass <- callJavaMethod(classLoader, "loadClass", "java.net.URL")
-  if (javaVersion[2] == "8") {
-    urlArray <- createJavaObject("java.lang.Class", 1, isArray = TRUE)
-    setValueInArray(urlArray, urlClass, 0)
-    addURLMethod <- callJavaMethod(classLoaderSuperClass, "getDeclaredMethod","addURL", urlArray)
-    callJavaMethod(addURLMethod, "setAccessible", T)
-    objectArray <- createJavaObject("java.lang.Object", 1, isArray = TRUE)
-    setValueInArray(objectArray, url, 0)
-    callJavaMethod(addURLMethod, "invoke", classLoader, objectArray)
-  }
-
-
+  callJavaMethod("repicea.lang.REpiceaSystem", "addToClassPath", urlString)
 }

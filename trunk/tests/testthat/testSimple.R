@@ -188,9 +188,9 @@ test_that("Check values in the array", {
 
 #### Check if libraries are part of the path ####
 
-test_that("Check the return value of checkIfExtensionsContain", {
-  expect_equal(checkIfExtensionsContain("repicea.jar"), TRUE)
-  expect_equal(checkIfExtensionsContain("lerfob-foresttools.jar"), FALSE)
+test_that("Check the return value of checkIfClasspathContains", {
+  expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
+  expect_equal(checkIfClasspathContains("lerfob-foresttools.jar"), FALSE)
 })
 
 myNewList <- createJavaObject("java.util.ArrayList")
@@ -380,9 +380,16 @@ test_that("Testing that the second call to connectToJava returns FALSE", {
 })
 
 
+versionIn <- getJavaVersion()
+
 ####  Shutting down Java ####
 
 # The server is shutted down through the shutdownJava function:
 
 shutdownJava()
 
+versionOut <- getJavaVersion()
+
+test_that("Testing that the getJavaVersion gives the same result whether or not the server is online", {
+  expect_equal(versionIn, versionOut)
+})
