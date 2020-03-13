@@ -46,7 +46,7 @@ maxVectorLength <- 200
 #'
 #' @export
 connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
-  if (exists("j4rSocket", envir = cacheEnv)) {
+  if (isConnectedToJava()) {
     message("The object j4rSocket already exists! It seems R is already connected to the Java server.")
     return(FALSE)
   } else {
@@ -144,7 +144,17 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
   return(sourceLength)
 }
 
-
+#'
+#' Checks if the Java server is running
+#'
+#' This is done by checking f the socket connection to the JVM exists.
+#'
+#' @return a logical
+#'
+#' @export
+isConnectedToJava <- function() {
+  return(exists("j4rSocket", envir = cacheEnv))
+}
 
 
 #'
@@ -606,7 +616,7 @@ shutdownJava <- function() {
 }
 
 .internalShutdown <- function() {
-  if (exists("j4rSocket", envir = cacheEnv)) {
+  if (isConnectedToJava()) {
     utils::write.socket(.getMainSocket(), "closeConnection")
     message("Closing connection and removing socket...")
     rm("j4rSocket", envir = cacheEnv)
@@ -688,7 +698,7 @@ getClassLoaderURLs <- function() {
 #'
 #' @export
 getJavaVersion <- function() {
-  if (exists("j4rSocket", envir = cacheEnv)) {
+  if (isConnectedToJava()) {
     javaVersion <- callJavaMethod("java.lang.System","getProperty","java.version")
     return(javaVersion)
   } else {
@@ -745,7 +755,7 @@ getMemorySettings <- function() {
 #'
 #' @export
 checkIfClasspathContains <- function(myJavaLibrary) {
-  if (exists("j4rSocket", envir = cacheEnv)) {
+  if (isConnectedToJava()) {
     listURLs <- getClassLoaderURLs()
     isLibIn <- FALSE
     if (length(listURLs) > 1) {
