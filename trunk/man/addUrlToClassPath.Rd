@@ -4,12 +4,19 @@
 \alias{addUrlToClassPath}
 \title{Dynamically adds an url to the classpath.}
 \usage{
-addUrlToClassPath(urlString)
+addUrlToClassPath(urlString, packageName = NULL)
 }
 \arguments{
-\item{urlString}{a character representing the complete path to the directory or the JAR file}
+\item{urlString}{a character representing the complete path to the directory or the JAR file
+if the packageName parameter is null. Otherwise, it can just be the name of the JAR file.}
+
+\item{packageName}{a character representing the package.}
 }
 \description{
 This function makes it possible to add a directory or a JAR file
-to the class path.
+to the class path. If the packageName parameter is null then the urlString
+parameter must be the complete path to the directory. Otherwise, it can be
+the name of the JAR file and the function will find the path through the package
+name. A non null packageName parameter is typically used in packages that rely
+on J4R.
 }

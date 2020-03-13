@@ -808,20 +808,41 @@ killJava <- function() {
 #'
 #' @export
 getREpiceaRevision <- function() {
-  version <- callJavaMethod("repicea.app.REpiceaJARSVNAppVersion", "getInstance")
-  revision <- callJavaMethod(version, "getRevision")
-  return(revision)
+  if (isConnectedToJava()) {
+    version <- callJavaMethod("repicea.app.REpiceaJARSVNAppVersion", "getInstance")
+    revision <- callJavaMethod(version, "getRevision")
+    return(revision)
+  } else {
+    message("The Java server is not running.")
+  }
 }
 
 #'
 #' Dynamically adds an url to the classpath.
 #'
 #' This function makes it possible to add a directory or a JAR file
-#' to the class path.
+#' to the class path. If the packageName parameter is null then the urlString
+#' parameter must be the complete path to the directory. Otherwise, it can be
+#' the name of the JAR file and the function will find the path through the package
+#' name. A non null packageName parameter is typically used in packages that rely
+#' on J4R.
 #'
 #' @param urlString a character representing the complete path to the directory or the JAR file
+#' if the packageName parameter is null. Otherwise, it can just be the name of the JAR file.
+#' @param packageName a character representing the package.
 #'
 #' @export
-addUrlToClassPath <- function(urlString) {
-  callJavaMethod("repicea.lang.REpiceaSystem", "addToClassPath", urlString)
+addUrlToClassPath <- function(urlString, packageName = NULL) {
+  if (isConnectedToJava()) {
+    if (is.null(packageName)) {
+      callJavaMethod("repicea.lang.REpiceaSystem", "addToClassPath", urlString)
+    } else {
+      callJavaMethod("repicea.lang.REpiceaSystem", "addToClassPath", .getLibraryPath(packageName, urlString))
+    }
+  } else {
+    message("The Java server is not running.")
+  }
 }
+
+
+
