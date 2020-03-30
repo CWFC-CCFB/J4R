@@ -65,13 +65,13 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
         }
         parms <- c(parms, "-mem", as.integer(memorySize))
       }
-      if (file.exists(paste(find.package("J4R"),"inst/java/repicea.jar", sep="/"))) {  ### test mode
+      if (file.exists(paste(find.package("J4R"),"inst/java/j4r.jar", sep="/"))) {  ### test mode
         rootPath <- paste(find.package("J4R"),"inst", "java", sep="/")
       } else {  ### normal mode
         rootPath <- paste(find.package("J4R"), "java", sep="/")
       }
       #    message(rootPath)
-      path <- paste(rootPath,"repicea.jar",sep="/")
+      path <- paste(rootPath,"j4r.jar",sep="/")
       completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
       system(completeCommand, wait=FALSE)
       Sys.sleep(2)
@@ -688,7 +688,7 @@ callJavaGC <- function(...) {
 #'
 #' @export
 getClassLoaderURLs <- function() {
-  urls <- callJavaMethod("repicea.lang.REpiceaSystem", "getClassPathURLs")
+  urls <- callJavaMethod("j4r.lang.J4RSystem", "getClassPathURLs")
   urlsList <- getAllValuesFromListObject(urls)
   return(urlsList)
 }
@@ -803,19 +803,19 @@ killJava <- function() {
 
 
 
-#'
-#' Retrieves the revision of the REpicea library
-#'
-#' @export
-getREpiceaRevision <- function() {
-  if (isConnectedToJava()) {
-    version <- callJavaMethod("repicea.app.REpiceaJARSVNAppVersion", "getInstance")
-    revision <- callJavaMethod(version, "getRevision")
-    return(revision)
-  } else {
-    message("The Java server is not running.")
-  }
-}
+#' #'
+#' #' Retrieves the revision of the REpicea library
+#' #'
+#' #' @export
+#' getREpiceaRevision <- function() {
+#'   if (isConnectedToJava()) {
+#'     version <- callJavaMethod("repicea.app.REpiceaJARSVNAppVersion", "getInstance")
+#'     revision <- callJavaMethod(version, "getRevision")
+#'     return(revision)
+#'   } else {
+#'     message("The Java server is not running.")
+#'   }
+#' }
 
 #'
 #' Dynamically adds an url to the classpath.
@@ -835,9 +835,9 @@ getREpiceaRevision <- function() {
 addUrlToClassPath <- function(urlString, packageName = NULL) {
   if (isConnectedToJava()) {
     if (is.null(packageName)) {
-      callJavaMethod("repicea.lang.REpiceaSystem", "addToClassPath", urlString)
+      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", urlString)
     } else {
-      callJavaMethod("repicea.lang.REpiceaSystem", "addToClassPath", .getLibraryPath(packageName, urlString))
+      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", .getLibraryPath(packageName, urlString))
     }
   } else {
     message("The Java server is not running.")

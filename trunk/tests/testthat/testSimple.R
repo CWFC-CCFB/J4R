@@ -118,20 +118,20 @@ test_that("Removing all the java.list object and synchronizing yield no object l
 
 #### Instantiating an Enum variable ####
 
-# In this example, the Enum variable Species.Fagus_sylvatica is instantiated. Then calling the method name() on
+# In this example, the Enum variable ExceptionType is instantiated. Then calling the method name() on
 # this enum returns:
 
-beechEnum <- createJavaObject("repicea.simulation.species.REpiceaSpecies$Species", "Fagus_sylvatica")
-resultNameFunction <- callJavaMethod(beechEnum, "name")
+closeConnectionEnum <- createJavaObject("j4r.net.server.BasicClient$ClientRequest", "closeConnection")
+resultNameFunction <- callJavaMethod(closeConnectionEnum, "name")
 
-test_that("Testing the method name() on a Species enum variable", {
-  expect_equal(resultNameFunction, "Fagus_sylvatica")
+test_that("Testing the method name() on an ExceptionType enum variable", {
+  expect_equal(resultNameFunction, "closeConnection")
 })
 
 #### Instantiating many enum variables ####
 
-enumValue <- rep("alive", J4R::maxVectorLength)
-enumList <- createJavaObject("repicea.simulation.covariateproviders.treelevel.TreeStatusProvider$StatusClass", enumValue)
+enumValue <- rep("closeConnection", J4R::maxVectorLength)
+enumList <- createJavaObject("j4r.net.server.BasicClient$ClientRequest", enumValue)
 
 test_that(paste("Instantiating", J4R::maxVectorLength,  "times an enum variable", sep=" "), {
   expect_equal(length(enumList), J4R::maxVectorLength)
@@ -154,7 +154,7 @@ result <- createJavaObject("java.util.ArrayList", isNullObject = TRUE)
 result
 
 test_that("Create a NullWrapper instance", {
-  expect_equal(result$class, "repicea.lang.codetranslator.REnvironment$NullWrapper")
+  expect_equal(result$class, "j4r.lang.codetranslator.REnvironment$NullWrapper")
 })
 
 #### Creating a 3x3 array of integers
@@ -189,7 +189,7 @@ test_that("Check values in the array", {
 #### Check if libraries are part of the path ####
 
 test_that("Check the return value of checkIfClasspathContains", {
-  expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
+  expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
   expect_equal(checkIfClasspathContains("lerfob-foresttools.jar"), FALSE)
 })
 
@@ -287,10 +287,13 @@ test_that("Adding 1 to 601 to the 601 ArrayList instances", {
 
 myNullDoubleArray <- createJavaObject("double", 3, 3, isArray=T, isNullObject = T)
 test_that("Testing if the array has been produced", {
-  expect_equal(myNullDoubleArray$class, "repicea.lang.codetranslator.REnvironment$NullWrapper")
+  expect_equal(myNullDoubleArray$class, "j4r.lang.codetranslator.REnvironment$NullWrapper")
 })
 
 #### Testing if a null array is still considered when invoking a method or a constructor
+
+urlString <- paste(getwd(),"/javatests/repicea.jar", sep="")
+addUrlToClassPath(urlString)
 
 out <- tryCatch(
   {
@@ -347,6 +350,9 @@ myBorderLayout <- getJavaField("java.awt.BorderLayout", "EAST")
 test_that("Testing that the static field was correctly retrieved BorderLayout", {
   expect_equal(myBorderLayout, "East")
 })
+
+
+
 
 myMatrix <- createJavaObject("repicea.math.Matrix", as.integer(3), as.integer(3))
 nbColumns <- getJavaField(myMatrix, "m_iCols")

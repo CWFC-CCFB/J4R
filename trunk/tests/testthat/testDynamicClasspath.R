@@ -12,7 +12,7 @@ library(J4R)
 connectToJava()
 
 test_that("Check the return value of checkIfClasspathContains", {
-  expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
+  expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
   expect_equal(checkIfClasspathContains("mrnf-foresttools.jar"), FALSE)
 })
 
@@ -20,7 +20,7 @@ urlString <- paste(getwd(),"/javatests/mrnf-foresttools.jar", sep="")
 addUrlToClassPath(urlString)
 
 test_that("Check the return value of checkIfClasspathContains", {
-  expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
+  expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
   expect_equal(checkIfClasspathContains("mrnf-foresttools.jar"), TRUE)
 })
 
