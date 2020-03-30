@@ -9,7 +9,7 @@ Description: Makes it possible to create 'Java' objects and to execute 'Java' me
     through a socket connection from the R environment. Calls to 'Java' methods allow for 
     vectors so that a particular method is iteratively run on each element of the vector. A 
     score algorithm also makes the calls to 'Java' methods less restrictive. The gateway server
-    relies on a 'Java' library called 'REpicea' which was created under a LGPL 3.0 license (rev 576). The 
+    relies on a 'Java' library called 'REpicea' which was created under a LGPL-3 license. The 
     sources are available at <https://sourceforge.net/projects/repiceasource/>. To start the gateway
     server, 'Java' must be part of the path.
 URL: https://sourceforge.net/p/repiceasource/wiki/J4R/
@@ -19,7 +19,7 @@ License: GPL-3
 BugReports: https://sourceforge.net/p/repiceasource/tickets/
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 SystemRequirements: Java
 Suggests: 
     testthat

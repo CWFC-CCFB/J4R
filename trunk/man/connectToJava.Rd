@@ -4,8 +4,12 @@
 \alias{connectToJava}
 \title{Connect to Java environment}
 \usage{
-connectToJava(port = 18011, extensionPath = NULL, memorySize = NULL,
-  debug = FALSE)
+connectToJava(
+  port = 18011,
+  extensionPath = NULL,
+  memorySize = NULL,
+  debug = FALSE
+)
 }
 \arguments{
 \item{port}{the local port (the port is set to 18011 by default)}
