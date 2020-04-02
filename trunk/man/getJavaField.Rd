@@ -2,7 +2,7 @@
 % Please edit documentation in R/j4rFunctions.R
 \name{getJavaField}
 \alias{getJavaField}
-\title{Get public field}
+\title{Get the value of a public field}
 \usage{
 getJavaField(source, fieldName)
 }

@@ -2,19 +2,7 @@
 % Please edit documentation in R/j4rFunctions.R
 \name{addUrlToClassPath}
 \alias{addUrlToClassPath}
-\title{#'
-#' Retrieves the revision of the REpicea library
-#'
-#' @export
-getREpiceaRevision <- function() {
-  if (isConnectedToJava()) {
-    version <- callJavaMethod("repicea.app.REpiceaJARSVNAppVersion", "getInstance")
-    revision <- callJavaMethod(version, "getRevision")
-    return(revision)
-  } else {
-    message("The Java server is not running.")
-  }
-}}
+\title{Dynamically adds an url to the classpath.}
 \usage{
 addUrlToClassPath(urlString, packageName = NULL)
 }
@@ -25,9 +13,6 @@ if the packageName parameter is null. Otherwise, it can just be the name of the 
 \item{packageName}{a character representing the package.}
 }
 \description{
-Dynamically adds an url to the classpath.
-}
-\details{
 This function makes it possible to add a directory or a JAR file
 to the class path. If the packageName parameter is null then the urlString
 parameter must be the complete path to the directory. Otherwise, it can be

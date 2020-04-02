@@ -13,22 +13,22 @@ connectToJava()
 
 test_that("Check the return value of checkIfClasspathContains", {
   expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
-  expect_equal(checkIfClasspathContains("mrnf-foresttools.jar"), FALSE)
+  expect_equal(checkIfClasspathContains("repicea.jar"), FALSE)
 })
 
-urlString <- paste(getwd(),"/javatests/mrnf-foresttools.jar", sep="")
+urlString <- paste(getwd(),"/javatests/repicea.jar", sep="")
 addUrlToClassPath(urlString)
 
 test_that("Check the return value of checkIfClasspathContains", {
   expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
-  expect_equal(checkIfClasspathContains("mrnf-foresttools.jar"), TRUE)
+  expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
 })
 
-msi <- createJavaObject("canforservutility.biodiversity.indices.MultipleSiteIndex")
+myMatrix <- createJavaObject("repicea.math.Matrix", as.integer(3), as.integer(3))
 
-test_that("Check if the msi object has been created", {
-  expect_equal(is.null(msi), FALSE)
-  expect_equal("java.object" %in% class(msi), TRUE)
+test_that("Check if the Matrix object has been created", {
+  expect_equal(is.null(myMatrix), FALSE)
+  expect_equal("java.object" %in% class(myMatrix), TRUE)
 })
 
 shutdownJava()

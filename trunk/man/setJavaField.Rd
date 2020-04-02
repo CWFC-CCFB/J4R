@@ -2,7 +2,7 @@
 % Please edit documentation in R/j4rFunctions.R
 \name{setJavaField}
 \alias{setJavaField}
-\title{Set public fields}
+\title{Set the value of a public field}
 \usage{
 setJavaField(source, fieldName, value)
 }

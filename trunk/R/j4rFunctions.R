@@ -23,6 +23,9 @@ bufferLength <- 100000
 
 MainSplitter <- "/;"
 SubSplitter <- "/,"
+ExceptionPrefix <- "j4r.net.server.JavaLocalGatewayServer$JavaGatewayException"
+
+
 
 #'
 #' Maximum length of the vector in the parameters.
@@ -226,21 +229,28 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     }
     utils::write.socket(.getMainSocket(), command)
     callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-    if(regexpr("Exception", callback) >= 0) {
-      stop(callback)
+    .checkForExceptionInCallback(callback)
+    # if(regexpr("Exception", callback) >= 0) {
+    #   stop(callback)
+    # } else {
+    if (parametersLength <= 1) {
+      return(.createFakeJavaObject(callback)) ## a single object
     } else {
-      if (parametersLength <= 1) {
-        return(.createFakeJavaObject(callback)) ## a single object
+      if (is.null(javaList)) {
+        javaList <- .createFakeJavaObject(callback)
       } else {
-        if (is.null(javaList)) {
-          javaList <- .createFakeJavaObject(callback)
-        } else {
-          javaList <- .dropAllIntoFirstList(javaList, .createFakeJavaObject(callback))
-        }
+        javaList <- .dropAllIntoFirstList(javaList, .createFakeJavaObject(callback))
       }
     }
+    # }
   }
   return(javaList)
+}
+
+.checkForExceptionInCallback <- function(callback) {
+  if(startsWith(callback, ExceptionPrefix)) {
+    stop(substring(callback, nchar(ExceptionPrefix) + 2))
+  }
 }
 
 .dropAllIntoFirstList <- function(javaList, javaSomething) {
@@ -306,7 +316,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
 }
 
 #'
-#' Get public field
+#' Get the value of a public field
 #'
 #' This function gets the value of a particular field, which can be either static or not. If the field is static,
 #' the source should be a valid class name.
@@ -362,7 +372,7 @@ getJavaField <- function(source, fieldName) {
 
 
 #'
-#' Set public fields
+#' Set the value of a public field
 #'
 #' This function sets a particular field, which can be either static or not. If the field is static,
 #' the source should be a valid class name.
@@ -504,11 +514,12 @@ callJavaMethod <- function(source, methodName, ...) {
 
 .processCallback <- function(callback) {
 #  print(paste("Processing this callback : ", callback, sep=""))
-  if(regexpr("Exception", callback) >= 0) {
-    stop(callback)
-  } else if(regexpr("Error", callback) >= 0) {
-    stop(callback)
-  } else if (regexpr("JavaObject", callback) >= 0) {  ## a single Java object
+  # if(startsWith(callback, ExceptionPrefix)) {
+  #   stop(substring(callback, nchar(ExceptionPrefix)))
+  # } else if(regexpr("Error", callback) >= 0) {
+  #   stop(callback)
+  .checkForExceptionInCallback(callback)
+  if (regexpr("JavaObject", callback) >= 0) {  ## a single Java object
     returnObject <- .createFakeJavaObject(callback)
   } else if (regexpr("JavaList", callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
     returnObject <- .createFakeJavaObject(callback)
@@ -800,22 +811,6 @@ killJava <- function() {
   Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
   message("Done.")
 }
-
-
-
-#' #'
-#' #' Retrieves the revision of the REpicea library
-#' #'
-#' #' @export
-#' getREpiceaRevision <- function() {
-#'   if (isConnectedToJava()) {
-#'     version <- callJavaMethod("repicea.app.REpiceaJARSVNAppVersion", "getInstance")
-#'     revision <- callJavaMethod(version, "getRevision")
-#'     return(revision)
-#'   } else {
-#'     message("The Java server is not running.")
-#'   }
-#' }
 
 #'
 #' Dynamically adds an url to the classpath.

@@ -309,6 +309,14 @@ test_that("If the null array has been considered then there should be an excepti
             expect_equal(out, "threw an exception")
           })
 
+#### Testing if an exception can be instantiated
+
+myException <- createJavaObject("java.lang.Exception")
+test_that("myException has been instantiated", {
+  expect_equal("java.object" %in% class(myException), TRUE)
+  expect_equal(myException$class == "java.lang.Exception", TRUE)
+})
+
 #### Testing if the call to a non static method throws an exception when looking for a static method
 
 out <- tryCatch(
