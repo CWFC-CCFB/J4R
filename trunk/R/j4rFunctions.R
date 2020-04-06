@@ -621,9 +621,10 @@ callJavaMethod <- function(source, methodName, ...) {
 #'
 #' @export
 shutdownJava <- function() {
-  .internalShutdown()
-  Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
-  message("Done.")
+  .killJava()
+  message("Your global environment may now contain some useless Java references.")
+  message("To delete them, you can use the following line of code:")
+  message("rm(list = getListOfJavaReferences())")
 }
 
 .internalShutdown <- function() {
@@ -632,18 +633,39 @@ shutdownJava <- function() {
     message("Closing connection and removing socket...")
     rm("j4rSocket", envir = cacheEnv)
   }
-  nbObjectRemoved <- 0
+  #### Remove because CRAN policy is to left the global environment untouched
+  # nbObjectRemoved <- 0
+  # for (objectName in ls(envir = globalenv())) {
+  #   # if ("java.object" %in% class(object)) {
+  #   if (.getClass(get(objectName, envir = globalenv())) %in% c("java.object", "java.list")) {
+  #     nbObjectRemoved <- nbObjectRemoved + 1
+  #     if (nbObjectRemoved == 1) {
+  #       message("Removing Java objects from global environment...")
+  #     }
+  #     rm(list = objectName, envir = globalenv())
+  #   }
+  # }
+}
+
+#'
+#' Provide a list of the Java references
+#'
+#' The function provides the list of the Java references in the global environment.
+#'
+#' @return a vector with the names of the objects that belong to the java.object and java.list classes.
+#'
+#' @export
+getListOfJavaReferences <- function() {
+  output <- c()
   for (objectName in ls(envir = globalenv())) {
-    # if ("java.object" %in% class(object)) {
     if (.getClass(get(objectName, envir = globalenv())) %in% c("java.object", "java.list")) {
-      nbObjectRemoved <- nbObjectRemoved + 1
-      if (nbObjectRemoved == 1) {
-        message("Removing Java objects from global environment...")
-      }
-      rm(list = objectName, envir = globalenv())
+      output <- c(output, objectName)
     }
   }
+  return(output)
 }
+
+
 
 
 #'
@@ -796,14 +818,7 @@ checkIfClasspathContains <- function(myJavaLibrary) {
   return(filePath)
 }
 
-#'
-#' Kills the JVM and removes all the java.object instances from the environment
-#'
-#' This function should be used when the control over the Java server has been lost.
-#' The JVM can be killed using this function. All references to Java objects are then lost.
-#'
-#' @export
-killJava <- function() {
+.killJava <- function() {
   emergencySocket <- utils::make.socket("localhost", 50000)
   utils::read.socket(emergencySocket, maxlen = bufferLength)
   utils::write.socket(socket = emergencySocket, "emergencyShutdown")

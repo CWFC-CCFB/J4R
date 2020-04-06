@@ -9,7 +9,10 @@ context("Test on dynamic classpath")
 #### Starting the Java server and connecting to it ####
 
 library(J4R)
-connectToJava()
+
+if (!isConnectedToJava()) {
+  connectToJava()
+}
 
 test_that("Check the return value of checkIfClasspathContains", {
   expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
@@ -31,5 +34,4 @@ test_that("Check if the Matrix object has been created", {
   expect_equal("java.object" %in% class(myMatrix), TRUE)
 })
 
-shutdownJava()
 

@@ -9,7 +9,10 @@ context("Simple tests in J4R")
 #### Starting the Java server and connecting to it ####
 
 library(J4R)
-connectToJava()
+
+if (!isConnectedToJava()) {
+  connectToJava()
+}
 
 ####  Creating a single object with a basic constructor ####
 
