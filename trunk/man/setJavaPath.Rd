@@ -7,15 +7,21 @@
 setJavaPath(path)
 }
 \arguments{
-\item{path}{the complete path to Java as in the example below}
+\item{path}{the complete path to Java as in the example below. The file.path function should be used to
+define the path}
 }
 \description{
 This is an option function that makes it possible to set the
-JAVA environmental variable in R, if it is not already set.
-It first tests if the path ends with java and if it is actually
-a file.
+JAVA environment variable in R, if it is not already set.
+It first tests if the path ends with java or java.exe and
+if it is actually a file. Note that if an empty character is
+passed to this function. It resets the JAVA environment variable.
 }
 \examples{
-# setJavaPath("/usr/lib/jvm/java-8-openjdk-amd64/bin/java")  ### not run
+# myPath <- file.path("C:","Program Files (x86)","Java", "jre1.8.0_221", "bin", "java.exe") ## not run
+# setJavaPath(myPath)  ### not run
 
+}
+\seealso{
+file.path
 }
