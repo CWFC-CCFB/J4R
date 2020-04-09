@@ -701,7 +701,13 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			if (firstCall != null && firstCall.toLowerCase().trim().equals("true")) {
 				List<String> newCommands = new ArrayList<String>();
 				newCommands.add(REnvironment.class.getName());
-				String classPath = "j4r.jar";
+				String architecture = J4RSystem.getJavaArchitecture();
+				String classPath;
+				if (architecture.equals("32")) {
+					classPath = "j4r_x86.jar";
+				} else {
+					classPath = "j4r.jar";
+				}
 				String extensionPath = J4RSystem.retrieveArgument(EXTENSION, arguments);
 				if (extensionPath != null) {
 					if (new File(extensionPath).exists()) {

@@ -114,6 +114,16 @@ public class J4RSystem {
 //		return parseJVMVersion(jvmVersion);
 //	}
 
+	
+	/**
+	 * Returns the architecture of the JVM, i.e. either 32-Bit, 64-Bit or unknown.
+	 * @return a String
+	 */
+	public static String getJavaArchitecture() {
+		return System.getProperty("sun.arch.data.model");
+	}
+
+	
 	private static int parseJVMVersion(String jvmVersion) {
 		String[] splittedDigits = jvmVersion.split("\\.");
 		int firstInteger = Integer.parseInt(splittedDigits[0]);

@@ -396,8 +396,9 @@ test_that("Testing that the second call to connectToJava returns FALSE", {
   expect_equal(callback, FALSE)
 })
 
-
-versionIn <- getJavaVersion()
+jVersion <- getJavaVersion()
+versionIn <- jVersion$version
+architectureIn <- jVersion$architecture
 
 ####  Shutting down Java ####
 
@@ -405,8 +406,11 @@ versionIn <- getJavaVersion()
 
 shutdownJava()
 
-versionOut <- getJavaVersion()
+jVersion <- getJavaVersion()
+versionOut <- jVersion$version
+architectureOut <- jVersion$architecture
 
 test_that("Testing that the getJavaVersion gives the same result whether or not the server is online", {
   expect_equal(versionIn, versionOut)
+  expect_equal(architectureIn, architectureOut)
 })
