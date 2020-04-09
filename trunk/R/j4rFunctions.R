@@ -54,6 +54,7 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
     return(FALSE)
   } else {
     if (!debug) {
+      message(.checkJavaVersionRequirement())
       message("Starting Java server...")
       parms <- c("-firstcall", "true")
       if (port != 18011) {
@@ -75,7 +76,7 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
       }
       #    message(rootPath)
       path <- paste(rootPath,"j4r.jar",sep="/")
-      completeCommand <- paste("java -jar", path, paste(parms, collapse=" "), sep = " ")
+      completeCommand <- paste(.getJavaPath(), "-jar", path, paste(parms, collapse=" "), sep = " ")
       system(completeCommand, wait=FALSE)
       Sys.sleep(2)
     }
@@ -622,9 +623,12 @@ callJavaMethod <- function(source, methodName, ...) {
 #' @export
 shutdownJava <- function() {
   .killJava()
-  message("Your global environment may now contain some useless Java references.")
-  message("To delete them, you can use the following line of code:")
-  message("rm(list = getListOfJavaReferences())")
+  listJavaReferences <- getListOfJavaReferences()
+  if (!is.null(listJavaReferences) & length(listJavaReferences) > 0) {
+    message("Your global environment now contains some useless Java references.")
+    message("To delete them, you can use the following line of code:")
+    message("rm(list = getListOfJavaReferences())")
+  }
 }
 
 .internalShutdown <- function() {
@@ -735,11 +739,79 @@ getJavaVersion <- function() {
     javaVersion <- callJavaMethod("java.lang.System","getProperty","java.version")
     return(javaVersion)
   } else {
-    output <- system2("java", args = c("-version"), stdout = T, stderr = T, wait = F)
-    javaVersion <- substring(output[1], first=regexpr("\"", output[1])[[1]] + 1)
-    javaVersion <- substring(javaVersion, first=1, last = regexpr("\"", javaVersion)[[1]] - 1)
-    return(javaVersion)
+    output <- tryCatch(
+      {
+        javaPath <- suppressWarnings(.getJavaPath())
+        system2(javaPath, args = c("-version"), stdout = T, stderr = T, wait = F)
+      },
+      error=function(cond) {
+        return(NULL)
+      }
+    )
+    if (is.null(output)) {
+      stop("Java seems to be missing on this computer. Please check your configuration!")
+    } else {
+      javaVersion <- substring(output[1], first=regexpr("\"", output[1])[[1]] + 1)
+      javaVersion <- substring(javaVersion, first=1, last = regexpr("\"", javaVersion)[[1]] - 1)
+      return(javaVersion)
+    }
   }
+}
+
+.getJavaPath <- function() {
+  javaPath <- Sys.getenv("JAVA")
+  if (javaPath == "") {
+    message("It seems that the JAVA environment variable was not set in R. Trying to rely on the OS path instead.")
+    message("You can consider defining this variable through the setJavaPath function.")
+    return("java")
+  } else {
+    return(javaPath)
+  }
+}
+
+#'
+#' Set the path to Java
+#'
+#' This is an option function that makes it possible to set the
+#' JAVA environmental variable in R, if it is not already set.
+#' It first tests if the path ends with java and if it is actually
+#' a file.
+#'
+#' @param path the complete path to Java as in the example below
+#'
+#' @examples
+#' # setJavaPath("/usr/lib/jvm/java-8-openjdk-amd64/bin/java")  ### not run
+#'
+#' @export
+setJavaPath <- function(path) {
+  if (!endsWith(path, "java")) {
+    stop("The path is incorrect. It should end with java!")
+  } else {
+    if (file.exists(path) && !dir.exists(path)) {
+      Sys.setenv(JAVA = path)
+    } else {
+      stop("The path is either a directory or it does not point to a file!")
+    }
+  }
+}
+
+.checkJavaVersionRequirement <- function() {
+  version <- suppressMessages(getJavaVersion())
+  dotIndices <- gregexpr("\\.", version)
+  firstDot <- dotIndices[[1]][1]
+  firstInt <- as.integer(substr(version, 1, firstDot-1))
+  if (firstInt == 1) {
+    secondDot <- dotIndices[[1]][2]
+    secondInt <- as.integer(substr(version, firstDot + 1, secondDot - 1))
+    if (secondInt < 8) {
+      stop(paste("The Java version", version, "does not meet the requirement of the J4R package. Please install Java version 8 or later."))
+    }
+  } else {
+    if (firstInt < 8) {
+      stop(paste("The Java version", version, "does not meet the requirement of the J4R package. Please install Java version 8 or later."))
+    }
+  }
+  return(paste("The Java version", version, "meets the requirement of the J4R package."))
 }
 
 
@@ -770,7 +842,7 @@ getMemorySettings <- function() {
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to J4R!")
-  packageStartupMessage("Please, make sure that Java (version 8 or later) is part of the path.")
+  packageStartupMessage("Please, make sure that Java (version 8 or later) is installed on your computer.")
   packageStartupMessage("For more information, visit https://sourceforge.net/p/repiceasource/wiki/J4R/ .")
 }
 
@@ -819,9 +891,16 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 }
 
 .killJava <- function() {
-  emergencySocket <- utils::make.socket("localhost", 50000)
-  utils::read.socket(emergencySocket, maxlen = bufferLength)
-  utils::write.socket(socket = emergencySocket, "emergencyShutdown")
+  tryCatch(
+    {
+      emergencySocket <- utils::make.socket("localhost", 50000)
+      utils::read.socket(emergencySocket, maxlen = bufferLength)
+      utils::write.socket(socket = emergencySocket, "emergencyShutdown")
+    },
+    error=function(cond) {
+      message("Unable to contact the server. It might be already down!")
+    }
+  )
   .internalShutdown()
   Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
   message("Done.")
