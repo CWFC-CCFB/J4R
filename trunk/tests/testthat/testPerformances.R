@@ -44,10 +44,17 @@ test_that("Time to create one additional object", {
 
 shutdownJava()
 
-connectToJava(memorySize = 3000)
 
-test_that("Increased memory to 1000 Mb", {
-  expect_equal(as.numeric(getMemorySettings()[1]) > 2500, TRUE)
+if (getJavaVersion()$architecture == "32-Bit") {
+  memorySize <- 800
+} else {
+  memorySize <- 3000
+}
+
+connectToJava(memorySize = memorySize)
+
+test_that("Increased memory", {
+  expect_equal(as.numeric(getMemorySettings()[1]) > (memorySize * .85), TRUE)
 })
 
 

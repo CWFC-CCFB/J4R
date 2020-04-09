@@ -52,19 +52,24 @@ maxVectorLength <- 200
 #' Set the path to Java
 #'
 #' This is an option function that makes it possible to set the
-#' JAVA environmental variable in R, if it is not already set.
-#' It first tests if the path ends with java and if it is actually
-#' a file.
+#' JAVA environment variable in R, if it is not already set.
+#' It first tests if the path ends with java or java.exe and
+#' if it is actually a file. Note that if an empty character is
+#' passed to this function. It resets the JAVA environment variable.
 #'
-#' @param path the complete path to Java as in the example below
+#' @param path the complete path to Java as in the example below. The file.path function should be used to
+#' define the path
+#'
+#' @seealso file.path
 #'
 #' @examples
-#' # setJavaPath("/usr/lib/jvm/java-8-openjdk-amd64/bin/java")  ### not run
+#' # myPath <- file.path("C:","Program Files (x86)","Java", "jre1.8.0_221", "bin", "java.exe") ## not run
+#' # setJavaPath(myPath)  ### not run
 #'
 #' @export
 setJavaPath <- function(path) {
-  if (path != "" && !endsWith(path, "java")) {
-    stop("The path is incorrect. It should end with java!")
+  if (path != "" && !endsWith(path, "java") && !endsWith(path, "java.exe")) {
+    stop("The path is incorrect. It should end with java (or java.exe if your OS is windows!")
   } else {
     if (path == "" || (file.exists(path) && !dir.exists(path))) {
       Sys.setenv(JAVA = path)

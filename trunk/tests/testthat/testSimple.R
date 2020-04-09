@@ -191,8 +191,14 @@ test_that("Check values in the array", {
 
 #### Check if libraries are part of the path ####
 
+if (getJavaVersion()$architecture == "32-Bit") {
+  expectedJar <- "j4r_x86.jar"
+} else {
+  expectedJar <- "j4r.jar"
+}
+
 test_that("Check the return value of checkIfClasspathContains", {
-  expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
+  expect_equal(checkIfClasspathContains(expectedJar), TRUE)
   expect_equal(checkIfClasspathContains("lerfob-foresttools.jar"), FALSE)
 })
 

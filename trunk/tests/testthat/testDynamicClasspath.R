@@ -14,8 +14,15 @@ if (!isConnectedToJava()) {
   connectToJava()
 }
 
+if (getJavaVersion()$architecture == "32-Bit") {
+  expectedJar <- "j4r_x86.jar"
+} else {
+  expectedJar <- "j4r.jar"
+}
+
+
 test_that("Check the return value of checkIfClasspathContains", {
-  expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
+  expect_equal(checkIfClasspathContains(expectedJar), TRUE)
   expect_equal(checkIfClasspathContains("repicea.jar"), FALSE)
 })
 
@@ -23,7 +30,7 @@ urlString <- paste(getwd(),"/javatests/repicea.jar", sep="")
 addUrlToClassPath(urlString)
 
 test_that("Check the return value of checkIfClasspathContains", {
-  expect_equal(checkIfClasspathContains("j4r.jar"), TRUE)
+  expect_equal(checkIfClasspathContains(expectedJar), TRUE)
   expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
 })
 
