@@ -1,5 +1,5 @@
 ########################################################
-# R function for connection to Gateway Server in Java
+# R functions for connection to Gateway Server in Java
 # Author: Mathieu Fortin, Canadian Wood Fibre Centre
 # Date: January 2019
 ########################################################

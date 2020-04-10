@@ -1,5 +1,5 @@
 ########################################################
-# R function for J4R configuration
+# R functions for J4R configuration
 # Author: Mathieu Fortin, Canadian Wood Fibre Centre
 # Date: April 2020
 ########################################################
@@ -63,7 +63,7 @@ maxVectorLength <- 200
 #' @seealso file.path
 #'
 #' @examples
-#' # myPath <- file.path("C:","Program Files (x86)","Java", "jre1.8.0_221", "bin", "java.exe") ## not run
+#' myPath <- file.path("C:","Program Files (x86)","Java", "jre1.8.0_221", "bin", "java.exe")
 #' # setJavaPath(myPath)  ### not run
 #'
 #' @export

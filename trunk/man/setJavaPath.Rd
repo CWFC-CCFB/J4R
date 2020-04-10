@@ -18,7 +18,7 @@ if it is actually a file. Note that if an empty character is
 passed to this function. It resets the JAVA environment variable.
 }
 \examples{
-# myPath <- file.path("C:","Program Files (x86)","Java", "jre1.8.0_221", "bin", "java.exe") ## not run
+myPath <- file.path("C:","Program Files (x86)","Java", "jre1.8.0_221", "bin", "java.exe")
 # setJavaPath(myPath)  ### not run
 
 }
