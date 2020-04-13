@@ -15,13 +15,14 @@
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
 #' @param debug for debugging only (should be left as is)
 #'
-#' @return nothing
+#' @return a logical TRUE if the function managed to get connected to the server or if it was already connected or
+#' FALSE if the connection has failed
 #'
 #' @export
 connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (isConnectedToJava()) {
     message("The object j4rSocket already exists! It seems R is already connected to the Java server.")
-    return(FALSE)
+    return(TRUE)
   } else {
     if (!debug) {
       message(.checkJavaVersionRequirement())
@@ -55,12 +56,35 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
       path <- paste(rootPath, jarFilename, sep="/")
       completeCommand <- paste(.getJavaPath(), "-jar", path, paste(parms, collapse=" "), sep = " ")
       system(completeCommand, wait=FALSE)
-      Sys.sleep(2)
+      Sys.sleep(2.5)  ### MF2020-04-13 changed from 2 to 2.5 sec because some systems such as Fedora seem to take more time to instantiate the server
     }
     message(paste("Connecting on port", port))
-    assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
-    utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-    return(TRUE)
+    isConnected <- tryCatch(
+      {
+        assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
+        utils::read.socket(.getMainSocket(), maxlen = bufferLength)
+        return(TRUE)
+      },
+      error=function(cond) {
+        message("It seems the instantiation of the server is taking more time than expected...")
+        message("J4R will attempt to get connected one more time...")
+        Sys.sleep(2) ### wait again before trying to connect to the server
+        isConn <- tryCatch(
+          {
+            assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
+            utils::read.socket(.getMainSocket(), maxlen = bufferLength)
+            return(TRUE)
+          },
+          error=function(cond) {
+            message("Unable to get connected to the Java server.")
+            message("Either the server instantiation failed or the current port is used by another application.")
+            return(FALSE)
+          }
+        )
+        return(isConn)
+      }
+    )
+    return(isConnected)
   }
 }
 

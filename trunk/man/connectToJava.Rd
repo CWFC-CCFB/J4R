@@ -21,7 +21,8 @@ connectToJava(
 \item{debug}{for debugging only (should be left as is)}
 }
 \value{
-nothing
+a logical TRUE if the function managed to get connected to the server or if it was already connected or
+FALSE if the connection has failed
 }
 \description{
 This function connects the R environment to a gateway server that runs in Java.

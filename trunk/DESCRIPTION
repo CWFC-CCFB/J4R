@@ -10,7 +10,7 @@ Description: Makes it possible to create 'Java' objects and to execute 'Java' me
     vectors so that a particular method is iteratively run on each element of the vector. A 
     score algorithm also makes the calls to 'Java' methods less restrictive. The gateway server
     relies on the runnable 'Java' library 'j4r.jar'. This library is licensed under the LGPL-3. Its
-    sources are included in this package. To start the gateway server, 'Java' must be part of the path.
+    sources are included in this package. 
 URL: https://sourceforge.net/p/repiceasource/wiki/J4R/
 Imports:
     utils (>= 3.4.4)
