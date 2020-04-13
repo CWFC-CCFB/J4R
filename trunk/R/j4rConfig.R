@@ -39,7 +39,7 @@ maxVectorLength <- 200
 .getJavaPath <- function() {
   javaPath <- Sys.getenv("JAVA")
   if (javaPath == "") {
-    message("It seems that the JAVA environment variable was not set in R. Trying to rely on the OS path instead.")
+    message("It seems that the JAVA environment variable has not been set. J4R will rely on the OS path instead.")
     message("You can consider defining this variable through the setJavaPath function.")
     return("java")
   } else {
