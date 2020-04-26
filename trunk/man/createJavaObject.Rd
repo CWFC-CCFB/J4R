@@ -20,7 +20,9 @@ a java.object or java.list instance in the R environment
 }
 \description{
 This function creates one or many object of a particular class. If the parameters
-contain vectors, then a series of instances of this class can be created.
+contain vectors, then a series of instances of this class can be created. Primitive
+type are converted on the fly, numeric to double, integer to int,
+logical to boolean and character to String. Factors are also converted to String.
 }
 \examples{
 ### starting Java

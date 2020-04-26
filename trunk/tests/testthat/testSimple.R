@@ -391,9 +391,26 @@ test_that("Testing that the number of columns was correctly retrieved a Matrix i
 
 setJavaField(myMatrices, "m_iCols", as.integer(c(10,7)))
 newNbColumns <- getJavaField(myMatrices, "m_iCols")
-test_that("Testing that the number of columns was correctly retrieved a Matrix instance", {
+test_that("Testing that the number of columns was correctly set a Matrix instance", {
   expect_equal(newNbColumns, c(10,7))
 })
+
+
+vec <- c("carotte", "patate")
+expected <- callJavaMethod(vec, "length")
+observed <- callJavaMethod(as.factor(vec), "length")
+test_that("Testing that a factor source is processed as a character", {
+  expect_equal(length(which(expected != observed)) == 0, TRUE)
+})
+
+
+vec2 <- "a"
+expected <- callJavaMethod(as.factor(vec), "lastIndexOf", vec2)
+observed <- callJavaMethod(as.factor(vec), "lastIndexOf", as.factor(vec2))
+test_that("Testing that a factor source and a factor parameter are processed as characters", {
+  expect_equal(length(which(expected != observed)) == 0, TRUE)
+})
+
 
 shutdownJava()
 

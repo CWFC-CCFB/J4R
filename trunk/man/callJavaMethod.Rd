@@ -24,7 +24,8 @@ instances can be returned.
 }
 \details{
 There is no need to cast a particular parameter to a super class. Actually, the Java server tries to find the method
-that best matches the types of the parameters
+that best matches the types of the parameters. Primitive type are converted on the fly, numeric to double, integer to int,
+logical to boolean and character to String. Factors are also converted to String.
 }
 \examples{
 ### starting Java

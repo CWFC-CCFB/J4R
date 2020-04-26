@@ -166,7 +166,9 @@ isConnectedToJava <- function() {
 #' Create Java objects
 #'
 #' This function creates one or many object of a particular class. If the parameters
-#' contain vectors, then a series of instances of this class can be created.
+#' contain vectors, then a series of instances of this class can be created. Primitive
+#' type are converted on the fly, numeric to double, integer to int,
+#' logical to boolean and character to String. Factors are also converted to String.
 #'
 #' @param class the Java class of the object (e.g. java.util.ArrayList)
 #' @param ... the parameters to be passed to the constructor of the object
@@ -232,9 +234,6 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     utils::write.socket(.getMainSocket(), command)
     callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
     .checkForExceptionInCallback(callback)
-    # if(regexpr("Exception", callback) >= 0) {
-    #   stop(callback)
-    # } else {
     if (parametersLength <= 1) {
       return(.createFakeJavaObject(callback)) ## a single object
     } else {
@@ -290,6 +289,9 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     if (class == "java.object" || class == "java.list") {
       class <- "java.object"
       parm <- .translateJavaObject(parm)
+    } else if (class == "factor") {
+      class <- "character"
+      parm <- as.character(parm)
     }
     subCommand <- paste(class, paste(parm,collapse=SubSplitter), sep="")
     if (is.null(command)) {
@@ -307,7 +309,12 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
   } else if (.getClass(source) %in% c("java.list")) {   ### non-static method
     subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
     command <- paste(prefix, paste("java.object", .translateJavaObject(subList), sep=""), targetName, sep=MainSplitter)
-  } else {  ### static method
+  } else {  ### static method or primitive
+    clazz <- class(source)
+    if (clazz == "factor") {
+      clazz <- "character"
+      source <- as.character(source)
+    }
     if (sourceLength == 1) {
       command <- paste(prefix, paste(class(source), source, sep=""), targetName, sep=MainSplitter)
     } else {
@@ -442,7 +449,8 @@ setJavaField <- function(source, fieldName, value) {
 #' instances can be returned.
 #'
 #' There is no need to cast a particular parameter to a super class. Actually, the Java server tries to find the method
-#' that best matches the types of the parameters
+#' that best matches the types of the parameters. Primitive type are converted on the fly, numeric to double, integer to int,
+#' logical to boolean and character to String. Factors are also converted to String.
 #'
 #' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
 #' a string representing the Java class name in case of static method
