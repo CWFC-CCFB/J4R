@@ -12,7 +12,7 @@ package and the j4r Java library come with absolutely NO WARRANTY.
 
 
 The source code of the J4R package and the j4r library is freely available at
- https://sourceforge.net/p/repiceasource/code/HEAD/tree/trunk/ .
+ https://svn.code.sf.net/p/repiceasource/j4r/rclient/trunk .
 
 The documentation can be found at https://sourceforge.net/p/repiceasource/wiki/J4R/ .
 
