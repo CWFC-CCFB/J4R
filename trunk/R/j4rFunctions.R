@@ -646,7 +646,8 @@ shutdownJava <- function() {
     message("Closing connection and removing socket...")
     rm("j4rSocket", envir = cacheEnv)
   }
-  #### Remove because CRAN policy is to left the global environment untouched
+
+  #### Remove because CRAN policy is to leave the global environment untouched
   # nbObjectRemoved <- 0
   # for (objectName in ls(envir = globalenv())) {
   #   # if ("java.object" %in% class(object)) {
