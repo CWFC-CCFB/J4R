@@ -11,7 +11,7 @@ context("Test on dynamic classpath")
 library(J4R)
 
 if (!isConnectedToJava()) {
-  connectToJava()
+  connectToJava(memorySize = 200)
 }
 
 if (getJavaVersion()$architecture == "32-Bit") {

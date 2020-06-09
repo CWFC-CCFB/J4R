@@ -29,7 +29,7 @@ logical to boolean and character to String. Factors are also converted to String
 }
 \examples{
 ### starting Java
-connectToJava()
+connectToJava(memorySize = 200)
 
 ### creating an empty ArrayList object
 myList <- createJavaObject("java.util.ArrayList")

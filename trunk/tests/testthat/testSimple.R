@@ -11,7 +11,7 @@ context("Simple tests in J4R")
 library(J4R)
 
 if (!isConnectedToJava()) {
-  connectToJava()
+  connectToJava(memorySize = 200)
 }
 
 ####  Creating a single object with a basic constructor ####

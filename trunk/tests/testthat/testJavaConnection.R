@@ -10,7 +10,7 @@ if (isConnectedToJava()) {
   shutdownJava()
 }
 
-connectToJava(extensionPath = paste(getwd(),"/javatests", sep=""))
+connectToJava(extensionPath = paste(getwd(),"/javatests", sep=""), memorySize = 200)
 
 result <- callJavaMethod("J4RTestClass", "testFunction")
 
@@ -20,7 +20,7 @@ test_that("Classpath to J4RTestClass makes it possible to call the testFunction 
 
 shutdownJava()
 
-connectionEstablished <- connectToJava()
+connectionEstablished <- connectToJava(memorySize = 200)
 test_that("The JVM has been properly shutted down by the shutdownJava function", {
   expect_equal(connectionEstablished, TRUE)
 })
@@ -28,7 +28,7 @@ test_that("The JVM has been properly shutted down by the shutdownJava function",
 
 #### Testing that two calls to connectToJava will not affect the socket connection ####
 
-callback <- connectToJava()
+callback <- connectToJava(memorySize = 200)
 test_that("Testing if the second call to connectToJava returns TRUE", {
   expect_equal(callback, TRUE)
 })
@@ -63,7 +63,7 @@ test_that("Testing if the connectToJava function returns FALSE when it does not 
 
 ### Testing connection on another port ###
 
-isConnected <- connectToJava(port = 18013)
+isConnected <- connectToJava(port = 18013, memorySize = 200)
 
 test_that("Testing if the connectToJava function with another port works", {
   expect_equal(isConnected, TRUE)

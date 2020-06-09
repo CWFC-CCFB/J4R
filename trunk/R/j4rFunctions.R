@@ -54,7 +54,7 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
         jarFilename <- "j4r.jar"
       }
       path <- paste(rootPath, jarFilename, sep="/")
-      completeCommand <- paste(.getJavaPath(), "-jar", path, paste(parms, collapse=" "), sep = " ")
+      completeCommand <- paste(.getJavaPath(), "-Xmx50m", "-jar", path, paste(parms, collapse=" "), sep = " ")  ### MF2020-06-09 Reducing the size of the first JVM to avoid memory allocation issues
       system(completeCommand, wait=FALSE)
       Sys.sleep(2.5)  ### MF2020-04-13 changed from 2 to 2.5 sec because some systems such as Fedora seem to take more time to instantiate the server
     }
@@ -177,7 +177,7 @@ isConnectedToJava <- function() {
 #' @return a java.object or java.list instance in the R environment
 #' @examples
 #' ### starting Java
-#' connectToJava()
+#' connectToJava(memorySize = 200)
 #'
 #' ### creating an empty ArrayList object
 #' createJavaObject("java.util.ArrayList")
@@ -459,7 +459,7 @@ setJavaField <- function(source, fieldName, value) {
 #' @return It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.
 #' @examples
 #' ### starting Java
-#' connectToJava()
+#' connectToJava(memorySize = 200)
 #'
 #' ### creating an empty ArrayList object
 #' myList <- createJavaObject("java.util.ArrayList")
