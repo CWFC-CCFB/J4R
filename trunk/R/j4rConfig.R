@@ -120,15 +120,22 @@ getJavaVersion <- function() {
     output <- tryCatch(
       {
         javaPath <- suppressWarnings(.getJavaPath())
-        system2(javaPath, args = c("-version"), stdout = T, stderr = T, wait = F)
+        out <- list()
+        out$result <- system2(javaPath, args = c("-version"), stdout = T, stderr = T, wait = F)
+        out$correct <- T
+        out
       },
       error=function(cond) {
-        return(NULL)
+        out <- list()
+        out$result <- cond
+        out$correct <- F
+        return(out)
       }
     )
-    if (is.null(output)) {
-      stop("Java seems to be missing on this computer. Please check your configuration!")
+    if (output$correct == F) {
+      stop(output$result)
     } else {
+      output <- output$result
       javaVersion <- list()
       jv <- substring(output[1], first=regexpr("\"", output[1])[[1]] + 1)
       jv <- substring(jv, first=1, last = regexpr("\"", jv)[[1]] - 1)

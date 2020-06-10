@@ -2,7 +2,7 @@ Package: J4R
 Type: Package
 Title: Create 'Java' Objects and Execute 'Java' Methods
 Version: 1.0.8
-Authors: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service
+Author: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service
 Maintainer: Mathieu Fortin <mathieu.fortin.re@gmail.com>
 Copyright: Her Majesty the Queen in right of Canada
 Description: Makes it possible to create 'Java' objects and to execute 'Java' methods from the 'R' environment. 
