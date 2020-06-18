@@ -583,22 +583,28 @@ java.list <- function() {
   return(me)
 }
 
-### TODO make sure the class and method declations are registered in the classloader
-print.java.list <- function(objs) {
-  outputStr <- NULL
+#'
+#' Print a java.list object
+#'
+#' The java.object instances that are included in
+#' this list are displayed up to a maximum number.
+#'
+#' @param x a java.list instance
+#' @param ... additional parameters for consistent overriding
+#'
+#' @export
+print.java.list <- function(x, ...) {
   max <- 100
   i <- 0
-  while (i < length(objs) && i < max) {
+  while (i < length(x) && i < max) {
     i <- i + 1
-    obj <- objs[[i]]
+    obj <- x[[i]]
     str <- paste(obj$class, obj$hashcode, sep=":")
-    if (is.null(outputStr)) {
-      outputStr <- paste("[", i,"]", str, sep = "")
-    } else {
-      outputStr <- paste(outputStr, paste("[", i,"]", str, sep = ""))
-    }
+    print(paste("[",i,"] ", str, sep=""))
   }
-  print(outputStr)
+  if (length(x) > max) {
+    print(paste("... (", length(x) - max, " Java reference(s) omitted)",sep=""))
+  }
 }
 
 java.object <- function(classname, hashcodeInt) {
@@ -607,8 +613,18 @@ java.object <- function(classname, hashcodeInt) {
   return(me)
 }
 
-print.java.object <- function(obj) {
-  print(paste(obj$class, obj$hashcode, sep=":"))
+#'
+#' Print a java.object instance
+#'
+#' The class name and the hashcode of the reference
+#' are displayed.
+#'
+#' @param x a java.object instance
+#' @param ... additional parameters for consistent overriding
+#'
+#' @export
+print.java.object <- function(x, ...) {
+  print(paste(x$class, x$hashcode, sep=":"))
 }
 
 .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
