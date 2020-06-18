@@ -818,12 +818,23 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 }
 
 .getLibraryPath <- function(packageName, myJavaLibrary) {
-  if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
-    filePath <- paste(find.package(packageName), "inst", myJavaLibrary, sep="/")
-  } else if (file.exists(paste(find.package(packageName), myJavaLibrary, sep="/"))) {  ### normal mode
-    filePath <- paste(find.package(packageName), myJavaLibrary, sep="/")
+  # if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
+  #   filePath <- paste(find.package(packageName), "inst", myJavaLibrary, sep="/")
+  # } else if (file.exists(paste(find.package(packageName), myJavaLibrary, sep="/"))) {  ### normal mode
+  #   filePath <- paste(find.package(packageName), myJavaLibrary, sep="/")
+  # } else {
+  #   filePath <- NULL
+  # }
+  filename <- system.file("inst", myJavaLibrary, package = packageName)
+  if (file.exists(filename)) {  ### test mode
+    filePath <- filename
   } else {
-    filePath <- NULL
+    filename <- system.file(myJavaLibrary, package = packageName)
+    if (file.exists(filename)) {  ### normal mode
+      filePath <- filename
+    } else {
+      filePath <- NULL
+    }
   }
   return(filePath)
 }
@@ -862,11 +873,15 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 #' @export
 addToClassPath <- function(path, packageName = NULL) {
   if (isConnectedToJava()) {
-    if (is.null(packageName)) {
-      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", path)
-    } else {
-      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", .getLibraryPath(packageName, path))
+    if (!is.null(packageName)) {
+      path <- .getLibraryPath(packageName, path)
     }
+    callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", normalizePath(path))
+    # if (is.null(packageName)) {
+    #   callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", path)
+    # } else {
+    #   callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", .getLibraryPath(packageName, path))
+    # }
   } else {
     message("The Java server is not running.")
   }
