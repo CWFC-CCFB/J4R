@@ -583,10 +583,32 @@ java.list <- function() {
   return(me)
 }
 
+### TODO make sure the class and method declations are registered in the classloader
+print.java.list <- function(objs) {
+  outputStr <- NULL
+  max <- 100
+  i <- 0
+  while (i < length(objs) && i < max) {
+    i <- i + 1
+    obj <- objs[[i]]
+    str <- paste(obj$class, obj$hashcode, sep=":")
+    if (is.null(outputStr)) {
+      outputStr <- paste("[", i,"]", str, sep = "")
+    } else {
+      outputStr <- paste(outputStr, paste("[", i,"]", str, sep = ""))
+    }
+  }
+  print(outputStr)
+}
+
 java.object <- function(classname, hashcodeInt) {
   me <- list(class = classname, hashcode = hashcodeInt)
   class(me) <- append(class(me), "java.object")
   return(me)
+}
+
+print.java.object <- function(obj) {
+  print(paste(obj$class, obj$hashcode, sep=":"))
 }
 
 .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
@@ -605,11 +627,6 @@ java.object <- function(classname, hashcodeInt) {
     classname <- arguments[[1]][1]
     hashcodeInt <- as.integer(arguments[[1]][2])
     javaObject <- java.object(classname, hashcodeInt)
-#    javaObject <- list()
-#    class(javaObject) <- c(class(javaObject), "java.object")
-#    javaObject <- java.object()
-#    javaObject$class <- arguments[[1]][1]
-#    javaObject$hashcode <- as.integer(arguments[[1]][2])
     outputList[[i]] <- javaObject
   }
   if (length(outputList) == 1) {
