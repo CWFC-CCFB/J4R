@@ -28,7 +28,7 @@ getAllValuesFromListObject <- function(object) {
       } else if (size == 1) {
         javaObj <- callJavaMethod(object, "get", 0:(size-1))
         if (methods::is(javaObj, "java.object")) {
-          outputList <- .createJavaList()
+          outputList <- java.list()
           outputList[[1]] <- javaObj
           return(outputList)
         } else {
@@ -142,7 +142,7 @@ getAllValuesFromArray <- function(object) {
   } else if (length == 1) {
     javaObj <- J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1))
     if (methods::is(javaObj, "java.object")) {
-      outputList <- .createJavaList()
+      outputList <- java.list()
       outputList[[1]] <- javaObj
       return(outputList)
     } else {

@@ -577,10 +577,16 @@ callJavaMethod <- function(source, methodName, ...) {
   }
 }
 
-.createJavaList <- function() {
-  outputList <- list()
-  class(outputList) <- c(class(outputList), "java.list")
-  return(outputList)
+java.list <- function() {
+  me <- list()
+  class(me) <- append(class(me), "java.list")
+  return(me)
+}
+
+java.object <- function(classname, hashcodeInt) {
+  me <- list(class = classname, hashcode = hashcodeInt)
+  class(me) <- append(class(me), "java.object")
+  return(me)
 }
 
 .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
@@ -593,13 +599,17 @@ callJavaMethod <- function(source, methodName, ...) {
 .createFakeJavaObject <- function(str) {
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)
-  outputList <- .createJavaList()
+  outputList <- java.list()
   for (i in 1:length(innerList[[1]])) {
-    javaObject <- list()
-    class(javaObject) <- c(class(javaObject), "java.object")
     arguments <- strsplit(innerList[[1]][i],"@")
-    javaObject$class <- arguments[[1]][1]
-    javaObject$hashcode <- as.integer(arguments[[1]][2])
+    classname <- arguments[[1]][1]
+    hashcodeInt <- as.integer(arguments[[1]][2])
+    javaObject <- java.object(classname, hashcodeInt)
+#    javaObject <- list()
+#    class(javaObject) <- c(class(javaObject), "java.object")
+#    javaObject <- java.object()
+#    javaObject$class <- arguments[[1]][1]
+#    javaObject$hashcode <- as.integer(arguments[[1]][2])
     outputList[[i]] <- javaObject
   }
   if (length(outputList) == 1) {
