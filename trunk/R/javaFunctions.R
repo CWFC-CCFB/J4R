@@ -72,13 +72,18 @@ isArray <- function(object) {
 #'
 #' @param object a java.object that represents an array
 #' @param value the value to be set
-#' @param index the index of the location at which the value is retrieved. Note that in Java
-#' the first index is 0
+#' @param index the index of the location at which the value is set. Note that in Java
+#' the first index is 0. If this argument is set to NULL, then it is assumed that the value
+#' is set to index 0. In case of vectorization, the values are set from 0 to length(value) - 1
+#' if this argument is left to NULL.
 #'
 #' @export
-setValueInArray <- function(object, value, index) {
+setValueInArray <- function(object, value, index = NULL) {
   if (!isArray(object)) {
     stop("The object parameter must represent an array!")
+  }
+  if (is.null(index)) {
+    index <- 0:(length(value)-1)
   }
   J4R::callJavaMethod("java.lang.reflect.Array", "set", object, as.integer(index), value)
 }

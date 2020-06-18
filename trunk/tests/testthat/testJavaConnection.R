@@ -10,7 +10,7 @@ if (isConnectedToJava()) {
   shutdownJava()
 }
 
-connectToJava(extensionPath = paste(getwd(),"/javatests", sep=""), memorySize = 200)
+connectToJava(extensionPath = file.path(getwd(),"javatests"), memorySize = 200)
 
 result <- callJavaMethod("J4RTestClass", "testFunction")
 

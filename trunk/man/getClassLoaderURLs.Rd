@@ -7,6 +7,9 @@
 getClassLoaderURLs()
 }
 \description{
-This functions returns the URLs that are currently included
+This function returns the URLs that are currently included
 in the System classloader.
+}
+\details{
+This function is deprecated. Please use the getClassLoaderPaths instead.
 }

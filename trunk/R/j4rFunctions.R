@@ -762,16 +762,30 @@ callJavaGC <- function(...) {
 }
 
 #'
-#' Retrieve the URLs of the current classloader
+#' Retrieve the paths of the current classloader
 #'
-#' This functions returns the URLs that are currently included
+#' This functions returns the paths that are currently included
 #' in the System classloader.
 #'
 #' @export
+getClassLoaderPaths <- function() {
+  paths <- callJavaMethod("j4r.lang.J4RSystem", "getClassPathURLs")
+  pathsList <- getAllValuesFromListObject(paths)
+  return(pathsList)
+}
+
+#'
+#' Retrieve the URLs of the current classloader
+#'
+#' This function returns the URLs that are currently included
+#' in the System classloader.
+#'
+#' This function is deprecated. Please use the getClassLoaderPaths instead.
+#'
+#' @export
 getClassLoaderURLs <- function() {
-  urls <- callJavaMethod("j4r.lang.J4RSystem", "getClassPathURLs")
-  urlsList <- getAllValuesFromListObject(urls)
-  return(urlsList)
+  .Deprecated("getClassLoaderPaths")
+  return(getClassLoaderPaths())
 }
 
 
@@ -785,7 +799,7 @@ getClassLoaderURLs <- function() {
 #' @export
 checkIfClasspathContains <- function(myJavaLibrary) {
   if (isConnectedToJava()) {
-    listURLs <- getClassLoaderURLs()
+    listURLs <- getClassLoaderPaths()
     isLibIn <- FALSE
     if (length(listURLs) > 1) {
       for (i in 1:length(listURLs)) {
@@ -830,6 +844,35 @@ checkIfClasspathContains <- function(myJavaLibrary) {
   message("Done.")
 }
 
+
+#'
+#' Dynamically adds a path or a jar file to the classpath.
+#'
+#' This function makes it possible to add a directory or a JAR file
+#' to the class path. If the packageName parameter is null then the urlString
+#' parameter must be the complete path to the directory. Otherwise, it can be
+#' the name of the JAR file and the function will find the path through the package
+#' name. A non null packageName parameter is typically used in packages that rely
+#' on J4R.
+#'
+#' @param path a character representing the complete path to the directory or the JAR file
+#' if the packageName parameter is null. Otherwise, it can just be the name of the JAR file.
+#' @param packageName a character representing the package.
+#'
+#' @export
+addToClassPath <- function(path, packageName = NULL) {
+  if (isConnectedToJava()) {
+    if (is.null(packageName)) {
+      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", path)
+    } else {
+      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", .getLibraryPath(packageName, path))
+    }
+  } else {
+    message("The Java server is not running.")
+  }
+}
+
+
 #'
 #' Dynamically adds an url to the classpath.
 #'
@@ -840,21 +883,16 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 #' name. A non null packageName parameter is typically used in packages that rely
 #' on J4R.
 #'
+#' This function is deprecated. Use the addToClassPath function instead.
+#'
 #' @param urlString a character representing the complete path to the directory or the JAR file
 #' if the packageName parameter is null. Otherwise, it can just be the name of the JAR file.
 #' @param packageName a character representing the package.
 #'
 #' @export
 addUrlToClassPath <- function(urlString, packageName = NULL) {
-  if (isConnectedToJava()) {
-    if (is.null(packageName)) {
-      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", urlString)
-    } else {
-      callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", .getLibraryPath(packageName, urlString))
-    }
-  } else {
-    message("The Java server is not running.")
-  }
+  .Deprecated("addToClassPath")
+  addToClassPath(urlString, packageName)
 }
 
 

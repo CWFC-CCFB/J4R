@@ -4,15 +4,17 @@
 \alias{setValueInArray}
 \title{Set a value in an array}
 \usage{
-setValueInArray(object, value, index)
+setValueInArray(object, value, index = NULL)
 }
 \arguments{
 \item{object}{a java.object that represents an array}
 
 \item{value}{the value to be set}
 
-\item{index}{the index of the location at which the value is retrieved. Note that in Java
-the first index is 0}
+\item{index}{the index of the location at which the value is set. Note that in Java
+the first index is 0. If this argument is set to NULL, then it is assumed that the value
+is set to index 0. In case of vectorization, the values are set from 0 to length(value) - 1
+if this argument is left to NULL.}
 }
 \description{
 This function sets the value at the location given by the index

@@ -301,8 +301,8 @@ test_that("Testing if the array has been produced", {
 
 #### Testing if a null array is still considered when invoking a method or a constructor
 
-urlString <- paste(getwd(),"/javatests/repicea.jar", sep="")
-addUrlToClassPath(urlString)
+path <- file.path(getwd(),"javatests","repicea.jar")
+addToClassPath(path)
 
 out <- tryCatch(
   {
