@@ -58,9 +58,7 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
       } else {
         jarFilename <- "j4r.jar"
       }
-      path <- paste(rootPath, jarFilename, sep="/")
-#      completeCommand <- paste(.getJavaPath(), "-Xmx50m", "-jar", path, paste(parms, collapse=" "), sep = " ")  ### MF2020-06-09 Reducing the size of the first JVM to avoid memory allocation issues
-#      system(completeCommand, wait=FALSE)
+      path <- file.path(rootPath, jarFilename)
       system2(.getJavaPath(), args = c("-Xmx50m", "-jar", path, parms), wait = F)
       initialTime <- Sys.time()
       while (!file.exists(filename)) {
