@@ -16,7 +16,7 @@
 #'
 #' @export
 getAllValuesFromListObject <- function(object) {
-  if (.getClass(object) != "java.object") {
+  if (!methods::is(object, "java.object")) {
     stop("The object must be an instance of java.object")
   } else {
     systemClassLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
@@ -27,7 +27,7 @@ getAllValuesFromListObject <- function(object) {
         return(c()) ## an empty vector
       } else if (size == 1) {
         javaObj <- callJavaMethod(object, "get", 0:(size-1))
-        if (.getClass(javaObj) == "java.object") {
+        if (methods::is(javaObj, "java.object")) {
           outputList <- .createJavaList()
           outputList[[1]] <- javaObj
           return(outputList)
@@ -54,7 +54,7 @@ getAllValuesFromListObject <- function(object) {
 #'
 #' @export
 isArray <- function(object) {
-  if (.getClass(object) != "java.object") {
+  if (!methods::is(object, "java.object")) {
     stop("The object must be an instance of java.object")
   }
   if (startsWith(object$class,"[")) {
@@ -141,7 +141,7 @@ getAllValuesFromArray <- function(object) {
     return(c())
   } else if (length == 1) {
     javaObj <- J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1))
-    if (.getClass(javaObj) == "java.object") {
+    if (methods::is(javaObj, "java.object")) {
       outputList <- .createJavaList()
       outputList[[1]] <- javaObj
       return(outputList)

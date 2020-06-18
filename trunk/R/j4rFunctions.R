@@ -91,21 +91,13 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
   return(get("j4rSocket", envir = cacheEnv))
 }
 
-.getClass <- function(obj) {
-  vector <- class(obj)
-  return(vector[length(vector)])
-}
-
 .translateJavaObject <- function(javaObject) {
   hashcode <- c()
-#  clazz <- .getClass(javaObject)
-  if (is(javaObject, "java.list")) {
-#  if (clazz == "java.list") {
+  if (methods::is(javaObject, "java.list")) {
     for (i in 1:length(javaObject)) {
       hashcode <- c(hashcode, as.character(javaObject[[i]]$hashcode))
     }
-  } else if (is(javaObject, "java.object")) {
-#  } else if (clazz == "java.object") {
+  } else if (methods::is(javaObject, "java.object")) {
     hashcode <- as.character(javaObject$hashcode)
   } else {
     stop(".translateJavaObject: the argument should be an instance of java.object or java.list")
@@ -119,7 +111,7 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
   maxLength <- 0
   if (length(parameters) > 0) {
     for (i in 1:length(parameters)) {
-      if (.getClass(parameters[[i]]) == "java.object") {
+      if (methods::is(parameters[[i]], "java.object")) {
         thisParameterLength <- 1
       } else {
         thisParameterLength <- length(parameters[[i]])
@@ -137,7 +129,7 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
 
 
 .getSourceLength <- function(source, parametersLength) {
-  if (.getClass(source) == "java.object") {   ### a single java.object instance has a length of 1
+  if (methods::is(source, "java.object")) {   ### a single java.object instance has a length of 1
     sourceLength <- 1
   } else { ## either a java.list or a vector
     lengthSource <- length(source)
@@ -244,7 +236,6 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
         javaList <- .dropAllIntoFirstList(javaList, .createFakeJavaObject(callback))
       }
     }
-    # }
   }
   return(javaList)
 }
@@ -257,7 +248,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
 
 .dropAllIntoFirstList <- function(javaList, javaSomething) {
   initialLength <- length(javaList)
-  if (.getClass(javaSomething) == "java.object") {
+  if (methods::is(javaSomething, "java.object")) {
     javaList[[initialLength + 1]] <- javaSomething
   } else { ### dealing with a list of java object
     lengthIncomingList <- length(javaSomething)
@@ -273,24 +264,25 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
   for (i in 1:length(list)) {
     parm <- list[[i]]
     l <- length(parm)
-    if (.getClass(parm) == "java.object") { ## it should not be set to 2
+    if (methods::is(parm, "java.object")) { ## it should not be set to 2
       l <- 1
     }
     if (l > 1) {
       if (upperBoundIndex > l) {
         stop("The upperBoundIndex paramerer is larger than the size of the parameter!")
       }
-      if (.getClass(parm) == "java.list") {
+      if (methods::is(parm, "java.list")) {
         parm <- .getSubsetOfJavaArrayList(parm, lowerBoundIndex, upperBoundIndex)
       } else {
         parm <- parm[lowerBoundIndex:upperBoundIndex]
       }
     }
-    class <- .getClass(parm)
-    if (class == "java.object" || class == "java.list") {
+    classes <- class(parm)
+    class <- (classes[length(classes)])
+    if (methods::is(parm, "java.object") || methods::is(parm, "java.list")) {
       class <- "java.object"
       parm <- .translateJavaObject(parm)
-    } else if (class == "factor") {
+    } else if (methods::is(parm, "factor")) {
       class <- "character"
       parm <- as.character(parm)
     }
@@ -305,9 +297,9 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
 }
 
 .constructSourcePartCommand <- function(prefix, source, sourceLength, targetName, lowerIndex, upperIndex) {
-  if (.getClass(source) %in% c("java.object")) {   ### non-static method
+  if (methods::is(source, "java.object")) {   ### non-static method
     command <- paste(prefix, paste("java.object", .translateJavaObject(source), sep=""), targetName, sep=MainSplitter)
-  } else if (.getClass(source) %in% c("java.list")) {   ### non-static method
+  } else if (methods::is(source, "java.list")) {   ### non-static method
     subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
     command <- paste(prefix, paste("java.object", .translateJavaObject(subList), sep=""), targetName, sep=MainSplitter)
   } else {  ### static method or primitive
@@ -368,7 +360,7 @@ getJavaField <- function(source, fieldName) {
       if (is.null(output)) {
         output <- result
       } else {
-        if (.getClass(output) == "java.list") {
+        if (methods::is(output, "java.list")) {
           output <- .dropAllIntoFirstList(output, result)
         } else {
           output <- c(output, result)
@@ -430,7 +422,7 @@ setJavaField <- function(source, fieldName, value) {
       if (is.null(output)) {
         output <- result
       } else {
-        if (.getClass(output) == "java.list") {
+        if (methods::is(output, "java.list")) {
           output <- .dropAllIntoFirstList(output, result)
         } else {
           output <- c(output, result)
@@ -512,7 +504,7 @@ callJavaMethod <- function(source, methodName, ...) {
       if (is.null(output)) {
         output <- result
       } else {
-        if (.getClass(output) == "java.list") {
+        if (methods::is(output, "java.list")) {
           output <- .dropAllIntoFirstList(output, result)
         } else {
           output <- c(output, result)
@@ -524,11 +516,6 @@ callJavaMethod <- function(source, methodName, ...) {
 }
 
 .processCallback <- function(callback) {
-#  print(paste("Processing this callback : ", callback, sep=""))
-  # if(startsWith(callback, ExceptionPrefix)) {
-  #   stop(substring(callback, nchar(ExceptionPrefix)))
-  # } else if(regexpr("Error", callback) >= 0) {
-  #   stop(callback)
   .checkForExceptionInCallback(callback)
   if (regexpr("JavaObject", callback) >= 0) {  ## a single Java object
     returnObject <- .createFakeJavaObject(callback)
@@ -607,7 +594,6 @@ callJavaMethod <- function(source, methodName, ...) {
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)
   outputList <- .createJavaList()
-#  class(outputList) <- c(class(outputList), "java.list")
   for (i in 1:length(innerList[[1]])) {
     javaObject <- list()
     class(javaObject) <- c(class(javaObject), "java.object")
@@ -676,7 +662,8 @@ shutdownJava <- function() {
 getListOfJavaReferences <- function() {
   output <- c()
   for (objectName in ls(envir = globalenv())) {
-    if (.getClass(get(objectName, envir = globalenv())) %in% c("java.object", "java.list")) {
+    obj <- get(objectName, envir = globalenv())
+    if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
       output <- c(output, objectName)
     }
   }
@@ -708,7 +695,7 @@ callJavaGC <- function(...) {
   command <- "sync"
   for (objectName in ls(envir = globalenv())) {
     object <- get(objectName, envir = globalenv())
-    if (.getClass(object) %in% c("java.object", "java.list")) {
+    if (methods::is(object, "java.object") || methods::is(object, "java.list")) {
       command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
     }
   }
@@ -718,7 +705,7 @@ callJavaGC <- function(...) {
         if (!identical(environment, globalenv())) {
           for (objectName in ls(envir = environment)) {
             object <- get(objectName, envir = environment)
-            if (.getClass(object) %in% c("java.object", "java.list")) {
+            if (methods::is(object, "java.object") || methods::is(object, "java.list")) {
               command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
             }
           }

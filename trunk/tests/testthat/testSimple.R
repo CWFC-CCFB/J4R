@@ -411,6 +411,10 @@ test_that("Testing that a factor source and a factor parameter are processed as 
   expect_equal(length(which(expected != observed)) == 0, TRUE)
 })
 
+length <- callJavaMethod("Hello world!", "length")
+test_that("Testing the length of a  character string", {
+  expect_equal(length, 12)
+})
 
 shutdownJava()
 

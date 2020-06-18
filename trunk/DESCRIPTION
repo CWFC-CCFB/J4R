@@ -14,7 +14,8 @@ Description: Makes it possible to create 'Java' objects and to execute 'Java' me
     sources are included in this package. 
 URL: https://sourceforge.net/p/repiceasource/wiki/J4R/
 Imports:
-    utils (>= 3.4.4)
+    utils (>= 3.4.4),
+    methods (>= 3.6.3)
 License: GPL-3
 BugReports: https://sourceforge.net/p/repiceasource/tickets/
 Encoding: UTF-8
