@@ -59,8 +59,9 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
         jarFilename <- "j4r.jar"
       }
       path <- paste(rootPath, jarFilename, sep="/")
-      completeCommand <- paste(.getJavaPath(), "-Xmx50m", "-jar", path, paste(parms, collapse=" "), sep = " ")  ### MF2020-06-09 Reducing the size of the first JVM to avoid memory allocation issues
-      system(completeCommand, wait=FALSE)
+#      completeCommand <- paste(.getJavaPath(), "-Xmx50m", "-jar", path, paste(parms, collapse=" "), sep = " ")  ### MF2020-06-09 Reducing the size of the first JVM to avoid memory allocation issues
+#      system(completeCommand, wait=FALSE)
+      system2(.getJavaPath(), args = c("-Xmx50m", "-jar", path, parms), wait = F)
       initialTime <- Sys.time()
       while (!file.exists(filename)) {
         Sys.sleep(0.5)
@@ -97,12 +98,14 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
 
 .translateJavaObject <- function(javaObject) {
   hashcode <- c()
-  clazz <- .getClass(javaObject)
-  if (clazz == "java.list") {
+#  clazz <- .getClass(javaObject)
+  if (is(javaObject, "java.list")) {
+#  if (clazz == "java.list") {
     for (i in 1:length(javaObject)) {
       hashcode <- c(hashcode, as.character(javaObject[[i]]$hashcode))
     }
-  } else if (clazz == "java.object") {
+  } else if (is(javaObject, "java.object")) {
+#  } else if (clazz == "java.object") {
     hashcode <- as.character(javaObject$hashcode)
   } else {
     stop(".translateJavaObject: the argument should be an instance of java.object or java.list")
