@@ -7,8 +7,9 @@
 addToClassPath(path, packageName = NULL)
 }
 \arguments{
-\item{path}{a character representing the complete path to the directory or the JAR file
-if the packageName parameter is null. Otherwise, it can just be the name of the JAR file.}
+\item{path}{a character representing the path to the directory or the JAR file
+if the packageName parameter is null. Otherwise, it can just be the name of the JAR file. This path
+is normalized so that expressions like myJar.jar or ./extensions/myJar.jar will be processed.}
 
 \item{packageName}{a character representing the package.}
 }

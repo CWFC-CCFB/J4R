@@ -45,10 +45,10 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
       if (file.exists(filename)) {
         file.remove(filename)
       }
-      if (file.exists(paste(find.package("J4R"),"inst/java/j4r.jar", sep="/"))) {  ### test mode
-        rootPath <- paste(find.package("J4R"),"inst", "java", sep="/")
+      if (file.exists(system.file("inst", "java", "j4r.jar", package = "J4R"))) {  ### test mode
+        rootPath <- system.file("inst", "java", package = "J4R")
       } else {  ### normal mode
-        rootPath <- paste(find.package("J4R"), "java", sep="/")
+        rootPath <- system.file("java", package = "J4R")
       }
       #    message(rootPath)
       architecture <- suppressMessages(getJavaVersion()$architecture)
@@ -866,8 +866,9 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 #' name. A non null packageName parameter is typically used in packages that rely
 #' on J4R.
 #'
-#' @param path a character representing the complete path to the directory or the JAR file
-#' if the packageName parameter is null. Otherwise, it can just be the name of the JAR file.
+#' @param path a character representing the path to the directory or the JAR file
+#' if the packageName parameter is null. Otherwise, it can just be the name of the JAR file. This path
+#' is normalized so that expressions like myJar.jar or ./extensions/myJar.jar will be processed.
 #' @param packageName a character representing the package.
 #'
 #' @export
