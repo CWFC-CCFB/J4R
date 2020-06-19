@@ -19,16 +19,21 @@
 #' FALSE if the connection has failed
 #'
 #' @export
-connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
+connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (isConnectedToJava()) {
     message("The object j4rSocket already exists! It seems R is already connected to the Java server.")
     return(TRUE)
   } else {
-    if (!debug) {
+    if (debug) {
+      ### default values in debug mode
+      assign(".localport", 18011, envir = cacheEnv)
+      assign(".key", 0, envir = cacheEnv)
+      assign(".backdoorport", 50000, envir = cacheEnv)
+    } else {
       message(.checkJavaVersionRequirement())
       message("Starting Java server...")
       parms <- c("-firstcall", "true")
-      if (port != 18011) {
+      if (!is.null(port)) {
         parms <- c(parms, "-port", port)
       }
       if (!is.null(extensionPath)) {
@@ -68,11 +73,15 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
           stop("It seems the server has failed to start!")
         }
       }
+      info <- suppressWarnings(utils::read.csv2("J4RTmpFile", header=F))
+      assign(".localport", as.integer(info[1]), envir = cacheEnv)
+      assign(".key", as.integer(info[2]), envir = cacheEnv)
+      assign(".backdoorport", as.integer(info[3]), envir = cacheEnv)
     }
-    message(paste("Connecting on port", port))
+    message(paste("Connecting on port", .getPort()))
     isConnected <- tryCatch(
       {
-        assign("j4rSocket", utils::make.socket("localhost", port), envir = cacheEnv)
+        assign("j4rSocket", utils::make.socket("localhost", .getPort()), envir = cacheEnv)
         utils::read.socket(.getMainSocket(), maxlen = bufferLength)
         return(TRUE)
       },
@@ -83,6 +92,18 @@ connectToJava <- function(port = 18011, extensionPath = NULL, memorySize = NULL,
     )
     return(isConnected)
   }
+}
+
+.getPort <- function() {
+  return(get(".localport", envir = cacheEnv))
+}
+
+.getBackdoorPort <- function() {
+  return(get(".backdoorport", envir = cacheEnv))
+}
+
+.getKey <- function() {
+  return(get(".key", envir = cacheEnv))
 }
 
 .getMainSocket <- function() {
@@ -630,6 +651,9 @@ shutdownJava <- function() {
     utils::write.socket(.getMainSocket(), "closeConnection")
     message("Closing connection and removing socket...")
     rm("j4rSocket", envir = cacheEnv)
+    rm(".backdoorport", envir = cacheEnv)
+    rm(".localport", envir = cacheEnv)
+    rm(".key", envir = cacheEnv)
   }
   filename <- file.path(getwd(), "J4RTmpFile")
   if (file.exists(filename)) {
@@ -797,7 +821,7 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 .killJava <- function() {
   tryCatch(
     {
-      emergencySocket <- utils::make.socket("localhost", 50000)
+      emergencySocket <- utils::make.socket("localhost", .getBackdoorPort())
       utils::read.socket(emergencySocket, maxlen = bufferLength)
       utils::write.socket(socket = emergencySocket, "emergencyShutdown")
     },

@@ -5,7 +5,7 @@
 \title{Connect to Java environment}
 \usage{
 connectToJava(
-  port = 18011,
+  port = NULL,
   extensionPath = NULL,
   memorySize = NULL,
   debug = FALSE
