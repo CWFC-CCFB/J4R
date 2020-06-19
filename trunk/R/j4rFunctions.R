@@ -192,8 +192,8 @@ isConnectedToJava <- function() {
 #'
 #' @export
 createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) {
-  env <- environment(createJavaObject)
-  reg.finalizer(env, .finalize)
+#  env <- environment(createJavaObject)
+#  reg.finalizer(env, .finalize)
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
   firstCommand <- "create"
