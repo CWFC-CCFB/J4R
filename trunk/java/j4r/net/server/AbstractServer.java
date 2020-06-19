@@ -39,13 +39,15 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	protected static enum ServerReply {IAmBusyCallBackLater, 
 		CallAccepted, 
 		ClosingConnection,
-		RequestReceivedAndProcessed}
+		RequestReceivedAndProcessed,
+		SecurityChecked,
+		SecurityFailed}
 
 	/**
 	 * This internal class handles the calls and stores these in the queue.
 	 * @author Mathieu Fortin
 	 */
-	private class CallReceiverThread extends Thread {
+	class CallReceiverThread extends Thread {
 
 		private boolean shutdownCall;
 		protected final ServerSocket serverSocket;
@@ -73,7 +75,9 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 				while (!shutdownCall) {
 					SocketWrapper clientSocket = new TCPSocketWrapper(serverSocket.accept(), AbstractServer.this.isCallerAJavaApplication);
 					clientSocket.writeObject(ServerReply.CallAccepted);
-					clientQueue.add(clientSocket);
+					if (AbstractServer.this.checkSecurity(clientSocket)) {
+						clientQueue.add(clientSocket);
+					}
 				}
 				System.out.println("Call receiver thread shut down");
 			} catch (Exception e) {
@@ -96,7 +100,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 
 	private ArrayList<ClientThread> clientThreads;
 	protected final LinkedBlockingQueue<SocketWrapper> clientQueue;
-	private CallReceiverThread callReceiver;
+	protected final CallReceiverThread callReceiver;
 	
 	protected final boolean isCallerAJavaApplication;
 	
@@ -128,6 +132,32 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	}
 
 	
+	protected boolean checkSecurity(SocketWrapper clientSocket) {
+		if (configuration.isLocal) {
+			try {
+				Object obj = clientSocket.readObject();
+				int key = Integer.parseInt(obj.toString());
+				if (configuration.key == key) {
+					clientSocket.writeObject(ServerReply.SecurityChecked);
+					return true;
+				} else {
+					clientSocket.writeObject(ServerReply.SecurityFailed);
+					return false;
+				}
+			} catch (Exception e) {
+				try {
+					clientSocket.writeObject(e);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				return false;
+			}
+		} else {
+			return true;	// for web server 
+		}
+	}
+
+
 	protected abstract ClientThread createClientThread(AbstractServer server, int id);
 		
 
@@ -191,6 +221,9 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	@Override
 	protected void firstTasksToDo() {
 		addTask(new ServerTask(ServerTaskID.StartReceiverThread, this));
+		if (configuration.isLocalServer()) {
+			addTask(new ServerTask(ServerTaskID.CreateFileInfo, this));
+		}
 	}
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -241,9 +274,13 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		}
 		super.requestShutdown();
 	}
+
+
+	/*
+	 * This method can be overriden and left empty for webserver.
+	 * @throws IOException
+	 */
+	protected abstract void createFileInfoForLocalServer() throws IOException;
 	
-
-
-
 
 }

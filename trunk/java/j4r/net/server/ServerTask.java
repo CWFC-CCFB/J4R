@@ -25,7 +25,8 @@ public class ServerTask extends AbstractGenericTask {
 	private static final long serialVersionUID = 1L;
 
 	public static enum ServerTaskID {
-		StartReceiverThread
+		StartReceiverThread,
+		CreateFileInfo;
 	}
 	
 	private final ServerTaskID taskID;
@@ -42,6 +43,9 @@ public class ServerTask extends AbstractGenericTask {
 		switch(taskID) {
 		case StartReceiverThread:
 			server.startReceiverThread();
+			break;
+		case CreateFileInfo:
+			server.createFileInfoForLocalServer();
 			break;
 		}
 	}

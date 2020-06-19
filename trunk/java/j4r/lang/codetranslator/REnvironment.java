@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import j4r.lang.J4RSystem;
@@ -50,6 +51,10 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	
 	private static final String PORT = "-port";
 	
+	private static final String BACKDOORPORT = "-backdoorport";
+
+	private static final String WD = "-wd";
+
 	private static final String MEMORY = "-mem";
 
 	public static final String MainSplitter = "/;";
@@ -202,6 +207,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	private static String SynchronizeEnvironment = "sync";
 	private static String FieldCode = "field";
 
+	private static final Random RANDOM = new Random();
 	
 
 	
@@ -361,6 +367,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 		}
 	}
 
+	private static int generateSecurityKey() {
+		return RANDOM.nextInt();
+	}
+	
+	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object processMethod(String[] requestStrings) throws Exception {
 		Class clazz = null;
@@ -479,7 +490,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			}
 		}
 		if (possibleMatches.isEmpty()) {
-			throw new NoSuchMethodException("Method " + methodName + "cannot be found in the class " + clazz.getSimpleName());
+			throw new NoSuchMethodException("Method " + methodName + " cannot be found in the class " + clazz.getSimpleName());
 		} else {
 			Collections.sort(possibleMatches);
 		}
@@ -688,6 +699,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	}
 
 	
+	
 	/**
 	 * Main entry point for creating a REnvironment hosted by a Java local gateway server.
 	 * @param args
@@ -724,7 +736,11 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 					newCommands.add(PORT);
 					newCommands.add(port);
 				}
-				
+
+				String wd = J4RSystem.retrieveArgument(WD, arguments);
+				newCommands.add(WD);
+				newCommands.add(wd);
+
 				String memorySizeStr = J4RSystem.retrieveArgument(MEMORY, arguments);
 				Integer memorySize = null;
 				if (memorySizeStr != null) {
@@ -756,9 +772,17 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			if (portStr != null) {
 				port = Integer.parseInt(portStr);
 			} else {
-				port = 18011;		// default port
+				port = 0;		// default random port
 			}
-			server = new JavaLocalGatewayServer(new ServerConfiguration(port), new REnvironment());
+			String backdoorportStr = J4RSystem.retrieveArgument(BACKDOORPORT, arguments);
+			int backdoorport;
+			if (backdoorportStr != null) {
+				backdoorport = Integer.parseInt(backdoorportStr);
+			} else {
+				backdoorport = 0;		// default random port
+			}
+			ServerConfiguration conf = new ServerConfiguration(port, generateSecurityKey(), backdoorport, J4RSystem.retrieveArgument(WD, arguments));
+			server = new JavaLocalGatewayServer(conf, new REnvironment());
 			server.startApplication();
 		} catch (Exception e) {
 			System.exit(1);

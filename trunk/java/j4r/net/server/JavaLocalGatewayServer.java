@@ -18,6 +18,8 @@
  */
 package j4r.net.server;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -37,13 +39,13 @@ import j4r.net.server.BasicClient.ClientRequest;
 public class JavaLocalGatewayServer extends AbstractServer {
 	
 	
-	class REpiceaBackDoorCancellationThread extends Thread {
+	class BackDoorThread extends Thread {
 		
 		private final ServerSocket emergencySocket;
 		private final int port;
 		
-		REpiceaBackDoorCancellationThread(int port) throws IOException {
-			super("Back door cancellation thread");
+		BackDoorThread(int port) throws IOException {
+			super("Back door thread");
 			this.port = port;
 			emergencySocket = new ServerSocket(port);
 			start();
@@ -186,7 +188,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 
 	protected final REnvironment translator;	
 	protected final boolean shutdownOnClosedConnection;
-	protected final REpiceaBackDoorCancellationThread backdoorThread;
+	protected final BackDoorThread backdoorThread;
 	protected boolean bypassShutdownForTesting;
 	
 	/**
@@ -210,6 +212,9 @@ public class JavaLocalGatewayServer extends AbstractServer {
 		return socket;
 	}
 
+	
+	
+	
 	/**
 	 * Hidden constructor for test purpose
 	 * @param servConf a ServerConfiguration instance
@@ -218,11 +223,10 @@ public class JavaLocalGatewayServer extends AbstractServer {
 	 * @throws Exception
 	 */
 	protected JavaLocalGatewayServer(ServerConfiguration servConf, REnvironment translator, boolean shutdownOnClosedConnection) throws Exception {
-//		super(new ServerConfiguration(1, 0, outerPort, null), false); // false: the client is not a Java application
 		super(servConf, false);
 		this.translator = translator;
 		this.shutdownOnClosedConnection = shutdownOnClosedConnection;
-		backdoorThread = new REpiceaBackDoorCancellationThread(50000);
+		backdoorThread = new BackDoorThread(servConf.innerPort);
 	}
 
 	@Override
@@ -230,7 +234,6 @@ public class JavaLocalGatewayServer extends AbstractServer {
 		return new JavaGatewayClientThread(server, id);
 	}
 
-	
 	
 	@Override
 	protected void shutdown(int shutdownCode) {
@@ -241,6 +244,16 @@ public class JavaLocalGatewayServer extends AbstractServer {
 			return;
 		}
 		super.shutdown(shutdownCode);
+	}
+
+	@Override
+	protected void createFileInfoForLocalServer() throws IOException {
+		String filename = getConfiguration().wd.trim() + File.separator + "J4RTmpFile";
+		File file = new File(filename);
+		String outputStr = "" + this.callReceiver.serverSocket.getLocalPort() + ";" + getConfiguration().key + ";" + backdoorThread.emergencySocket.getLocalPort();
+		FileWriter writer = new FileWriter(file);
+		writer.write(outputStr);
+		writer.close();
 	}
 	
 	

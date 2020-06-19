@@ -171,14 +171,14 @@ public class J4RSystem {
 	 */
 	public static List<String> setClassicalOptions(String[] args) {
 		if (args.length == 0) {
-			System.out.println("No parameters received.");
+//			System.out.println("No parameters received.");
 			return new ArrayList<String>();
 		} else {
 			String inputString = "";
 			for (String str : args) {
 				inputString = inputString + str + "; ";
 			}
-			System.out.println("Parameters received:" + inputString);
+//			System.out.println("Parameters received:" + inputString);
 			J4RSystem.setLanguageFromMain(args, Language.English);
 			System.out.println("Language set to: " + J4RTranslator.getCurrentLanguage().name());
 			return Arrays.asList(args);

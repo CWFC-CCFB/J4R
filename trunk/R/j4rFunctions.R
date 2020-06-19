@@ -83,14 +83,36 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
       {
         assign("j4rSocket", utils::make.socket("localhost", .getPort()), envir = cacheEnv)
         utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-        return(TRUE)
+        TRUE
       },
       error=function(cond) {
           message("The server has started but it seems the client is unable to get connected to the server.")
           return(FALSE)
       }
     )
-    return(isConnected)
+    if (isConnected) {
+      isSecure <- tryCatch(
+        {
+          utils::write.socket(.getMainSocket(), as.character(.getKey()))
+          outcome <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
+          if (outcome == "SecurityFailed") {
+            message("The client got connected but security could not be confirmed.")
+          }
+          outcome == "SecurityChecked"
+        },
+        error=function(cond) {
+          message("An error occurred while checking security key.")
+          message(cond)
+          return(FALSE)
+        }
+      )
+      if (!isSecure) {
+        shutdownJava()  ### for a clean exit
+      }
+      return(isSecure)
+    } else {
+      return(FALSE)
+    }
   }
 }
 
@@ -103,7 +125,11 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
 }
 
 .getKey <- function() {
-  return(get(".key", envir = cacheEnv))
+  if (exists(".testKey", envir = cacheEnv)) {
+    return(get(".testKey", envir = cacheEnv))
+  } else {
+    return(get(".key", envir = cacheEnv))
+  }
 }
 
 .getMainSocket <- function() {

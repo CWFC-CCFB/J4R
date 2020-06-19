@@ -71,3 +71,20 @@ test_that("Testing if the connectToJava function with another port works", {
 
 shutdownJava()
 
+
+### Testing if server automatically shut down if the key is not validated ###
+
+assign(".testKey", 1, envir = J4R::cacheEnv)
+
+isConnected <- connectToJava(memorySize = 200)
+remainingObjectsInCache <- ls(envir = J4R::cacheEnv, all.names = T)
+
+test_that("Testing if the server is properly shutted down when the key is not validated", {
+  expect_equal(isConnected, FALSE)
+  expect_equal(length(remainingObjectsInCache), 1)
+  expect_equal(remainingObjectsInCache[1], ".testKey")
+})
+
+rm(list = ls(envir = J4R::cacheEnv, all.names = T), envir = J4R::cacheEnv)
+
+shutdownJava()
