@@ -160,6 +160,15 @@ test_that("Create a NullWrapper instance", {
   expect_equal(result$class, "j4r.lang.codetranslator.REnvironment$NullWrapper")
 })
 
+### Creating a array of integers and filling it
+mySimpleArray <- createJavaObject("int", 3, isArray = TRUE)
+setValueInArray(mySimpleArray, 7:9)
+diffVector <- getAllValuesFromArray(mySimpleArray) - 7:9
+
+test_that("Check the values returned from the array", {
+  expect_equal(length(which(diffVector != 0)), 0)
+})
+
 #### Creating a 3x3 array of integers
 myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
 
@@ -415,6 +424,33 @@ length <- callJavaMethod("Hello world!", "length")
 test_that("Testing the length of a  character string", {
   expect_equal(length, 12)
 })
+
+## Tests for primitve type wrappers
+
+a <- createJavaObject("java.lang.String", "Hello world!")
+test_that("Testing that a String created through the String constructor is returned as a primitive type", {
+  expect_equal(methods::is(a, "java.object") | methods::is(a, "java.list"), FALSE)
+  expect_equal(a, "Hello world!")
+})
+
+b <- createJavaObject("java.lang.String", rep("Hello world!",10))
+test_that("Testing that a String created through the String constructor is returned as a primitive type", {
+  expect_equal(methods::is(b, "java.object") | methods::is(b, "java.list"), FALSE)
+  expect_equal(length(b), 10)
+  expect_equal(length(which(b == "Hello world!")), 10)
+})
+
+c <- createJavaObject("java.lang.Integer", as.integer(1))
+test_that("Testing that a String created through the String constructor is returned as a primitive type", {
+  expect_equal(c, as.integer(1))
+})
+
+d <- createJavaObject("java.lang.Integer", as.integer(rep(1,10)))
+test_that("Testing that a String created through the String constructor is returned as a primitive type", {
+  expect_equal(length(d), 10)
+  expect_equal(length(which(d == as.integer(1))), 10)
+})
+
 
 shutdownJava()
 

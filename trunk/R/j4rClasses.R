@@ -35,9 +35,9 @@ print.java.list <- function(x, ...) {
   }
 }
 
-.finalize <- function(e) {
-  print("I am cleaning")
-}
+# .finalize <- function(e) {
+#   print("I am cleaning")
+# }
 
 java.object <- function(classname, hashcodeInt) {
   me <- list(class = classname, hashcode = hashcodeInt)
@@ -56,5 +56,5 @@ java.object <- function(classname, hashcodeInt) {
 #'
 #' @export
 print.java.object <- function(x, ...) {
-  print(paste(x$class, x$hashcode, sep=":"))
+  print(paste("Java_ref",x$class, x$hashcode, sep="_"))
 }

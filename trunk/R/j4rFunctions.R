@@ -192,7 +192,7 @@ isConnectedToJava <- function() {
 #'
 #' @export
 createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) {
-#  env <- environment(createJavaObject)
+#  env <- rlang::current_env()
 #  reg.finalizer(env, .finalize)
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
@@ -226,14 +226,18 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     }
     utils::write.socket(.getMainSocket(), command)
     callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-    .checkForExceptionInCallback(callback)
+    obj <- .processCallback(callback)
+#    .checkForExceptionInCallback(callback)
     if (parametersLength <= 1) {
-      return(.createFakeJavaObject(callback)) ## a single object
+      return(obj) ## a single object
+#      return(.createJavaObjectReference(callback)) ## a single object
     } else {
       if (is.null(javaList)) {
-        javaList <- .createFakeJavaObject(callback)
+        javaList <- obj
+#        javaList <- .createJavaObjectReference(callback)
       } else {
-        javaList <- .dropAllIntoFirstList(javaList, .createFakeJavaObject(callback))
+        javaList <- .dropAllIntoFirstList(javaList, obj)
+#        javaList <- .dropAllIntoFirstList(javaList, .createJavaObjectReference(callback))
       }
     }
   }
@@ -518,9 +522,9 @@ callJavaMethod <- function(source, methodName, ...) {
 .processCallback <- function(callback) {
   .checkForExceptionInCallback(callback)
   if (regexpr("JavaObject", callback) >= 0) {  ## a single Java object
-    returnObject <- .createFakeJavaObject(callback)
+    returnObject <- .createJavaObjectReference(callback)
   } else if (regexpr("JavaList", callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
-    returnObject <- .createFakeJavaObject(callback)
+    returnObject <- .createJavaObjectReference(callback)
   } else if (regexpr("RequestReceivedAndProcessed", callback) >= 0) {
     returnObject <- NULL
   } else {
@@ -585,7 +589,7 @@ callJavaMethod <- function(source, methodName, ...) {
 }
 
 
-.createFakeJavaObject <- function(str) {
+.createJavaObjectReference <- function(str) {
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)
   outputList <- java.list()
