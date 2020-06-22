@@ -4,19 +4,19 @@
 # Date: January 2019
 ########################################################
 
-numericToken <- "numeric"
-integerToken <- "integer"
-logicalToken <- "logical"
-characterToken <- "character"
-javaObjectToken <- "JavaObject"
-javaListToken <- "JavaList"
+# numericToken <- "numeric"
+# integerToken <- "integer"
+# logicalToken <- "logical"
+# characterToken <- "character"
+# javaObjectToken <- "JavaObject"
+# javaListToken <- "JavaList"
 
-# numericToken <- "nu"
-# integerToken <- "in"
-# logicalToken <- "lo"
-# characterToken <- "ch"
-# javaObjectToken <- "JO"
-# javaListToken <- "JL"
+numericToken <- "nu"
+integerToken <- "in"
+logicalToken <- "lo"
+characterToken <- "ch"
+javaObjectToken <- "JO"
+javaListToken <- "JL"
 
 
 numericTokenLength <- nchar(numericToken)
