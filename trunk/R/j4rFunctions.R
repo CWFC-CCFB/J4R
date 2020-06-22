@@ -17,13 +17,14 @@ logicalToken <- "lo"
 characterToken <- "ch"
 javaObjectToken <- "JO"
 javaListToken <- "JL"
+javaListAndMainSplitterToken <- paste(javaListToken, MainSplitter, sep="")
 
 numericTokenLength <- nchar(numericToken) + 1
 integerTokenLength <- nchar(integerToken) + 1
 logicalTokenLength <- nchar(logicalToken) + 1
 characterTokenLength <- nchar(characterToken) + 1
 #javaObjectTokenLength <- nchar(javaObjectToken) + 1
-javaListTokenLength <- nchar(javaListToken) + 3
+javaListAndMainSplitterTokenLength <- nchar(javaListAndMainSplitterToken) + 1
 
 
 #'
@@ -574,8 +575,8 @@ callJavaMethod <- function(source, methodName, ...) {
 }
 
 .translatePrimitiveType <- function(str) {
-  if (regexpr(paste(javaListToken, MainSplitter, sep=""), str) == 1) {
-    str <- substring(str, javaListTokenLength)
+  if (regexpr(javaListAndMainSplitterToken, str) == 1) {
+    str <- substring(str, javaListAndMainSplitterTokenLength)
   }
   inputList <- strsplit(str,SubSplitter)[[1]]
   outputVector <- list()
