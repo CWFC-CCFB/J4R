@@ -259,7 +259,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     nbCalls <- 1
   }
   basicCommand <- paste(firstCommand, class, sep=MainSplitter)
-  javaList <- NULL
+  output <- NULL
   for (i in 1:nbCalls) {
     if (parametersLength > 0) {
       lowerIndex <- (i-1) * maxVectorLength + 1
@@ -273,22 +273,9 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     }
     utils::write.socket(.getMainSocket(), command)
     callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-    obj <- .processCallback(callback)
-#    .checkForExceptionInCallback(callback)
-    if (parametersLength <= 1) {
-      return(obj) ## a single object
-#      return(.createJavaObjectReference(callback)) ## a single object
-    } else {
-      if (is.null(javaList)) {
-        javaList <- obj
-#        javaList <- .createJavaObjectReference(callback)
-      } else {
-        javaList <- .dropAllIntoFirstList(javaList, obj)
-#        javaList <- .dropAllIntoFirstList(javaList, .createJavaObjectReference(callback))
-      }
-    }
+    output <- .processResult(callback, output)
   }
-  return(javaList)
+  return(output)
 }
 
 .checkForExceptionInCallback <- function(callback) {
@@ -404,20 +391,7 @@ getJavaField <- function(source, fieldName) {
 
     utils::write.socket(.getMainSocket(), command)
     callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
-    result <- .processCallback(callback)
-    if (maxLength == 1) {
-      return(result)
-    } else {
-      if (is.null(output)) {
-        output <- result
-      } else {
-        if (methods::is(output, "java.list")) {
-          output <- .dropAllIntoFirstList(output, result)
-        } else {
-          output <- c(output, result)
-        }
-      }
-    }
+    output <- .processResult(callback, output)
   }
   return(output)
 }
@@ -466,22 +440,14 @@ setJavaField <- function(source, fieldName, value) {
     }
     utils::write.socket(.getMainSocket(), command)
     callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
-    result <- .processCallback(callback)
-    if (maxLength == 1) {
-      return(result)
-    } else {
-      if (is.null(output)) {
-        output <- result
-      } else {
-        if (methods::is(output, "java.list")) {
-          output <- .dropAllIntoFirstList(output, result)
-        } else {
-          output <- c(output, result)
-        }
-      }
-    }
+    output <- .processResult(callback, output)
   }
-  return(output)
+  if (!is.null(output)) {
+    warning("The Java server has returned something else than NULL!")
+    return(output)
+  } else {
+    return(invisible(output))
+  }
 }
 
 
@@ -548,23 +514,29 @@ callJavaMethod <- function(source, methodName, ...) {
     }
     utils::write.socket(.getMainSocket(), command)
     callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
-    result <- .processCallback(callback)
-    if (maxLength == 1) {
-      return(result)
-    } else {
-      if (is.null(output)) {
-        output <- result
-      } else {
-        if (methods::is(output, "java.list")) {
-          output <- .dropAllIntoFirstList(output, result)
-        } else {
-          output <- c(output, result)
-        }
-      }
-    }
+    output <- .processResult(callback, output)
+  }
+  if (is.null(output)) {
+    return(invisible(output))
+  } else {
+    return(output)
   }
   return(output)
 }
+
+.processResult <- function(callback, output) {
+  result <- .processCallback(callback)
+  if (is.null(output)) {
+    output <- result
+  } else {
+    if (methods::is(output, "java.list")) {
+      output <- .dropAllIntoFirstList(output, result)
+    } else {
+      output <- c(output, result)
+    }
+  }
+}
+
 
 .processCallback <- function(callback) {
   .checkForExceptionInCallback(callback)
@@ -823,13 +795,6 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 }
 
 .getLibraryPath <- function(packageName, myJavaLibrary) {
-  # if (file.exists(paste(find.package(packageName), "inst", myJavaLibrary, sep="/"))) {  ### test mode
-  #   filePath <- paste(find.package(packageName), "inst", myJavaLibrary, sep="/")
-  # } else if (file.exists(paste(find.package(packageName), myJavaLibrary, sep="/"))) {  ### normal mode
-  #   filePath <- paste(find.package(packageName), myJavaLibrary, sep="/")
-  # } else {
-  #   filePath <- NULL
-  # }
   filename <- system.file("inst", myJavaLibrary, package = packageName)
   if (file.exists(filename)) {  ### test mode
     filePath <- filename
@@ -883,11 +848,6 @@ addToClassPath <- function(path, packageName = NULL) {
       path <- .getLibraryPath(packageName, path)
     }
     callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", normalizePath(path))
-    # if (is.null(packageName)) {
-    #   callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", path)
-    # } else {
-    #   callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", .getLibraryPath(packageName, path))
-    # }
   } else {
     message("The Java server is not running.")
   }
