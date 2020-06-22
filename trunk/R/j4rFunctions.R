@@ -11,6 +11,11 @@
 # javaObjectToken <- "JavaObject"
 # javaListToken <- "JavaList"
 
+createCommandToken <- "c"
+createNullArrayToken <- "cnarr"
+createNullToken <- "cnu"
+createArrayToken <- "carr"
+
 numericToken <- "nu"
 integerToken <- "in"
 logicalToken <- "lo"
@@ -265,15 +270,15 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
 #  reg.finalizer(env, .finalize)
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
-  firstCommand <- "create"
+  firstCommand <- createCommandToken
   if (isNullObject) {
     if (isArray) {
-      firstCommand <- "createnullarray"
+      firstCommand <- createNullArrayToken
     } else {
-      firstCommand <- "createnull"
+      firstCommand <- createNullToken
     }
   } else if (isArray) {
-    firstCommand <- "createarray"
+    firstCommand <- createArrayToken
   }
 
   nbCalls <- ceiling(parametersLength / maxVectorLength)
