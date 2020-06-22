@@ -4,7 +4,7 @@
 \alias{createJavaObject}
 \title{Create Java objects}
 \usage{
-createJavaObject(class, ..., isNullObject = FALSE, isArray = FALSE)
+createJavaObject(class, ..., isNullObject = FALSE, isArray = FALSE, thread = 1)
 }
 \arguments{
 \item{class}{the Java class of the object (e.g. java.util.ArrayList)}

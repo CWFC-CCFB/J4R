@@ -4,7 +4,7 @@
 \alias{callJavaMethod}
 \title{Call a Java method}
 \usage{
-callJavaMethod(source, methodName, ...)
+callJavaMethod(source, methodName, ..., thread = 1)
 }
 \arguments{
 \item{source}{this should be either a java.list instance or a single java.object instance for non-static methods or

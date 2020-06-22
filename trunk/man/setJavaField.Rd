@@ -4,7 +4,7 @@
 \alias{setJavaField}
 \title{Set the value of a public field}
 \usage{
-setJavaField(source, fieldName, value)
+setJavaField(source, fieldName, value, thread = 1)
 }
 \arguments{
 \item{source}{this should be either a java.list instance or a single java.object instance for non-static methods or

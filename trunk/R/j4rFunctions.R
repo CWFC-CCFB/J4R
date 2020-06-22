@@ -28,7 +28,6 @@ numericTokenLength <- nchar(numericToken) + 1
 integerTokenLength <- nchar(integerToken) + 1
 logicalTokenLength <- nchar(logicalToken) + 1
 characterTokenLength <- nchar(characterToken) + 1
-#javaObjectTokenLength <- nchar(javaObjectToken) + 1
 javaListAndMainSplitterTokenLength <- nchar(javaListAndMainSplitterToken) + 1
 
 
@@ -53,10 +52,6 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
   } else {
     if (debug) {
       assign("connectionHandler", J4RConnectionHandler(18011, 0, 50000), envir = cacheEnv)
-      # ### default values in debug mode
-      # assign(".localport", 18011, envir = cacheEnv)
-      # assign(".key", 0, envir = cacheEnv)
-      # assign(".backdoorport", 50000, envir = cacheEnv)
     } else {
       message(.checkJavaVersionRequirement())
       message("Starting Java server...")
@@ -105,46 +100,8 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
       port <- as.integer(info[1])
       key <- as.integer(info[2])
       backdoorport <- as.integer(info[3])
-      # assign(".localport", port, envir = cacheEnv)
-      # assign(".key", key, envir = cacheEnv)
-      # assign(".backdoorport", backdoorport, envir = cacheEnv)
       assign("connectionHandler", J4RConnectionHandler(port, key, backdoorport), envir = cacheEnv)
     }
-    # message(paste("Connecting on port", .getPort()))
-    # isConnected <- tryCatch(
-    #   {
-    #     assign("j4rSocket", utils::make.socket("localhost", .getPort()), envir = cacheEnv)
-    #     utils::read.socket(.getSocket(), maxlen = bufferLength)
-    #     TRUE
-    #   },
-    #   error=function(cond) {
-    #       message("The server has started but it seems the client is unable to get connected to the server.")
-    #       return(FALSE)
-    #   }
-    # )
-    # if (isConnected) {
-    #   isSecure <- tryCatch(
-    #     {
-    #       utils::write.socket(.getSocket(), as.character(.getKey()))
-    #       outcome <- utils::read.socket(.getSocket(), maxlen = bufferLength)
-    #       if (outcome == "SecurityFailed") {
-    #         message("The client got connected but security could not be confirmed.")
-    #       }
-    #       outcome == "SecurityChecked"
-    #     },
-    #     error=function(cond) {
-    #       message("An error occurred while checking security key.")
-    #       message(cond)
-    #       return(FALSE)
-    #     }
-    #   )
-    #   if (!isSecure) {
-    #     shutdownJava()  ### for a clean exit
-    #   }
-    #   return(isSecure)
-    # } else {
-    #   return(FALSE)
-    # }
     isSecure <- .createAndSecureConnection()
 
     if (!isSecure) {
@@ -267,7 +224,7 @@ isConnectedToJava <- function() {
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) {
+createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, thread = 1) {
 #  env <- rlang::current_env()
 #  reg.finalizer(env, .finalize)
   parameters <- list(...)
@@ -300,8 +257,8 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     } else {
       command <- basicCommand
     }
-    utils::write.socket(.getSocket(), command)
-    callback <- utils::read.socket(.getSocket(), maxlen = bufferLength)
+    utils::write.socket(.getSocket(thread), command)
+    callback <- utils::read.socket(.getSocket(thread), maxlen = bufferLength)
     output <- .processResult(callback, output)
   }
   return(output)
@@ -395,7 +352,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
 #' @param fieldName the name of the field to be set
 #'
 #' @export
-getJavaField <- function(source, fieldName) {
+getJavaField <- function(source, fieldName, thread = 1) {
   if (length(fieldName) != 1) {
     stop("The function getJavaField can only take a single field name!" )
   }
@@ -418,8 +375,8 @@ getJavaField <- function(source, fieldName) {
 
     command <- .constructSourcePartCommand("field", source, sourceLength, fieldName, lowerIndex, upperIndex)
 
-    utils::write.socket(.getSocket(), command)
-    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
+    utils::write.socket(.getSocket(thread), command)
+    callback <- utils::read.socket(.getSocket(thread), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
   return(output)
@@ -439,7 +396,7 @@ getJavaField <- function(source, fieldName) {
 #' @param value the new value of the field
 #'
 #' @export
-setJavaField <- function(source, fieldName, value) {
+setJavaField <- function(source, fieldName, value, thread = 1) {
   parameters <- list(value)
   parametersLength <- .getParametersLength(parameters)
   maxLength <- parametersLength
@@ -467,8 +424,8 @@ setJavaField <- function(source, fieldName, value) {
         command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
       }
     }
-    utils::write.socket(.getSocket(), command)
-    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
+    utils::write.socket(.getSocket(thread), command)
+    callback <- utils::read.socket(.getSocket(thread), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
   if (!is.null(output)) {
@@ -512,7 +469,7 @@ setJavaField <- function(source, fieldName, value) {
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-callJavaMethod <- function(source, methodName, ...) {
+callJavaMethod <- function(source, methodName, ..., thread = 1) {
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
   maxLength <- parametersLength
@@ -541,8 +498,8 @@ callJavaMethod <- function(source, methodName, ...) {
         command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
       }
     }
-    utils::write.socket(.getSocket(), command)
-    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
+    utils::write.socket(.getSocket(thread), command)
+    callback <- utils::read.socket(.getSocket(thread), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
   if (is.null(output)) {
@@ -677,10 +634,6 @@ shutdownJava <- function() {
   if (isConnectedToJava()) {
     utils::write.socket(.getSocket(), "closeConnection")
     message("Closing connection and removing socket...")
-    # rm("j4rSocket", envir = cacheEnv)
-    # rm(".backdoorport", envir = cacheEnv)
-    # rm(".localport", envir = cacheEnv)
-    # rm(".key", envir = cacheEnv)
   }
   if (exists("connectionHandler", envir = cacheEnv)) {  # when security is not validated, the connectionhandler object remains
     rm("connectionHandler", envir = cacheEnv)

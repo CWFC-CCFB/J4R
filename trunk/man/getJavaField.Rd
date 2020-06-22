@@ -4,7 +4,7 @@
 \alias{getJavaField}
 \title{Get the value of a public field}
 \usage{
-getJavaField(source, fieldName)
+getJavaField(source, fieldName, thread = 1)
 }
 \arguments{
 \item{source}{this should be either a java.list instance or a single java.object instance for non-static methods or
