@@ -27,8 +27,7 @@ print.java.list <- function(x, ...) {
   while (i < length(x) && i < max) {
     i <- i + 1
     obj <- x[[i]]
-    str <- paste(obj$class, obj$hashcode, sep=":")
-    print(paste("[",i,"] ", str, sep=""))
+    print(paste("[",i,"] ", .toString(obj), sep=""))
   }
   if (length(x) > max) {
     print(paste("... (", length(x) - max, " Java reference(s) omitted)",sep=""))
@@ -38,6 +37,11 @@ print.java.list <- function(x, ...) {
 # .finalize <- function(e) {
 #   print("I am cleaning")
 # }
+
+.toString <- function(x) {
+  return(paste(x$class, x$hashcode, sep="@"))
+}
+
 
 java.object <- function(classname, hashcodeInt) {
   me <- list(class = classname, hashcode = hashcodeInt)
@@ -56,5 +60,5 @@ java.object <- function(classname, hashcodeInt) {
 #'
 #' @export
 print.java.object <- function(x, ...) {
-  print(paste("Java_ref",x$class, x$hashcode, sep="_"))
+  print(.toString(x))
 }
