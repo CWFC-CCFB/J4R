@@ -4,6 +4,28 @@
 # Date: January 2019
 ########################################################
 
+numericToken <- "numeric"
+integerToken <- "integer"
+logicalToken <- "logical"
+characterToken <- "character"
+javaObjectToken <- "JavaObject"
+javaListToken <- "JavaList"
+
+# numericToken <- "nu"
+# integerToken <- "in"
+# logicalToken <- "lo"
+# characterToken <- "ch"
+# javaObjectToken <- "JO"
+# javaListToken <- "JL"
+
+
+numericTokenLength <- nchar(numericToken)
+integerTokenLength <- nchar(integerToken)
+logicalTokenLength <- nchar(logicalToken)
+characterTokenLength <- nchar(characterToken)
+javaObjectTokenLength <- nchar(javaObjectToken)
+javaListTokenLength <- nchar(javaListToken)
+
 
 #'
 #' Connect to Java environment
@@ -540,9 +562,9 @@ callJavaMethod <- function(source, methodName, ...) {
 
 .processCallback <- function(callback) {
   .checkForExceptionInCallback(callback)
-  if (regexpr("JavaObject", callback) >= 0) {  ## a single Java object
+  if (regexpr(javaObjectToken, callback) >= 0) {  ## a single Java object
     returnObject <- .createJavaObjectReference(callback)
-  } else if (regexpr("JavaList", callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
+  } else if (regexpr(javaListToken, callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
     returnObject <- .createJavaObjectReference(callback)
   } else if (regexpr("RequestReceivedAndProcessed", callback) >= 0) {
     returnObject <- NULL
@@ -553,25 +575,25 @@ callJavaMethod <- function(source, methodName, ...) {
 }
 
 .translatePrimitiveType <- function(str) {
-  if (regexpr(paste("JavaList", MainSplitter, sep=""), str) == 1) {
-    str <- substring(str, 11)
+  if (regexpr(paste(javaListToken, MainSplitter, sep=""), str) == 1) {
+    str <- substring(str, javaListTokenLength + 3)
   }
   inputList <- strsplit(str,SubSplitter)[[1]]
   outputVector <- list()
   for (i in 1:length(inputList)) {
     str <- inputList[i]
-    if (regexpr("numeric", str) == 1) { # starts with numeric
-      outputVector[[i]] <- as.numeric(substring(str,8))
-    } else if (regexpr("integer", str) == 1) { # starts with integer
-      value <- as.double(substring(str,8))  ### to avoid coercion
+    if (regexpr(numericToken, str) == 1) { # starts with numeric
+      outputVector[[i]] <- as.numeric(substring(str, numericTokenLength + 1))
+    } else if (regexpr(integerToken, str) == 1) { # starts with integer
+      value <- as.double(substring(str, integerTokenLength + 1))  ### to avoid coercion
       if (abs(value) < 2*10^9) {
         value <- as.integer(value)
       }
       outputVector[[i]] <- value
-    } else if (regexpr("logical", str) == 1) { # starts with logical
-      outputVector[[i]] <- as.logical(substring(str,8))
-    } else if (regexpr("character", str) == 1) { # starts with character
-      outputVector[[i]] <- as.character(substring(str, 10))
+    } else if (regexpr(logicalToken, str) == 1) { # starts with logical
+      outputVector[[i]] <- as.logical(substring(str, logicalTokenLength + 1))
+    } else if (regexpr(characterToken, str) == 1) { # starts with character
+      outputVector[[i]] <- as.character(substring(str, characterTokenLength + 1))
     } else {
       stop(paste("This primitive type is not recognized:", str, sep = " "))
     }
