@@ -565,7 +565,7 @@ callJavaMethod <- function(source, methodName, ...) {
     returnObject <- .createJavaObjectReference(callback)
   } else if (regexpr(javaListToken, callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
     returnObject <- .createJavaObjectReference(callback)
-  } else if (regexpr("RequestReceivedAndProcessed", callback) >= 0) {
+  } else if (regexpr("Done", callback) >= 0) {
     returnObject <- NULL
   } else {
     returnObject <- .translatePrimitiveType(callback)
