@@ -62,3 +62,84 @@ java.object <- function(classname, hashcodeInt) {
 print.java.object <- function(x, ...) {
   print(.toString(x))
 }
+
+
+J4RConnectionHandler <- function(port, key, backdoorport) {
+  me <- list(port = port, key = key, backdoorport = backdoorport, connections = list())
+  me$numberOfSockets <- 0
+  class(me) <- append(class(me), "J4RConnectionHandler")
+  return(me)
+}
+
+.isThereAtLeastOneConnection <- function(connectionHandler) {
+  return(length(connectionHandler$connections) > 0)
+}
+
+
+.createAndSecureConnection <- function() {
+  connectionHandler <- get("connectionHandler", envir = cacheEnv)
+  if (is.null(connectionHandler)) {
+    stop("The connection handler is null!")
+  }
+  isConnected <- tryCatch(
+    {
+      port <- connectionHandler$port
+      message(paste("Connecting on port", port))
+      socket <- utils::make.socket("localhost", connectionHandler$port)
+      nbOfConnections <- length(connectionHandler$connections)
+      connectionHandler$connections[[nbOfConnections + 1]] <- socket
+      utils::read.socket(socket, maxlen = bufferLength)
+      TRUE
+    },
+    error=function(cond) {
+      message("The server has started but it seems the client is unable to get connected to the server.")
+      return(FALSE)
+    }
+  )
+  if (isConnected) {
+    isSecure <- tryCatch(
+      {
+        if (exists(".testKey", envir = cacheEnv)) {
+          key <- get(".testKey", envir = cacheEnv)
+        } else {
+          key <- connectionHandler$key
+        }
+        utils::write.socket(socket, as.character(key))
+        outcome <- utils::read.socket(socket, maxlen = bufferLength)
+        if (outcome == "SecurityFailed") {
+          message("The client got connected but security could not be confirmed.")
+        }
+        outcome == "SecurityChecked"
+      },
+      error=function(cond) {
+        message("An error occurred while checking security key.")
+        message(cond)
+        return(FALSE)
+      }
+    )
+    if (!isSecure) {
+      connectionHandler$connections[[nbOfConnections + 1]] <- NULL ### we delete this invalid connection
+    } else {
+      assign("connectionHandler", connectionHandler, envir = cacheEnv)
+    }
+    return(isSecure)
+  } else {
+    return(FALSE)
+  }
+
+}
+
+.getBackdoorSocket <- function() {
+  connectionHandler <- get("connectionHandler", envir = cacheEnv)
+  if (is.null(connectionHandler)) {
+    stop("The connection handler is null!")
+  }
+  if (is.null(connectionHandler$backdoorSocket)) {
+    backdoorport <- connectionHandler$backdoorport
+    socket <- utils::make.socket("localhost", backdoorport)
+    connectionHandler$backdoorSocket <- socket
+    assign("connectionHandler", connectionHandler, envir = cacheEnv)
+  }
+  return(connectionHandler$backdoorSocket)
+}
+

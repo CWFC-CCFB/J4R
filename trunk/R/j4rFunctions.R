@@ -48,14 +48,15 @@ javaListAndMainSplitterTokenLength <- nchar(javaListAndMainSplitterToken) + 1
 #' @export
 connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (isConnectedToJava()) {
-    message("The object j4rSocket already exists! It seems R is already connected to the Java server.")
+    message("It seems R is already connected to the Java server.")
     return(TRUE)
   } else {
     if (debug) {
-      ### default values in debug mode
-      assign(".localport", 18011, envir = cacheEnv)
-      assign(".key", 0, envir = cacheEnv)
-      assign(".backdoorport", 50000, envir = cacheEnv)
+      assign("connectionHandler", J4RConnectionHandler(18011, 0, 50000), envir = cacheEnv)
+      # ### default values in debug mode
+      # assign(".localport", 18011, envir = cacheEnv)
+      # assign(".key", 0, envir = cacheEnv)
+      # assign(".backdoorport", 50000, envir = cacheEnv)
     } else {
       message(.checkJavaVersionRequirement())
       message("Starting Java server...")
@@ -101,66 +102,61 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
         }
       }
       info <- suppressWarnings(utils::read.csv2("J4RTmpFile", header=F))
-      assign(".localport", as.integer(info[1]), envir = cacheEnv)
-      assign(".key", as.integer(info[2]), envir = cacheEnv)
-      assign(".backdoorport", as.integer(info[3]), envir = cacheEnv)
+      port <- as.integer(info[1])
+      key <- as.integer(info[2])
+      backdoorport <- as.integer(info[3])
+      # assign(".localport", port, envir = cacheEnv)
+      # assign(".key", key, envir = cacheEnv)
+      # assign(".backdoorport", backdoorport, envir = cacheEnv)
+      assign("connectionHandler", J4RConnectionHandler(port, key, backdoorport), envir = cacheEnv)
     }
-    message(paste("Connecting on port", .getPort()))
-    isConnected <- tryCatch(
-      {
-        assign("j4rSocket", utils::make.socket("localhost", .getPort()), envir = cacheEnv)
-        utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-        TRUE
-      },
-      error=function(cond) {
-          message("The server has started but it seems the client is unable to get connected to the server.")
-          return(FALSE)
-      }
-    )
-    if (isConnected) {
-      isSecure <- tryCatch(
-        {
-          utils::write.socket(.getMainSocket(), as.character(.getKey()))
-          outcome <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
-          if (outcome == "SecurityFailed") {
-            message("The client got connected but security could not be confirmed.")
-          }
-          outcome == "SecurityChecked"
-        },
-        error=function(cond) {
-          message("An error occurred while checking security key.")
-          message(cond)
-          return(FALSE)
-        }
-      )
-      if (!isSecure) {
-        shutdownJava()  ### for a clean exit
-      }
-      return(isSecure)
-    } else {
-      return(FALSE)
+    # message(paste("Connecting on port", .getPort()))
+    # isConnected <- tryCatch(
+    #   {
+    #     assign("j4rSocket", utils::make.socket("localhost", .getPort()), envir = cacheEnv)
+    #     utils::read.socket(.getSocket(), maxlen = bufferLength)
+    #     TRUE
+    #   },
+    #   error=function(cond) {
+    #       message("The server has started but it seems the client is unable to get connected to the server.")
+    #       return(FALSE)
+    #   }
+    # )
+    # if (isConnected) {
+    #   isSecure <- tryCatch(
+    #     {
+    #       utils::write.socket(.getSocket(), as.character(.getKey()))
+    #       outcome <- utils::read.socket(.getSocket(), maxlen = bufferLength)
+    #       if (outcome == "SecurityFailed") {
+    #         message("The client got connected but security could not be confirmed.")
+    #       }
+    #       outcome == "SecurityChecked"
+    #     },
+    #     error=function(cond) {
+    #       message("An error occurred while checking security key.")
+    #       message(cond)
+    #       return(FALSE)
+    #     }
+    #   )
+    #   if (!isSecure) {
+    #     shutdownJava()  ### for a clean exit
+    #   }
+    #   return(isSecure)
+    # } else {
+    #   return(FALSE)
+    # }
+    isSecure <- .createAndSecureConnection()
+
+    if (!isSecure) {
+      shutdownJava()  ### for a clean exit
     }
+    return(isSecure)
   }
 }
 
-.getPort <- function() {
-  return(get(".localport", envir = cacheEnv))
-}
-
-.getBackdoorPort <- function() {
-  return(get(".backdoorport", envir = cacheEnv))
-}
-
-.getKey <- function() {
-  if (exists(".testKey", envir = cacheEnv)) {
-    return(get(".testKey", envir = cacheEnv))
-  } else {
-    return(get(".key", envir = cacheEnv))
-  }
-}
-
-.getMainSocket <- function() {
-  return(get("j4rSocket", envir = cacheEnv))
+.getSocket <- function(thread = 1) {
+  return(get("connectionHandler", envir = cacheEnv)$connections[[thread]])
+#  return(get("j4rSocket", envir = cacheEnv))
 }
 
 .translateJavaObject <- function(javaObject) {
@@ -223,7 +219,13 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
 #'
 #' @export
 isConnectedToJava <- function() {
-  return(exists("j4rSocket", envir = cacheEnv))
+  if (exists("connectionHandler", envir = cacheEnv)) {
+    stillConnected <- .isThereAtLeastOneConnection(get("connectionHandler", envir = cacheEnv))
+    return(stillConnected)
+  } else {
+    return(FALSE)
+  }
+#  return(exists("j4rSocket", envir = cacheEnv))
 }
 
 
@@ -298,8 +300,8 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE) 
     } else {
       command <- basicCommand
     }
-    utils::write.socket(.getMainSocket(), command)
-    callback <- utils::read.socket(.getMainSocket(), maxlen = bufferLength)
+    utils::write.socket(.getSocket(), command)
+    callback <- utils::read.socket(.getSocket(), maxlen = bufferLength)
     output <- .processResult(callback, output)
   }
   return(output)
@@ -416,8 +418,8 @@ getJavaField <- function(source, fieldName) {
 
     command <- .constructSourcePartCommand("field", source, sourceLength, fieldName, lowerIndex, upperIndex)
 
-    utils::write.socket(.getMainSocket(), command)
-    callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
+    utils::write.socket(.getSocket(), command)
+    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
   return(output)
@@ -465,8 +467,8 @@ setJavaField <- function(source, fieldName, value) {
         command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
       }
     }
-    utils::write.socket(.getMainSocket(), command)
-    callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
+    utils::write.socket(.getSocket(), command)
+    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
   if (!is.null(output)) {
@@ -539,8 +541,8 @@ callJavaMethod <- function(source, methodName, ...) {
         command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
       }
     }
-    utils::write.socket(.getMainSocket(), command)
-    callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
+    utils::write.socket(.getSocket(), command)
+    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
   if (is.null(output)) {
@@ -673,12 +675,15 @@ shutdownJava <- function() {
 
 .internalShutdown <- function() {
   if (isConnectedToJava()) {
-    utils::write.socket(.getMainSocket(), "closeConnection")
+    utils::write.socket(.getSocket(), "closeConnection")
     message("Closing connection and removing socket...")
-    rm("j4rSocket", envir = cacheEnv)
-    rm(".backdoorport", envir = cacheEnv)
-    rm(".localport", envir = cacheEnv)
-    rm(".key", envir = cacheEnv)
+    # rm("j4rSocket", envir = cacheEnv)
+    # rm(".backdoorport", envir = cacheEnv)
+    # rm(".localport", envir = cacheEnv)
+    # rm(".key", envir = cacheEnv)
+  }
+  if (exists("connectionHandler", envir = cacheEnv)) {  # when security is not validated, the connectionhandler object remains
+    rm("connectionHandler", envir = cacheEnv)
   }
   filename <- file.path(getwd(), "J4RTmpFile")
   if (file.exists(filename)) {
@@ -760,8 +765,8 @@ callJavaGC <- function(...) {
       }
     }
   }
-  utils::write.socket(.getMainSocket(), command)
-  callback <- utils::read.socket(.getMainSocket(), maxlen=bufferLength)
+  utils::write.socket(.getSocket(), command)
+  callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
   return(.processCallback(callback))
 }
 
@@ -839,7 +844,8 @@ checkIfClasspathContains <- function(myJavaLibrary) {
 .killJava <- function() {
   tryCatch(
     {
-      emergencySocket <- utils::make.socket("localhost", .getBackdoorPort())
+      emergencySocket <- .getBackdoorSocket()
+#      utils::make.socket("localhost", .getBackdoorPort(get("connectionHandler", envir = cacheEnv)))
       utils::read.socket(emergencySocket, maxlen = bufferLength)
       utils::write.socket(socket = emergencySocket, "emergencyShutdown")
     },
