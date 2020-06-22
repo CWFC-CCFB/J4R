@@ -311,6 +311,7 @@ test_that("Testing if the array has been produced", {
 #### Testing if a null array is still considered when invoking a method or a constructor
 
 path <- file.path(".","javatests","repicea.jar")
+#path <- file.path(".","tests","testthat", "javatests","repicea.jar")
 addToClassPath(path)
 
 out <- tryCatch(
