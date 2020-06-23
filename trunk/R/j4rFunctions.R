@@ -36,7 +36,7 @@ javaListAndMainSplitterTokenLength <- nchar(javaListAndMainSplitterToken) + 1
 #'
 #' This function connects the R environment to a gateway server that runs in Java.
 #'
-#' @param port the local port (the port is set to 18011 by default)
+#' @param port the ports the server sockets listen to
 #' @param extensionPath the path to jar files that can be loaded by the system classloader
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
 #' @param debug for debugging only (should be left as is)
@@ -57,7 +57,7 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
       message("Starting Java server...")
       parms <- c("-firstcall", "true")
       if (!is.null(port)) {
-        parms <- c(parms, "-port", port)
+        parms <- c(parms, "-ports", port)
       }
       if (!is.null(extensionPath)) {
         parms <- c(parms, "-ext", extensionPath)
@@ -97,9 +97,9 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
         }
       }
       info <- suppressWarnings(utils::read.csv2("J4RTmpFile", header=F))
-      port <- as.integer(info[1])
-      key <- as.integer(info[2])
-      backdoorport <- as.integer(info[3])
+      key <- as.integer(info[1])
+      backdoorport <- as.integer(info[2])
+      port <- as.integer(info[3])
       assign("connectionHandler", J4RConnectionHandler(port, key, backdoorport), envir = cacheEnv)
     }
     isSecure <- .createAndSecureConnection()

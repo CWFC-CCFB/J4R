@@ -6,3 +6,20 @@ system.time(replicate(100, callJavaMethod(myArrayLists, "clear")))
 
 callJavaMethod("java.lang.Math", "sqrt", 3)
 callJavaMethod("java.lang.Math", "length")
+
+shutdownJava()
+
+library(parallel)
+
+connectToJava()
+
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 500))
+
+system.time(doRun(1))
+system.time(
+result <- sapply(1:2, function (i) {
+  replicate(100, callJavaMethod(myArrayLists, "add", 5, thread=i))
+})
+)
+
+system.time(replicate(100, callJavaMethod(myArrayLists, "clear")))

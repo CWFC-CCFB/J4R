@@ -12,7 +12,7 @@ connectToJava(
 )
 }
 \arguments{
-\item{port}{the local port (the port is set to 18011 by default)}
+\item{port}{the ports the server sockets listen to}
 
 \item{extensionPath}{the path to jar files that can be loaded by the system classloader}
 
