@@ -30,6 +30,8 @@ logicalTokenLength <- nchar(logicalToken) + 1
 characterTokenLength <- nchar(characterToken) + 1
 javaListAndMainSplitterTokenLength <- nchar(javaListAndMainSplitterToken) + 1
 
+portSplitter <- ":"
+
 
 #'
 #' Connect to Java environment
@@ -57,7 +59,7 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
       message("Starting Java server...")
       parms <- c("-firstcall", "true")
       if (!is.null(port)) {
-        parms <- c(parms, "-ports", port)
+        parms <- c(parms, "-ports", paste(port,collapse=portSplitter))
       }
       if (!is.null(extensionPath)) {
         parms <- c(parms, "-ext", extensionPath)
@@ -96,10 +98,14 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
           stop("It seems the server has failed to start!")
         }
       }
-      info <- suppressWarnings(utils::read.csv2("J4RTmpFile", header=F))
-      key <- as.integer(info[1])
-      backdoorport <- as.integer(info[2])
-      port <- as.integer(info[3])
+      info <- suppressWarnings(utils::read.table("J4RTmpFile", header=F, sep=";", stringsAsFactors = F))
+      key <- as.integer(info[1,1])
+      backdoorport <- as.integer(info[1,2])
+      if (is.integer(info[1,3])) { ### happens with a single port
+        port <- as.integer(info[1,3])
+      } else {
+        port <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
+      }
       assign("connectionHandler", J4RConnectionHandler(port, key, backdoorport), envir = cacheEnv)
     }
     isSecure <- .createAndSecureConnection()
@@ -225,8 +231,6 @@ isConnectedToJava <- function() {
 #'
 #' @export
 createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, thread = 1) {
-#  env <- rlang::current_env()
-#  reg.finalizer(env, .finalize)
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
   firstCommand <- createCommandToken
@@ -262,6 +266,14 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
     output <- .processResult(callback, output)
   }
   return(output)
+}
+
+.getAvailableNbThreads <- function() {
+  if (exists("connectionHandler", envir = cacheEnv)) {
+    return(length(get("connectionHandler", envir = cacheEnv)$connections))
+  } else {
+    return(0)
+  }
 }
 
 .checkForExceptionInCallback <- function(callback) {
