@@ -104,6 +104,7 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
           } else {
             key <- connectionHandler$key
           }
+          key <- format(key, scientific = F)
           utils::write.socket(socket, as.character(key))
           outcome <- utils::read.socket(socket, maxlen = bufferLength)
           if (outcome == "SecurityFailed") {

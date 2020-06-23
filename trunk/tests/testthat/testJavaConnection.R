@@ -54,7 +54,7 @@ test_that("Testing if the getJavaVersion gives the same result whether or not th
 
 ### Testing when the client cannot get connected to the server ###
 
-isConnected <- connectToJava(debug = T)
+isConnected <- connectToJava(debug = T, port=18013)
 
 test_that("Testing if the connectToJava function returns FALSE when it does not connect to the server", {
   expect_equal(isConnected, FALSE)

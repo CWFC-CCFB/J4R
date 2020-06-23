@@ -23,3 +23,16 @@ result <- sapply(1:2, function (i) {
 )
 
 system.time(replicate(100, callJavaMethod(myArrayLists, "clear")))
+
+
+
+connectToJava()
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 5000))
+system.time(system.time(callJavaMethod(myArrayLists, "add", 5)))
+shutdownJava()
+
+connectToJava(port = c(0,0))
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 5000))
+system.time(callJavaMethod(myArrayLists, "add", 5))
+shutdownJava()
+
