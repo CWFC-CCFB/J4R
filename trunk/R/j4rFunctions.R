@@ -141,10 +141,11 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
 .getParametersLength <- function(parameters) {
   maxLength <- 0
   if (length(parameters) > 0) {
-    for (i in 1:length(parameters)) {
-      thisParameterLength <- length(parameters[[i]])
+#    for (i in 1:length(parameters)) {
+    for (parm in parameters) {
+      thisParameterLength <- length(parm)
       if (thisParameterLength >= maxLength) {
-        maxLength <- length(parameters[[i]])
+        maxLength <- thisParameterLength
       } else if (thisParameterLength > 1) {
         stop("The parameters are not consistent! Those with sizes greater than 1 should all have the same size!")
       }
@@ -697,15 +698,18 @@ shutdownJava <- function() {
 #'
 #' Provide a list of the Java references
 #'
-#' The function provides the list of the Java references in the global environment.
+#' The function provides the list of the Java references in an environment environment.
 #'
+#' By default this function provides the Java reference in the global environment.
+#'
+#' @param envir the environment for which the list of Java references is needed
 #' @return a vector with the names of the objects that belong to the java.object and java.list classes.
 #'
 #' @export
-getListOfJavaReferences <- function() {
+getListOfJavaReferences <- function(envir = globalenv()) {
   output <- c()
-  for (objectName in ls(envir = globalenv())) {
-    obj <- get(objectName, envir = globalenv())
+  for (objectName in ls(envir = envir)) {
+    obj <- get(objectName, envir = envir)
     if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
       output <- c(output, objectName)
     }

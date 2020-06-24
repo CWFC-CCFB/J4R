@@ -52,8 +52,8 @@ test_that("myArrayLists object has three java.object instances", {
   expect_equal(class(myArrayLists[[3]])[length(class(myArrayLists[[3]]))], "java.object")
 })
 
-myListOfJavaReferences <- getListOfJavaReferences()
-test_that("There are two java references in the global environment", {
+myListOfJavaReferences <- getListOfJavaReferences(envir = environment())
+test_that("There are two java references in the environment", {
   expect_equal(length(myListOfJavaReferences), 2)
 })
 
