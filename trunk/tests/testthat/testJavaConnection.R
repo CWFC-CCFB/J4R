@@ -88,3 +88,5 @@ test_that("Testing if the server is properly shutted down when the key is not va
 rm(list = ls(envir = J4R::cacheEnv, all.names = T), envir = J4R::cacheEnv)
 
 shutdownJava()
+
+

@@ -11,6 +11,8 @@ getJavaField(source, fieldName, thread = 1)
 a string representing the Java class name in case of static method}
 
 \item{fieldName}{the name of the field to be set}
+
+\item{thread}{a parameter used by the mclapply.j4r function in case of multithreading.}
 }
 \description{
 This function gets the value of a particular field, which can be either static or not. If the field is static,

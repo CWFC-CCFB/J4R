@@ -9,7 +9,6 @@ callJavaMethod("java.lang.Math", "length")
 
 shutdownJava()
 
-library(parallel)
 
 connectToJava()
 
@@ -58,18 +57,11 @@ system.time(replicate(1000, callJavaMethod(myArrayLists, "size")))
 shutdownJava()
 
 
-#### dual thread test ####
-connectToJava(port = c(0,0))
-n <- 400
-myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), n))
-system.time(replicate(1000, callJavaMethod(myArrayLists, "size")))
-shutdownJava()
+##### Test with mclapply
 
-#### four thread test ####
-connectToJava(port = c(0,0,0,0))
-n <- 400
-myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), n))
-system.time(replicate(1000, callJavaMethod(myArrayLists, "size")))
-shutdownJava()
+connectToJava(port=c(0,0))
+
+
+
 
 

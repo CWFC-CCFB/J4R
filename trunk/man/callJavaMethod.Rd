@@ -13,6 +13,8 @@ a string representing the Java class name in case of static method}
 \item{methodName}{the name of the method}
 
 \item{...}{the parameters of the method}
+
+\item{thread}{a parameter used by the mclapply.j4r function in case of multithreading.}
 }
 \value{
 It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.

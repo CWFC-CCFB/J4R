@@ -14,6 +14,8 @@ createJavaObject(class, ..., isNullObject = FALSE, isArray = FALSE, thread = 1)
 \item{isNullObject}{a logical that indicates whether the instance should be null (by default it is set to FALSE)}
 
 \item{isArray}{a logical that indicates whether the instance is an array. By default, it is set to FALSE. When creating an array, the parameters must be integers that define the dimensions of the array}
+
+\item{thread}{a parameter used by the mclapply.j4r function in case of multithreading.}
 }
 \value{
 a java.object or java.list instance in the R environment

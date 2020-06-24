@@ -195,6 +195,7 @@ isConnectedToJava <- function() {
 #' @param ... the parameters to be passed to the constructor of the object
 #' @param isNullObject a logical that indicates whether the instance should be null (by default it is set to FALSE)
 #' @param isArray a logical that indicates whether the instance is an array. By default, it is set to FALSE. When creating an array, the parameters must be integers that define the dimensions of the array
+#' @param thread a parameter used by the mclapply.j4r function in case of multithreading.
 #' @return a java.object or java.list instance in the R environment
 #' @examples
 #' ### starting Java
@@ -259,7 +260,13 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
   return(output)
 }
 
-.getAvailableNbThreads <- function() {
+#'
+#' The number of connections to the server
+#'
+#' @return the number of sockets connected to the server
+#'
+#' @export
+getNbConnections <- function() {
   if (exists("connectionHandler", envir = cacheEnv)) {
     return(length(get("connectionHandler", envir = cacheEnv)$connections))
   } else {
@@ -348,6 +355,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
 #' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
 #' a string representing the Java class name in case of static method
 #' @param fieldName the name of the field to be set
+#' @param thread a parameter used by the mclapply.j4r function in case of multithreading.
 #'
 #' @export
 getJavaField <- function(source, fieldName, thread = 1) {
@@ -392,6 +400,7 @@ getJavaField <- function(source, fieldName, thread = 1) {
 #' a string representing the Java class name in case of static method
 #' @param fieldName the name of the field to be set
 #' @param value the new value of the field
+#' @param thread a parameter used by the mclapply.j4r function in case of multithreading.
 #'
 #' @export
 setJavaField <- function(source, fieldName, value, thread = 1) {
@@ -450,6 +459,7 @@ setJavaField <- function(source, fieldName, value, thread = 1) {
 #' a string representing the Java class name in case of static method
 #' @param methodName the name of the method
 #' @param ... the parameters of the method
+#' @param thread a parameter used by the mclapply.j4r function in case of multithreading.
 #' @return It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.
 #' @examples
 #' ### starting Java
@@ -500,36 +510,6 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
     callback <- utils::read.socket(.getSocket(thread), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
-  # output <- NULL
-  # callID <- 0
-  # nbAvailableThreads <- .getAvailableNbThreads()
-  # while (callID < nbCalls) {
-  #   threadId <- 0
-  #   while (threadId < nbAvailableThreads && callID < nbCalls) {
-  #     callID <- callID + 1
-  #     threadId <- threadId + 1
-  #     lowerIndex <- (callID-1) * maxVectorLength + 1
-  #     upperIndex <- callID * maxVectorLength
-  #     if (upperIndex > maxLength) {
-  #       upperIndex <- maxLength
-  #     }
-  #
-  #     command <- .constructSourcePartCommand("method", source, sourceLength, methodName, lowerIndex, upperIndex)
-  #
-  #     if (length(parameters) > 0) {
-  #       if (maxLength == 1) {
-  #         command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)
-  #       } else {
-  #         command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
-  #       }
-  #     }
-  #     utils::write.socket(.getSocket(threadId), command)
-  #   }
-  #   for (threadId2 in 1:threadId) {
-  #     callback <- utils::read.socket(.getSocket(threadId2), maxlen=bufferLength)
-  #     output <- .processResult(callback, output)
-  #   }
-  # }
   if (is.null(output)) {
     return(invisible(output))
   } else {
@@ -880,6 +860,34 @@ addToClassPath <- function(path, packageName = NULL) {
 addUrlToClassPath <- function(urlString, packageName = NULL) {
   .Deprecated("addToClassPath")
   addToClassPath(urlString, packageName)
+}
+
+
+#'
+#' Using multithreading with J4R
+#'
+#' Applies the mclapply function in the context of
+#' the J4R package.
+#'
+#' Multithreading a function requires that the Java code is
+#' thread safe. The server must listen to  at least two ports.
+#' If it is started with a single port, this function will reduce
+#' to a single thread application. Each port is assigned to a thread.
+#'
+#' @param X a vector or a list as per the mclapply function
+#' @param FUN a two-argument function. The first argument is called by
+#' the mclapply function and the second argument must be used in the calls
+#' to the createJavaObject, callJavaMethod, getJavaField and setJavaField
+#' function.
+#'
+#' @export
+mclapply.j4r <- function(X, FUN) {
+  nbCores <- getNbConnections()
+  f <- function(i) {
+    threadId <- (i-1)%%nbCores + 1
+    FUN(i,threadId)
+  }
+  parallel::mclapply(X, f, mc.cores = nbCores)
 }
 
 
