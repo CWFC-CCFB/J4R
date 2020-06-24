@@ -602,27 +602,44 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
     str <- substring(str, javaListAndMainSplitterTokenLength)
   }
   inputList <- strsplit(str,SubSplitter)[[1]]
-  outputVector <- list()
-  for (i in 1:length(inputList)) {
-    str <- inputList[i]
+  # outputVector <- list()
+  # for (i in 1:length(inputList)) {
+  #   str <- inputList[i]
+  #   if (regexpr(numericToken, str) == 1) { # starts with numeric
+  #     outputVector[[i]] <- as.numeric(substring(str, numericTokenLength))
+  #   } else if (regexpr(integerToken, str) == 1) { # starts with integer
+  #     value <- as.double(substring(str, integerTokenLength))  ### to avoid coercion
+  #     if (abs(value) < 2*10^9) {
+  #       value <- as.integer(value)
+  #     }
+  #     outputVector[[i]] <- value
+  #   } else if (regexpr(logicalToken, str) == 1) { # starts with logical
+  #     outputVector[[i]] <- as.logical(substring(str, logicalTokenLength))
+  #   } else if (regexpr(characterToken, str) == 1) { # starts with character
+  #     outputVector[[i]] <- as.character(substring(str, characterTokenLength))
+  #   } else {
+  #     stop(paste("This primitive type is not recognized:", str, sep = " "))
+  #   }
+  # }
+  outputList <- lapply(inputList, function(str) {
     if (regexpr(numericToken, str) == 1) { # starts with numeric
-      outputVector[[i]] <- as.numeric(substring(str, numericTokenLength))
+      return(as.numeric(substring(str, numericTokenLength)))
     } else if (regexpr(integerToken, str) == 1) { # starts with integer
       value <- as.double(substring(str, integerTokenLength))  ### to avoid coercion
       if (abs(value) < 2*10^9) {
         value <- as.integer(value)
       }
-      outputVector[[i]] <- value
+      return(value)
     } else if (regexpr(logicalToken, str) == 1) { # starts with logical
-      outputVector[[i]] <- as.logical(substring(str, logicalTokenLength))
+      return(as.logical(substring(str, logicalTokenLength)))
     } else if (regexpr(characterToken, str) == 1) { # starts with character
-      outputVector[[i]] <- as.character(substring(str, characterTokenLength))
+      return(as.character(substring(str, characterTokenLength)))
     } else {
       stop(paste("This primitive type is not recognized:", str, sep = " "))
     }
-  }
+  })
 
-  return(.convertListToVectorIfPossible(outputVector))
+  return(.convertListToVectorIfPossible(outputList))
 }
 
 
