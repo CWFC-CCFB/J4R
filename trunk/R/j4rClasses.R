@@ -144,3 +144,7 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
   return(connectionHandler$backdoorSocket)
 }
 
+as.java.list <- function(javaList) {
+   class(javaList) <- append(class(javaList), "java.list")
+   return(javaList)
+}
