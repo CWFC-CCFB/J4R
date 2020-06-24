@@ -49,33 +49,27 @@ system.time(replicate(100, callJavaMethod("myArrayListsmyArrayListsmyArrayListsm
 J4R::callJavaGC()
 shutdownJava()
 
-vector <- rep("a@2",100)
-splitted <- strsplit(vector,"@")
-list <- list(vector)
+
+#### single thread test ####
+connectToJava()
+n <- 400
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), n))
+system.time(replicate(1000, callJavaMethod(myArrayLists, "size")))
+shutdownJava()
 
 
+#### dual thread test ####
+connectToJava(port = c(0,0))
+n <- 400
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), n))
+system.time(replicate(1000, callJavaMethod(myArrayLists, "size")))
+shutdownJava()
 
-
-str <- "allo"
-initialTime <- Sys.time()
-for (i in 1:1000000) {
-#  startsWith(str, "al")
-  regexpr("al", str)
-}
-elapsedTime <- Sys.time() - initialTime
-print(elapsedTime)
-
-myFirstList <- list(c(0,0), T, 4)
-
-vec <- sapply(myFirstList, function(a) {
-  class(a)
-})
-all(vec == vec[1])
-
-mySecondList <- list(c(2,3), F, 5)
-myFirstList[4] <- mySecondList
-
-
-
+#### four thread test ####
+connectToJava(port = c(0,0,0,0))
+n <- 400
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), n))
+system.time(replicate(1000, callJavaMethod(myArrayLists, "size")))
+shutdownJava()
 
 

@@ -479,57 +479,57 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 
   nbCalls <- ceiling(maxLength / maxVectorLength)
 
-  # output <- NULL
-  # for (i in 1:nbCalls) {
-  #   lowerIndex <- (i-1) * maxVectorLength + 1
-  #   upperIndex <- i * maxVectorLength
-  #   if (upperIndex > maxLength) {
-  #     upperIndex <- maxLength
-  #   }
-  #
-  #   command <- .constructSourcePartCommand("method", source, sourceLength, methodName, lowerIndex, upperIndex)
-  #
-  #   if (length(parameters) > 0) {
-  #     if (maxLength == 1) {
-  #       command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)
-  #     } else {
-  #       command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
-  #     }
-  #   }
-  #   utils::write.socket(.getSocket(thread), command)
-  #   callback <- utils::read.socket(.getSocket(thread), maxlen=bufferLength)
-  #   output <- .processResult(callback, output)
-  # }
   output <- NULL
-  callID <- 0
-  nbAvailableThreads <- .getAvailableNbThreads()
-  while (callID < nbCalls) {
-    threadId <- 0
-    while (threadId < nbAvailableThreads && callID < nbCalls) {
-      callID <- callID + 1
-      threadId <- threadId + 1
-      lowerIndex <- (callID-1) * maxVectorLength + 1
-      upperIndex <- callID * maxVectorLength
-      if (upperIndex > maxLength) {
-        upperIndex <- maxLength
-      }
-
-      command <- .constructSourcePartCommand("method", source, sourceLength, methodName, lowerIndex, upperIndex)
-
-      if (length(parameters) > 0) {
-        if (maxLength == 1) {
-          command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)
-        } else {
-          command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
-        }
-      }
-      utils::write.socket(.getSocket(threadId), command)
+  for (i in 1:nbCalls) {
+    lowerIndex <- (i-1) * maxVectorLength + 1
+    upperIndex <- i * maxVectorLength
+    if (upperIndex > maxLength) {
+      upperIndex <- maxLength
     }
-    for (threadId2 in 1:threadId) {
-      callback <- utils::read.socket(.getSocket(threadId2), maxlen=bufferLength)
-      output <- .processResult(callback, output)
+
+    command <- .constructSourcePartCommand("method", source, sourceLength, methodName, lowerIndex, upperIndex)
+
+    if (length(parameters) > 0) {
+      if (maxLength == 1) {
+        command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)
+      } else {
+        command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
+      }
     }
+    utils::write.socket(.getSocket(thread), command)
+    callback <- utils::read.socket(.getSocket(thread), maxlen=bufferLength)
+    output <- .processResult(callback, output)
   }
+  # output <- NULL
+  # callID <- 0
+  # nbAvailableThreads <- .getAvailableNbThreads()
+  # while (callID < nbCalls) {
+  #   threadId <- 0
+  #   while (threadId < nbAvailableThreads && callID < nbCalls) {
+  #     callID <- callID + 1
+  #     threadId <- threadId + 1
+  #     lowerIndex <- (callID-1) * maxVectorLength + 1
+  #     upperIndex <- callID * maxVectorLength
+  #     if (upperIndex > maxLength) {
+  #       upperIndex <- maxLength
+  #     }
+  #
+  #     command <- .constructSourcePartCommand("method", source, sourceLength, methodName, lowerIndex, upperIndex)
+  #
+  #     if (length(parameters) > 0) {
+  #       if (maxLength == 1) {
+  #         command <- paste(command, .marshallCommand(parameters, 1, 1), sep=MainSplitter)
+  #       } else {
+  #         command <- paste(command, .marshallCommand(parameters, lowerIndex, upperIndex), sep=MainSplitter)
+  #       }
+  #     }
+  #     utils::write.socket(.getSocket(threadId), command)
+  #   }
+  #   for (threadId2 in 1:threadId) {
+  #     callback <- utils::read.socket(.getSocket(threadId2), maxlen=bufferLength)
+  #     output <- .processResult(callback, output)
+  #   }
+  # }
   if (is.null(output)) {
     return(invisible(output))
   } else {
