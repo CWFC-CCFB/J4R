@@ -29,7 +29,7 @@ system.time(replicate(100, callJavaMethod(myArrayLists, "clear")))
 connectToJava()
 #system.time(myArrayList <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 200)))
 initialTime <- Sys.time()
-myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 200))
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 203))
 message(paste("Total Time", Sys.time() - initialTime))
 
 system.time(allo <- system.time(callJavaMethod(myArrayLists, "add", 5)))
@@ -61,4 +61,6 @@ for (i in 1:1000000) {
 elapsedTime <- Sys.time() - initialTime
 print(elapsedTime)
 
-
+myFirstList <- list(c(0,0), T, 4)
+mySecondList <- list(c(2,3), F, 5)
+myFirstList[4] <- mySecondList

@@ -297,9 +297,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
     javaList[[initialLength + 1]] <- javaSomething
   } else { ### dealing with a list of java object
     lengthIncomingList <- length(javaSomething)
-    for (i in 1:lengthIncomingList) {
-      javaList[[initialLength + i]] <- javaSomething[[i]]
-    }
+    javaList[(initialLength + 1):(initialLength + lengthIncomingList)] <- javaSomething
   }
   return(javaList)
 }
