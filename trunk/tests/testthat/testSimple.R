@@ -23,6 +23,7 @@ mySimpleJavaObject
 
 test_that("Returned object is of class java.object", {
   expect_equal(class(mySimpleJavaObject)[length(class(mySimpleJavaObject))], "java.object")
+  expect_equal(length(mySimpleJavaObject), 1)
 })
 
 #### Creating a single object with a parameterized constructor ####
@@ -49,6 +50,11 @@ test_that("myArrayLists object has three java.object instances", {
   expect_equal(class(myArrayLists[[1]])[length(class(myArrayLists[[1]]))], "java.object")
   expect_equal(class(myArrayLists[[2]])[length(class(myArrayLists[[2]]))], "java.object")
   expect_equal(class(myArrayLists[[3]])[length(class(myArrayLists[[3]]))], "java.object")
+})
+
+myListOfJavaReferences <- getListOfJavaReferences()
+test_that("There are two java references in the global environment", {
+  expect_equal(length(myListOfJavaReferences), 2)
 })
 
 #### Calling a method on a Java object ####

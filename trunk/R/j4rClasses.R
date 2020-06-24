@@ -63,6 +63,20 @@ print.java.object <- function(x, ...) {
   print(.toString(x))
 }
 
+#'
+#' Override the default length function
+#'
+#' A java.object class is a list by definition. However, its length
+#' is 1.
+#'
+#' @param x a java.object instance
+#' @return 1
+#'
+#' @export
+length.java.object <- function(x) {
+  return(1)
+}
+
 
 J4RConnectionHandler <- function(port, key, backdoorport) {
   me <- list(port = port, key = key, backdoorport = backdoorport, connections = list())
@@ -148,3 +162,6 @@ as.java.list <- function(javaList) {
    class(javaList) <- append(class(javaList), "java.list")
    return(javaList)
 }
+
+
+

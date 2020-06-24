@@ -122,15 +122,13 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
 
 .getSocket <- function(thread = 1) {
   return(get("connectionHandler", envir = cacheEnv)$connections[[thread]])
-#  return(get("j4rSocket", envir = cacheEnv))
 }
 
 .translateJavaObject <- function(javaObject) {
-  hashcode <- c()
   if (methods::is(javaObject, "java.list")) {
-    for (i in 1:length(javaObject)) {
-      hashcode <- c(hashcode, as.character(javaObject[[i]]$hashcode))
-    }
+    hashcode <- sapply(javaObject, function(obj) {
+      as.character(obj$hashcode)
+    })
   } else if (methods::is(javaObject, "java.object")) {
     hashcode <- as.character(javaObject$hashcode)
   } else {
@@ -140,19 +138,13 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
   return(str)
 }
 
-
 .getParametersLength <- function(parameters) {
   maxLength <- 0
   if (length(parameters) > 0) {
     for (i in 1:length(parameters)) {
-      if (methods::is(parameters[[i]], "java.object")) {
-        thisParameterLength <- 1
-      } else {
-        thisParameterLength <- length(parameters[[i]])
-      }
+      thisParameterLength <- length(parameters[[i]])
       if (thisParameterLength >= maxLength) {
         maxLength <- length(parameters[[i]])
-        #        stop(paste("The J4R package allows for vectors than do not exceed", maxVectorLength, "in length. You can use a loop instead.", sep=" "))
       } else if (thisParameterLength > 1) {
         stop("The parameters are not consistent! Those with sizes greater than 1 should all have the same size!")
       }
@@ -163,16 +155,12 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
 
 
 .getSourceLength <- function(source, parametersLength) {
-  if (methods::is(source, "java.object")) {   ### a single java.object instance has a length of 1
-    sourceLength <- 1
-  } else { ## either a java.list or a vector
     lengthSource <- length(source)
     if (lengthSource > 1 && parametersLength > 1 && lengthSource != parametersLength) {
       stop("The length of the java.list object or the vector is inconsistent with the length of the parameters!")
     } else {
       sourceLength <- length(source)
     }
-  }
   return(sourceLength)
 }
 
@@ -191,7 +179,6 @@ isConnectedToJava <- function() {
   } else {
     return(FALSE)
   }
-#  return(exists("j4rSocket", envir = cacheEnv))
 }
 
 
@@ -266,12 +253,12 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
     } else {
       command <- basicCommand
     }
-    initialTime <- Sys.time()
+#    initialTime <- Sys.time()
     utils::write.socket(.getSocket(thread), command)
-    message(paste("Sending info through socket took", Sys.time() - initialTime))
-    initialTime <- Sys.time()
+#    message(paste("Sending info through socket took", Sys.time() - initialTime))
+#    initialTime <- Sys.time()
     callback <- utils::read.socket(.getSocket(thread), maxlen = bufferLength)
-    message(paste("Waiting and reading info from socket took", Sys.time() - initialTime))
+#    message(paste("Waiting and reading info from socket took", Sys.time() - initialTime))
     output <- .processResult(callback, output)
   }
   return(output)
@@ -307,9 +294,6 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
   for (i in 1:length(list)) {
     parm <- list[[i]]
     l <- length(parm)
-    if (methods::is(parm, "java.object")) { ## it should not be set to 2
-      l <- 1
-    }
     if (l > 1) {
       if (upperBoundIndex > l) {
         stop("The upperBoundIndex paramerer is larger than the size of the parameter!")
@@ -560,9 +544,9 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 }
 
 .processResult <- function(callback, output) {
-  initialTime <- Sys.time()
+#  initialTime <- Sys.time()
   result <- .processCallback(callback)
-  message(paste("Processing callback took", Sys.time() - initialTime))
+#  message(paste("Processing callback took", Sys.time() - initialTime))
   if (is.null(output)) {
     output <- result
   } else {
@@ -602,37 +586,18 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
     str <- substring(str, javaListAndMainSplitterTokenLength)
   }
   inputList <- strsplit(str,SubSplitter)[[1]]
-  # outputVector <- list()
-  # for (i in 1:length(inputList)) {
-  #   str <- inputList[i]
-  #   if (regexpr(numericToken, str) == 1) { # starts with numeric
-  #     outputVector[[i]] <- as.numeric(substring(str, numericTokenLength))
-  #   } else if (regexpr(integerToken, str) == 1) { # starts with integer
-  #     value <- as.double(substring(str, integerTokenLength))  ### to avoid coercion
-  #     if (abs(value) < 2*10^9) {
-  #       value <- as.integer(value)
-  #     }
-  #     outputVector[[i]] <- value
-  #   } else if (regexpr(logicalToken, str) == 1) { # starts with logical
-  #     outputVector[[i]] <- as.logical(substring(str, logicalTokenLength))
-  #   } else if (regexpr(characterToken, str) == 1) { # starts with character
-  #     outputVector[[i]] <- as.character(substring(str, characterTokenLength))
-  #   } else {
-  #     stop(paste("This primitive type is not recognized:", str, sep = " "))
-  #   }
-  # }
   outputList <- lapply(inputList, function(str) {
-    if (regexpr(numericToken, str) == 1) { # starts with numeric
+    if (startsWith(str, numericToken)) { # starts with numeric
       return(as.numeric(substring(str, numericTokenLength)))
-    } else if (regexpr(integerToken, str) == 1) { # starts with integer
+    } else if (startsWith(str, integerToken)) { # starts with integer
       value <- as.double(substring(str, integerTokenLength))  ### to avoid coercion
       if (abs(value) < 2*10^9) {
         value <- as.integer(value)
       }
       return(value)
-    } else if (regexpr(logicalToken, str) == 1) { # starts with logical
+    } else if (startsWith(str, logicalToken)) { # starts with logical
       return(as.logical(substring(str, logicalTokenLength)))
-    } else if (regexpr(characterToken, str) == 1) { # starts with character
+    } else if (startsWith(str, characterToken)) { # starts with character
       return(as.character(substring(str, characterTokenLength)))
     } else {
       stop(paste("This primitive type is not recognized:", str, sep = " "))
@@ -644,19 +609,11 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 
 
 .convertListToVectorIfPossible <- function(myList) {
-  if (length(myList) > 0) {
-    outputVec <- c()
-    for (i in 1:length(myList)) {
-      if (i == 1) {
-        refClass <- class(myList[[i]])
-      } else {
-        if (class(myList[[i]]) != refClass) {
-          return(myList)
-        }
-      }
-      outputVec <- c(outputVec, myList[[i]])
-    }
-    return(outputVec)
+  classes <- sapply(myList, function(a) { ### check if the classes are the same to avoid coercion
+    class(a)
+  })
+  if (all(classes == classes[1])) {
+    return(unlist(myList, use.names = F)) ### use.names set to F to improve performance
   } else {
     return(myList)
   }
@@ -665,7 +622,7 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 
 .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
   newList <- javaArrayList[start:end]
-  class(newList) <- c(class(newList), "java.list")
+  class(newList) <- append(class(newList), "java.list")
   return(newList)
 }
 
@@ -879,7 +836,6 @@ checkIfClasspathContains <- function(myJavaLibrary) {
   tryCatch(
     {
       emergencySocket <- .getBackdoorSocket()
-#      utils::make.socket("localhost", .getBackdoorPort(get("connectionHandler", envir = cacheEnv)))
       utils::read.socket(emergencySocket, maxlen = bufferLength)
       utils::write.socket(socket = emergencySocket, "emergencyShutdown")
     },

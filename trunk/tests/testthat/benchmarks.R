@@ -27,12 +27,14 @@ system.time(replicate(100, callJavaMethod(myArrayLists, "clear")))
 
 
 connectToJava()
+myArrayList <- createJavaObject("java.util.ArrayList")
+length(myArrayList)
 #system.time(myArrayList <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 200)))
 initialTime <- Sys.time()
-myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 50))
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 200))
 message(paste("Total Time", Sys.time() - initialTime))
 
-system.time(allo <- system.time(callJavaMethod(myArrayLists, "add", 5)))
+system.time(allo <- callJavaMethod(myArrayLists, "add", 5))
 shutdownJava()
 
 #### single thread test in debug mode ####
@@ -64,6 +66,12 @@ elapsedTime <- Sys.time() - initialTime
 print(elapsedTime)
 
 myFirstList <- list(c(0,0), T, 4)
+
+vec <- sapply(myFirstList, function(a) {
+  class(a)
+})
+all(vec == vec[1])
+
 mySecondList <- list(c(2,3), F, 5)
 myFirstList[4] <- mySecondList
 
