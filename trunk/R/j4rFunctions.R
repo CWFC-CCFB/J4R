@@ -222,7 +222,6 @@ isConnectedToJava <- function() {
 #'
 #' @export
 createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, thread = 1) {
-  initialTime <- Sys.time()
   parameters <- list(...)
   parametersLength <- .getParametersLength(parameters)
   firstCommand <- createCommandToken
@@ -241,7 +240,6 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
     nbCalls <- 1
   }
   basicCommand <- paste(firstCommand, class, sep=MainSplitter)
-  message(paste("Preparing basic command took", Sys.time() - initialTime))
   output <- NULL
   for (i in 1:nbCalls) {
     if (parametersLength > 0) {
@@ -254,12 +252,8 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
     } else {
       command <- basicCommand
     }
-#    initialTime <- Sys.time()
     utils::write.socket(.getSocket(thread), command)
-#    message(paste("Sending info through socket took", Sys.time() - initialTime))
-#    initialTime <- Sys.time()
     callback <- utils::read.socket(.getSocket(thread), maxlen = bufferLength)
-#    message(paste("Waiting and reading info from socket took", Sys.time() - initialTime))
     output <- .processResult(callback, output)
   }
   return(output)
@@ -545,9 +539,7 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 }
 
 .processResult <- function(callback, output) {
-#  initialTime <- Sys.time()
   result <- .processCallback(callback)
-#  message(paste("Processing callback took", Sys.time() - initialTime))
   if (is.null(output)) {
     output <- result
   } else {
@@ -557,7 +549,6 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
       output <- c(output, result)
     }
   }
-#  message(paste("Processing result took", Sys.time() - initialTime))
   return(output)
 }
 
@@ -565,19 +556,13 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 .processCallback <- function(callback) {
   .checkForExceptionInCallback(callback)
   if (startsWith(callback, javaObjectToken)) {  ## a single Java object
-    initialTime <- Sys.time()
     returnObject <- .createJavaObjectReference(callback)
-    message(paste("Creating java reference took", Sys.time() - initialTime))
   } else if (startsWith(callback, javaListToken) && regexpr("@", callback) >= 0) { ## a list of Java objects
-    initialTime <- Sys.time()
     returnObject <- .createJavaObjectReference(callback)
-    message(paste("Creating list of java reference took", Sys.time() - initialTime))
   } else if (startsWith(callback, "Done")) {
     returnObject <- NULL
   } else {
-    initialTime <- Sys.time()
     returnObject <- .translatePrimitiveType(callback)
-    message(paste("Translating to primitive type took", Sys.time() - initialTime))
   }
   return(returnObject)
 }
@@ -629,12 +614,8 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 
 
 .createJavaObjectReference <- function(str) {
-  initialTime <- Sys.time()
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)
-  elapsedTime <- Sys.time() - initialTime
-  message(paste("Splitting callback took", elapsedTime))
-  initialTime <- Sys.time()
   vecStr <- innerList[[1]]
   argumentList <- strsplit(vecStr,"@")
   outputList <- lapply(argumentList, function(arguments) {
@@ -642,8 +623,6 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
         hashcodeInt <- as.integer(arguments[2])
         javaObject <- java.object(classname, hashcodeInt)
   })
-  elapsedTime <- Sys.time() - initialTime
-  message(paste("Creating the instances took", elapsedTime))
   if (length(outputList) == 1) {
     return (outputList[[1]])
   } else {
