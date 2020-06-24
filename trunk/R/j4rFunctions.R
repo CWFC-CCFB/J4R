@@ -564,15 +564,15 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 
 .processCallback <- function(callback) {
   .checkForExceptionInCallback(callback)
-  if (regexpr(javaObjectToken, callback) >= 0) {  ## a single Java object
+  if (startsWith(callback, javaObjectToken)) {  ## a single Java object
     initialTime <- Sys.time()
     returnObject <- .createJavaObjectReference(callback)
     message(paste("Creating java reference took", Sys.time() - initialTime))
-  } else if (regexpr(javaListToken, callback) >= 0 && regexpr("@", callback) >= 0) { ## a list of Java objects
+  } else if (startsWith(callback, javaListToken) && regexpr("@", callback) >= 0) { ## a list of Java objects
     initialTime <- Sys.time()
     returnObject <- .createJavaObjectReference(callback)
     message(paste("Creating list of java reference took", Sys.time() - initialTime))
-  } else if (regexpr("Done", callback) >= 0) {
+  } else if (startsWith(callback, "Done")) {
     returnObject <- NULL
   } else {
     initialTime <- Sys.time()
@@ -583,7 +583,7 @@ callJavaMethod <- function(source, methodName, ..., thread = 1) {
 }
 
 .translatePrimitiveType <- function(str) {
-  if (regexpr(javaListAndMainSplitterToken, str) == 1) {
+  if (startsWith(str, javaListAndMainSplitterToken)) {
     str <- substring(str, javaListAndMainSplitterTokenLength)
   }
   inputList <- strsplit(str,SubSplitter)[[1]]
