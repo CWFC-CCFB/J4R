@@ -292,9 +292,7 @@ getNbConnections <- function() {
 }
 
 .marshallCommand <- function(list, lowerBoundIndex, upperBoundIndex) {
-  command <- NULL
-  for (i in 1:length(list)) {
-    parm <- list[[i]]
+  subCommands <- unlist(lapply(list, function(parm) {
     l <- length(parm)
     if (l > 1) {
       if (upperBoundIndex > l) {
@@ -316,12 +314,8 @@ getNbConnections <- function() {
       parm <- as.character(parm)
     }
     subCommand <- paste(class, paste(parm,collapse=SubSplitter), sep="")
-    if (is.null(command)) {
-      command <- subCommand
-    } else {
-      command <- paste(command, subCommand, sep=MainSplitter)
-    }
-  }
+  }))
+  command <- paste(subCommands, collapse = MainSplitter)
   return(command)
 }
 

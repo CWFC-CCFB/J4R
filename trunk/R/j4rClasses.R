@@ -42,25 +42,37 @@ print.java.list <- function(x, ...) {
   return(paste(x$class, format(x$hashcode, scientific = F), sep="@"))
 }
 
-.is.equal <- function(obj1, obj2) {
-  if (!is.null(obj2) && methods::is(obj2,  "java.object")) {
-    return(obj1$class == obj2$class && obj1$hashcode == obj2$hashcode)
-  } else {
-    return(FALSE)
+.isFound <- function(objToBeFound, objToBeSearched) {
+  if (!is.null(objToBeSearched)) {
+    if (methods::is(objToBeSearched,  "java.object")) {
+      return(objToBeFound$class == objToBeSearched$class && objToBeFound$hashcode == objToBeSearched$hashcode)
+    } else if (methods::is(objToBeSearched, "java.list")) {
+      vec <- unlist(lapply(objToBeSearched, function(obj) {
+        .isFound(objToBeFound, obj)
+      }))
+      return(any(vec == TRUE))
+    }
   }
+  return(FALSE)   ### in all other cases return false
+}
+
+
+.isObjectFoundInThisEnvironment <- function(objToBeFound, envir = globalenv()) {
+  javaObjectsInGlobalEnvironment <- lapply(getListOfJavaReferences(),
+                                           function(obj) {
+                                             get(obj, envir = .GlobalEnv)
+                                           })
+  vec <- lapply(javaObjectsInGlobalEnvironment, function(obj) {
+    .isFound(objToBeFound, obj)
+  })
+  return(any(vec==TRUE))
 }
 
 .finalize <- function(env) {
-  # javaObject <- env$me
-  # javaObjectsInGlobalEnvironment <- lapply(getListOfJavaReferences(),
-  #                                          function(obj) {
-  #                                            get(obj, envir = .GlobalEnv)
-  #                                          })
-  # test <- lapply(javaObjectsInGlobalEnvironment, function(obj) {
-  #   .is.equal(javaObject, obj)
-  # })
-  # ### I should check if this object is in the global environment or within a list
-  # print("I am cleaning")
+  javaObject <- env$me  ### created through the constructor java.object
+  isFound <- .isObjectFoundInThisEnvironment(javaObject)
+  ### TODO create a list in the cash with all these objects
+  print(paste("Object", isFound))
 }
 
 java.object <- function(classname, hashcodeInt) {
