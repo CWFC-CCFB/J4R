@@ -60,7 +60,7 @@ print.java.list <- function(x, ...) {
 .isObjectFoundInThisEnvironment <- function(objToBeFound, envir = globalenv()) {
   javaObjectsInGlobalEnvironment <- lapply(getListOfJavaReferences(),
                                            function(obj) {
-                                             get(obj, envir = .GlobalEnv)
+                                             get(obj, envir = envir)
                                            })
   vec <- lapply(javaObjectsInGlobalEnvironment, function(obj) {
     .isFound(objToBeFound, obj)
@@ -68,11 +68,32 @@ print.java.list <- function(x, ...) {
   return(any(vec==TRUE))
 }
 
+.flushDumpPileIfNeeded <- function() {
+  dumpPile <- .getDumpPile()
+  if (length(dumpPile) > 100) {
+    .flush(dumpPile)
+    assign("dumpPile", java.list(), envir = cacheEnv)
+    print("I've just flushed the dump pile!")
+  }
+}
+
+.getDumpPile <- function() {
+  if (!exists("dumpPile", envir = cacheEnv)) {
+    assign("dumpPile", java.list(), envir = cacheEnv)
+  }
+  return(get("dumpPile", envir = cacheEnv))
+}
+
+
 .finalize <- function(env) {
   javaObject <- env$me  ### created through the constructor java.object
-  isFound <- .isObjectFoundInThisEnvironment(javaObject)
-  ### TODO create a list in the cash with all these objects
-  print(paste("Object", isFound))
+  isFound <- .isObjectFoundInThisEnvironment(javaObject) #### FIXME this bugs when tested because of the wrong environment
+  if (!isFound) {
+    df <- .getDumpPile()
+    df[[length(df) + 1]] <- javaObject
+    assign("dumpPile", df, envir = cacheEnv)
+    .flushDumpPileIfNeeded()
+  }
 }
 
 java.object <- function(classname, hashcodeInt) {

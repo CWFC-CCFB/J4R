@@ -630,6 +630,9 @@ shutdownJava <- function() {
   if (exists("connectionHandler", envir = cacheEnv)) {  # when security is not validated, the connectionhandler object remains
     rm("connectionHandler", envir = cacheEnv)
   }
+  if (exists("dumpPile", envir = cacheEnv)) {
+    rm("dumpPile", envir = cacheEnv)
+  }
   filename <- file.path(getwd(), "J4RTmpFile")
   if (file.exists(filename)) {
     file.remove(filename)
@@ -666,7 +669,7 @@ getListOfJavaReferences <- function(envir = globalenv()) {
     methods::is(obj, "java.object") || methods::is(obj, "java.list")
   }))
   if (is.null(isJavaReference) || length(isJavaReference) == 0) {
-    return(0)
+    return(c())
   } else {
     return(listObjectNames[which(isJavaReference)])
   }
@@ -715,6 +718,37 @@ callJavaGC <- function(...) {
       }
     }
   }
+  utils::write.socket(.getSocket(), command)
+  callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
+  return(.processCallback(callback))
+}
+
+
+.flush <- function(...) {
+  command <- "flush"
+  objects <- list(...)
+  subcommands <- unlist(lapply(objects, function(obj) {
+    if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
+      subCommand <- paste("java.object",.translateJavaObject(obj),sep="")
+    } else {
+      subCommand <- ""
+    }
+  }))
+  subcommands <- paste(subcommands[which(subcommands !="")], collapse=MainSplitter)
+  command <- paste(command, subcommands, sep=MainSplitter)
+  utils::write.socket(.getSocket(), command)
+  callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
+  return(.processCallback(callback))
+}
+
+#' Return the number of instances stored in the
+#' internal map of the Java server
+#'
+#' @return an integer
+#'
+#' @export
+getNbInstancesInInternalMap <- function() {
+  command <- "size"
   utils::write.socket(.getSocket(), command)
   callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
   return(.processCallback(callback))
