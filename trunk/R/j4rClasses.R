@@ -70,11 +70,11 @@ print.java.list <- function(x, ...) {
 
 .flushDumpPileIfNeeded <- function() {
   dumpPile <- .getDumpPile()
-  if (length(dumpPile) > 100) {
-    .flush(dumpPile)
-    assign("dumpPile", java.list(), envir = cacheEnv)
-    print("I've just flushed the dump pile!")
-  }
+  # if (length(dumpPile) > 100) {
+  #   .flush(dumpPile)
+  #   assign("dumpPile", java.list(), envir = cacheEnv)
+  #   print("I've just flushed the dump pile!")
+  # }
 }
 
 .getDumpPile <- function() {
@@ -88,6 +88,7 @@ print.java.list <- function(x, ...) {
 .finalize <- function(env) {
   javaObject <- env$me  ### created through the constructor java.object
   isFound <- .isObjectFoundInThisEnvironment(javaObject) #### FIXME this bugs when tested because of the wrong environment
+  ### might need to have a list of registered environment
   if (!isFound) {
     df <- .getDumpPile()
     df[[length(df) + 1]] <- javaObject

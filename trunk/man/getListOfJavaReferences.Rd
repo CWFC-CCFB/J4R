@@ -4,7 +4,7 @@
 \alias{getListOfJavaReferences}
 \title{Provide a list of the Java references}
 \usage{
-getListOfJavaReferences(envir = globalenv())
+getListOfJavaReferences(envir = globalenv(), just.names = T)
 }
 \arguments{
 \item{envir}{the environment for which the list of Java references is needed}

@@ -662,16 +662,24 @@ shutdownJava <- function() {
 #' @return a vector with the names of the objects that belong to the java.object and java.list classes.
 #'
 #' @export
-getListOfJavaReferences <- function(envir = globalenv()) {
+getListOfJavaReferences <- function(envir = globalenv(), just.names = T) {
   listObjectNames <- ls(envir = envir, all.names = T)
-  isJavaReference <- unlist(lapply(listObjectNames, function(objName) {
+  javaReferenceNames <- unlist(lapply(listObjectNames, function(objName) {
     obj <- get(objName, envir = envir)
-    methods::is(obj, "java.object") || methods::is(obj, "java.list")
+    if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
+      return(objName)
+    } else {
+      return(NULL)
+    }
   }))
-  if (is.null(isJavaReference) || length(isJavaReference) == 0) {
-    return(c())
+  if (is.null(javaReferenceNames) || length(javaReferenceNames) == 0) {
+    return(list())
   } else {
-    return(listObjectNames[which(isJavaReference)])
+    if (just.names) {
+      return(javaReferenceNames)
+    } else {
+      return(mget(javaReferenceNames, envir = envir))
+    }
   }
 }
 
@@ -698,12 +706,10 @@ getListOfJavaReferences <- function(envir = globalenv()) {
 callJavaGC <- function(...) {
   environments <- list(...)
   command <- "sync"
-  for (objectName in ls(envir = globalenv())) {
-    object <- get(objectName, envir = globalenv())
-    if (methods::is(object, "java.object") || methods::is(object, "java.list")) {
-      command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
-    }
-  }
+  javaReferences <- getListOfJavaReferences(just.names = F)
+  subcommands <- .marshallSubcommand(javaReferences)
+  command <- paste(command, subcommands, sep = MainSplitter)
+  ### TODO refactoring of the next lines
   if (length(environments) > 0) {
     for (environment in environments) {
       if (class(environment) == "environment") {
@@ -723,18 +729,17 @@ callJavaGC <- function(...) {
   return(.processCallback(callback))
 }
 
+.marshallSubcommand <- function(objects) {
+  subcommands <- unlist(lapply(objects, function(obj) {
+      subCommand <- paste("java.object",.translateJavaObject(obj),sep="")
+  }))
+  subcommands <- paste(subcommands, collapse=MainSplitter)
+}
 
 .flush <- function(...) {
   command <- "flush"
   objects <- list(...)
-  subcommands <- unlist(lapply(objects, function(obj) {
-    if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
-      subCommand <- paste("java.object",.translateJavaObject(obj),sep="")
-    } else {
-      subCommand <- ""
-    }
-  }))
-  subcommands <- paste(subcommands[which(subcommands !="")], collapse=MainSplitter)
+  subcommands <- .marshallSubcommand(objects)
   command <- paste(command, subcommands, sep=MainSplitter)
   utils::write.socket(.getSocket(), command)
   callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
