@@ -4,7 +4,13 @@
 \alias{createJavaObject}
 \title{Create Java objects}
 \usage{
-createJavaObject(class, ..., isNullObject = FALSE, isArray = FALSE, thread = 1)
+createJavaObject(
+  class,
+  ...,
+  isNullObject = FALSE,
+  isArray = FALSE,
+  affinity = 1
+)
 }
 \arguments{
 \item{class}{the Java class of the object (e.g. java.util.ArrayList)}
@@ -15,7 +21,7 @@ createJavaObject(class, ..., isNullObject = FALSE, isArray = FALSE, thread = 1)
 
 \item{isArray}{a logical that indicates whether the instance is an array. By default, it is set to FALSE. When creating an array, the parameters must be integers that define the dimensions of the array}
 
-\item{thread}{a parameter used by the mclapply.j4r function in case of multithreading.}
+\item{affinity}{a parameter used by the mclapply.j4r function in case of multithreading.}
 }
 \value{
 a java.object or java.list instance in the R environment

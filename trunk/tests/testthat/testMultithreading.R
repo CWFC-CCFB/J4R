@@ -17,9 +17,9 @@ test_that("Testing if the server is properly shutted down when the key is not va
   expect_equal(getNbConnections(), 2)
 })
 
-f <- function(i, threadId) {
-  myArrayList <- createJavaObject("java.util.ArrayList", thread = threadId)
-  callJavaMethod(myArrayList, "add", 5, thread = threadId)
+f <- function(i, aff) {
+  myArrayList <- createJavaObject("java.util.ArrayList", affinity = aff)
+  callJavaMethod(myArrayList, "add", 5, affinity = aff)
 }
 
 result <- mclapply.j4r(1:1000, f)

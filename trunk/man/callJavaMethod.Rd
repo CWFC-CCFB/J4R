@@ -4,7 +4,7 @@
 \alias{callJavaMethod}
 \title{Call a Java method}
 \usage{
-callJavaMethod(source, methodName, ..., thread = 1)
+callJavaMethod(source, methodName, ..., affinity = 1)
 }
 \arguments{
 \item{source}{this should be either a java.list instance or a single java.object instance for non-static methods or
@@ -14,7 +14,7 @@ a string representing the Java class name in case of static method}
 
 \item{...}{the parameters of the method}
 
-\item{thread}{a parameter used by the mclapply.j4r function in case of multithreading.}
+\item{affinity}{a parameter used by the mclapply.j4r function in case of multithreading.}
 }
 \value{
 It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.

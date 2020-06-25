@@ -39,15 +39,37 @@ print.java.list <- function(x, ...) {
 # }
 
 .toString <- function(x) {
-  return(paste(x$class, x$hashcode, sep="@"))
+  return(paste(x$class, format(x$hashcode, scientific = F), sep="@"))
 }
 
+.is.equal <- function(obj1, obj2) {
+  if (!is.null(obj2) && methods::is(obj2,  "java.object")) {
+    return(obj1$class == obj2$class && obj1$hashcode == obj2$hashcode)
+  } else {
+    return(FALSE)
+  }
+}
+
+.finalize <- function(env) {
+  # javaObject <- env$me
+  # javaObjectsInGlobalEnvironment <- lapply(getListOfJavaReferences(),
+  #                                          function(obj) {
+  #                                            get(obj, envir = .GlobalEnv)
+  #                                          })
+  # test <- lapply(javaObjectsInGlobalEnvironment, function(obj) {
+  #   .is.equal(javaObject, obj)
+  # })
+  # ### I should check if this object is in the global environment or within a list
+  # print("I am cleaning")
+}
 
 java.object <- function(classname, hashcodeInt) {
+  reg.finalizer(environment(), .finalize)
   me <- list(class = classname, hashcode = hashcodeInt)
   class(me) <- append(class(me), "java.object")
   return(me)
 }
+
 
 #'
 #' Print a java.object instance

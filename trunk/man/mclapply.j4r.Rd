@@ -10,9 +10,9 @@ mclapply.j4r(X, FUN)
 \item{X}{a vector or a list as per the mclapply function}
 
 \item{FUN}{a two-argument function. The first argument is called by
-the mclapply function and the second argument must be used in the calls
-to the createJavaObject, callJavaMethod, getJavaField and setJavaField
-function.}
+the mclapply function and the second argument defines the affinity and MUST
+be used in all the calls to the createJavaObject, callJavaMethod,
+getJavaField and setJavaField functions.}
 }
 \description{
 Applies the mclapply function in the context of
@@ -20,7 +20,13 @@ the J4R package.
 }
 \details{
 Multithreading a function requires that the Java code is
-thread safe. The server must listen to  at least two ports.
-If it is started with a single port, this function will reduce
-to a single thread application. Each port is assigned to a thread.
+thread safe. The server must listen to at least two ports.
+Otherwise, this function will reduce to a single thread.
+Each port is given an affinity to a thread, so that each Java thread
+matches an R thread. NOTE: the multithreading is not
+available on Windows. In such a case, the function will proceed
+in a single thread.
+}
+\seealso{
+mclapply in the parallel package
 }
