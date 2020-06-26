@@ -620,13 +620,12 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
 #' @export
 shutdownJava <- function() {
   .killJava()
-  listJavaReferences <- getListOfJavaReferences()
-  if (!is.null(listJavaReferences) & length(listJavaReferences) > 0) {
-    ### TODO remove references here
-    message("Your global environment now contains some useless Java references.")
-    message("To delete them, you can use the following line of code:")
-    message("rm(list = getListOfJavaReferences())")
-  }
+  # listJavaReferences <- getListOfJavaReferences()
+  # if (!is.null(listJavaReferences) & length(listJavaReferences) > 0) {
+  #   message("Your global environment now contains some useless Java references.")
+  #   message("To delete them, you can use the following line of code:")
+  #   message("rm(list = getListOfJavaReferences())")
+  # }
 }
 
 .internalShutdown <- function() {
