@@ -10,8 +10,10 @@ context("Simple tests in J4R")
 
 library(J4R)
 
+j4r.config.setDefaultJVMMemorySize(200)
+
 if (!isConnectedToJava()) {
-  connectToJava(memorySize = 200)
+  connectToJava()
 }
 
 ####  Creating a single object with a basic constructor ####
@@ -52,7 +54,7 @@ test_that("myArrayLists object has three java.object instances", {
   expect_equal(class(myArrayLists[[3]])[length(class(myArrayLists[[3]]))], "java.object")
 })
 
-myListOfJavaReferences <- getListOfJavaReferences(envir = environment())
+myListOfJavaReferences <- getListOfJavaReferences()
 test_that("There are two java references in the environment", {
   expect_equal(length(myListOfJavaReferences), 2)
 })

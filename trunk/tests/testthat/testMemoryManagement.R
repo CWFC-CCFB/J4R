@@ -8,13 +8,17 @@ context("Memory management tests in J4R")
 
 library(J4R)
 
+j4r.config.setDefaultJVMMemorySize(200)
+
 if (!isConnectedToJava()) {
-  connectToJava(memorySize = 200)
+  connectToJava()
 }
 
-rm(list=ls(envir = environment()), envir = environment()) ### cleaning up before testing
+rm(list=ls()) ### cleaning up before testing
 
-nbObjects <- callJavaGC(environment())
+j4r.config.registerEnvironment(environment())
+
+nbObjects <- callJavaGC()
 test_that("Removing all objects before testing", {
   expect_equal(nbObjects, 0)
 })
@@ -26,7 +30,7 @@ myArrayLists <- createJavaObject("java.util.ArrayList", 3:5)
 
 myArrayLists[[2]] <- NULL
 
-nbObjects <- callJavaGC(environment())
+nbObjects <- callJavaGC()
 
 test_that("Removing one object from the java.list object and synchronizing yield 3 objects registered in the Java environment", {
   expect_equal(nbObjects, 3)
@@ -34,15 +38,15 @@ test_that("Removing one object from the java.list object and synchronizing yield
 
 rm("myArrayLists")
 
-nbObjects <- callJavaGC(environment())
+nbObjects <- callJavaGC()
 
 test_that("Removing the java.list object and synchronizing yield a single object left in the Java environment", {
   expect_equal(nbObjects, 1)
 })
 
-rm(list = ls(envir = environment()))
+rm(list = ls())
 
-nbObjects <- callJavaGC(environment())
+nbObjects <- callJavaGC()
 
 test_that("Removing all the java.list object and synchronizing yield no object left in the Java environment", {
   expect_equal(nbObjects, 0)

@@ -71,6 +71,12 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
         if (!is.numeric(memorySize) && !is.integer(memorySize)) {
           stop("The memorySize parameter should be either a numeric or an integer!")
         }
+        if (memorySize < 50) {
+          stop("The minimum memory for the JVM is 50 Mb!")
+        }
+        parms <- c(parms, "-mem", as.integer(memorySize))
+      } else if (exists("defaultJVMMemory", envir = settingEnv)) {
+        memorySize <- get("defaultJVMMemory", envir = settingEnv)
         parms <- c(parms, "-mem", as.integer(memorySize))
       }
       parms <- c(parms, "-wd", getwd())
@@ -314,7 +320,7 @@ getNbConnections <- function() {
       parm <- as.character(parm)
     }
     subCommand <- paste(class, paste(parm,collapse=SubSplitter), sep="")
-  }))
+  }), use.names = F)
   command <- paste(subCommands, collapse = MainSplitter)
   return(command)
 }
@@ -616,6 +622,7 @@ shutdownJava <- function() {
   .killJava()
   listJavaReferences <- getListOfJavaReferences()
   if (!is.null(listJavaReferences) & length(listJavaReferences) > 0) {
+    ### TODO remove references here
     message("Your global environment now contains some useless Java references.")
     message("To delete them, you can use the following line of code:")
     message("rm(list = getListOfJavaReferences())")
@@ -654,33 +661,42 @@ shutdownJava <- function() {
 #'
 #' Provide a list of the Java references
 #'
-#' The function provides the list of the Java references in an environment environment.
+#' The function provides the list of the Java references in an environment.
 #'
-#' By default this function provides the Java reference in the global environment.
+#' By default this function provides the Java reference in the current environment. If
+#' there is no Java references then the value of the function is an empty list. If
+#' just.names is set to true, the value is a vector with the names of the instances. If false,
+#' then the function returns a list with the instances.
 #'
-#' @param envir the environment for which the list of Java references is needed
-#' @return a vector with the names of the objects that belong to the java.object and java.list classes.
+#' @param just.names true for the names of the instances (by default) or false for the instances
+#' @return a vector with the names of the instances or a list with the instances that belong to the java.object
+#' and java.list classes in the environment.
+#'
+#' @seealso \code{\link[base]{remove}}
 #'
 #' @export
-getListOfJavaReferences <- function(envir = globalenv(), just.names = T) {
-  listObjectNames <- ls(envir = envir, all.names = T)
-  javaReferenceNames <- unlist(lapply(listObjectNames, function(objName) {
-    obj <- get(objName, envir = envir)
-    if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
-      return(objName)
+getListOfJavaReferences <- function(just.names = T) {
+  output <- lapply(get("environments", envir = settingEnv), function(envir) {
+    listObjectNames <- ls(envir = envir, all.names = T)
+    javaReferenceNames <- unlist(lapply(listObjectNames, function(objName) {
+      obj <- get(objName, envir = envir)
+      if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
+        return(objName)
+      } else {
+        return(NULL)
+      }
+    }), use.names = F)
+    if (is.null(javaReferenceNames) || length(javaReferenceNames) == 0) {
+      return(list())
     } else {
-      return(NULL)
+      if (just.names) {
+        return(javaReferenceNames)
+      } else {
+        return(mget(javaReferenceNames, envir = envir))
+      }
     }
-  }))
-  if (is.null(javaReferenceNames) || length(javaReferenceNames) == 0) {
-    return(list())
-  } else {
-    if (just.names) {
-      return(javaReferenceNames)
-    } else {
-      return(mget(javaReferenceNames, envir = envir))
-    }
-  }
+  })
+  output
 }
 
 
@@ -697,33 +713,31 @@ getListOfJavaReferences <- function(envir = globalenv(), just.names = T) {
 #'
 #' To avoid a memory leak, the function should be called on a regular basis.
 #'
-#' @param ... a list of environment instances if the method is called within a function
 #' @return An integer which is the number of Java objects still registered in the Java environment
 #'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-callJavaGC <- function(...) {
-  environments <- list(...)
+callJavaGC <- function() {
   command <- "sync"
-  javaReferences <- getListOfJavaReferences(just.names = F)
+  javaReferences <- unlist(getListOfJavaReferences(just.names = F), recursive = F)
+  ### TODO find a way to collapse if we have two environments
   subcommands <- .marshallSubcommand(javaReferences)
   command <- paste(command, subcommands, sep = MainSplitter)
-  ### TODO refactoring of the next lines
-  if (length(environments) > 0) {
-    for (environment in environments) {
-      if (class(environment) == "environment") {
-        if (!identical(environment, globalenv())) {
-          for (objectName in ls(envir = environment)) {
-            object <- get(objectName, envir = environment)
-            if (methods::is(object, "java.object") || methods::is(object, "java.list")) {
-              command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
-            }
-          }
-        }
-      }
-    }
-  }
+  # if (length(environments) > 0) {
+  #   for (environment in environments) {
+  #     if (class(environment) == "environment") {
+  #       if (!identical(environment, globalenv())) {
+  #         for (objectName in ls(envir = environment)) {
+  #           object <- get(objectName, envir = environment)
+  #           if (methods::is(object, "java.object") || methods::is(object, "java.list")) {
+  #             command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
+  #           }
+  #         }
+  #       }
+  #     }
+  #   }
+  # }
   utils::write.socket(.getSocket(), command)
   callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
   return(.processCallback(callback))
@@ -732,7 +746,7 @@ callJavaGC <- function(...) {
 .marshallSubcommand <- function(objects) {
   subcommands <- unlist(lapply(objects, function(obj) {
       subCommand <- paste("java.object",.translateJavaObject(obj),sep="")
-  }))
+  }), use.names = F)
   subcommands <- paste(subcommands, collapse=MainSplitter)
 }
 

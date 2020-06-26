@@ -98,11 +98,13 @@ print.java.list <- function(x, ...) {
 }
 
 java.object <- function(classname, hashcodeInt) {
-  reg.finalizer(environment(), .finalize)
+#  reg.finalizer(environment(), .finalize)
   me <- list(class = classname, hashcode = hashcodeInt)
   class(me) <- append(class(me), "java.object")
   return(me)
 }
+
+
 
 
 #'

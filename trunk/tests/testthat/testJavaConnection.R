@@ -6,11 +6,13 @@ context("Testing Java connection")
 
 library(J4R)
 
+j4r.config.setDefaultJVMMemorySize(200)
+
 if (isConnectedToJava()) {
   shutdownJava()
 }
 
-connectToJava(extensionPath = file.path(getwd(),"javatests"), memorySize = 200)
+connectToJava(extensionPath = file.path(getwd(),"javatests"))
 
 result <- callJavaMethod("J4RTestClass", "testFunction")
 
@@ -20,7 +22,7 @@ test_that("Classpath to J4RTestClass makes it possible to call the testFunction 
 
 shutdownJava()
 
-connectionEstablished <- connectToJava(memorySize = 200)
+connectionEstablished <- connectToJava()
 test_that("The JVM has been properly shutted down by the shutdownJava function", {
   expect_equal(connectionEstablished, TRUE)
 })
@@ -28,7 +30,7 @@ test_that("The JVM has been properly shutted down by the shutdownJava function",
 
 #### Testing that two calls to connectToJava will not affect the socket connection ####
 
-callback <- connectToJava(memorySize = 200)
+callback <- connectToJava()
 test_that("Testing if the second call to connectToJava returns TRUE", {
   expect_equal(callback, TRUE)
 })
@@ -63,7 +65,7 @@ test_that("Testing if the connectToJava function returns FALSE when it does not 
 
 ### Testing connection on another port ###
 
-isConnected <- connectToJava(port = 18013, memorySize = 200)
+isConnected <- connectToJava(port = 18013)
 
 test_that("Testing if the connectToJava function with another port works", {
   expect_equal(isConnected, TRUE)
@@ -76,7 +78,7 @@ shutdownJava()
 
 assign(".testKey", 1, envir = J4R::cacheEnv)
 
-isConnected <- connectToJava(memorySize = 200)
+isConnected <- connectToJava()
 remainingObjectsInCache <- ls(envir = J4R::cacheEnv, all.names = T)
 
 test_that("Testing if the server is properly shutted down when the key is not validated", {

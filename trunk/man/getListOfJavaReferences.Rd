@@ -4,17 +4,24 @@
 \alias{getListOfJavaReferences}
 \title{Provide a list of the Java references}
 \usage{
-getListOfJavaReferences(envir = globalenv(), just.names = T)
+getListOfJavaReferences(just.names = T)
 }
 \arguments{
-\item{envir}{the environment for which the list of Java references is needed}
+\item{just.names}{true for the names of the instances (by default) or false for the instances}
 }
 \value{
-a vector with the names of the objects that belong to the java.object and java.list classes.
+a vector with the names of the instances or a list with the instances that belong to the java.object
+and java.list classes in the environment.
 }
 \description{
-The function provides the list of the Java references in an environment environment.
+The function provides the list of the Java references in an environment.
 }
 \details{
-By default this function provides the Java reference in the global environment.
+By default this function provides the Java reference in the current environment. If
+there is no Java references then the value of the function is an empty list. If
+just.names is set to true, the value is a vector with the names of the instances. If false,
+then the function returns a list with the instances.
+}
+\seealso{
+\code{\link[base]{remove}}
 }

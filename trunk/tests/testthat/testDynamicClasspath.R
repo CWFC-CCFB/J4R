@@ -10,8 +10,10 @@ context("Test on dynamic classpath")
 
 library(J4R)
 
+j4r.config.setDefaultJVMMemorySize(200)
+
 if (!isConnectedToJava()) {
-  connectToJava(memorySize = 200)
+  connectToJava()
 }
 
 if (getJavaVersion()$architecture == "32-Bit") {

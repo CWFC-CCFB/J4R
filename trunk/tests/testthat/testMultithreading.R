@@ -10,9 +10,15 @@ context("Tests for multithreading in J4R")
 
 library(J4R)
 
+j4r.config.setDefaultJVMMemorySize(200)
 
-isConnected <- connectToJava(port = c(0,0), memorySize = 200)
-test_that("Testing if the server is properly shutted down when the key is not validated", {
+if (isConnectedToJava()) {
+  shutdownJava()
+}
+
+isConnected <- connectToJava(port = c(0,0))
+
+test_that("Testing that there are two connections", {
   expect_equal(isConnected, TRUE)
   expect_equal(getNbConnections(), 2)
 })

@@ -4,10 +4,7 @@
 \alias{callJavaGC}
 \title{Synchronize the Java environment with the R environment}
 \usage{
-callJavaGC(...)
-}
-\arguments{
-\item{...}{a list of environment instances if the method is called within a function}
+callJavaGC()
 }
 \value{
 An integer which is the number of Java objects still registered in the Java environment
