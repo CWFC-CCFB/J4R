@@ -22,6 +22,3 @@ there is no Java references then the value of the function is an empty list. If
 just.names is set to true, the value is a vector with the names of the instances. If false,
 then the function returns a list with the instances.
 }
-\seealso{
-\code{\link[base]{remove}}
-}

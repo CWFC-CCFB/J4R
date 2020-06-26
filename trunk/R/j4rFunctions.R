@@ -671,8 +671,6 @@ shutdownJava <- function() {
 #' @return a vector with the names of the instances or a list with the instances that belong to the java.object
 #' and java.list classes in the environment.
 #'
-#' @seealso \code{\link[base]{remove}}
-#'
 #' @export
 getListOfJavaReferences <- function(just.names = T) {
   output <- lapply(get("environments", envir = settingEnv), function(envir) {
