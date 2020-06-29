@@ -4,13 +4,6 @@
 # Date: January 2019
 ########################################################
 
-# numericToken <- "numeric"
-# integerToken <- "integer"
-# logicalToken <- "logical"
-# characterToken <- "character"
-# javaObjectToken <- "JavaObject"
-# javaListToken <- "JavaList"
-
 createCommandToken <- "c"
 createNullArrayToken <- "cnarr"
 createNullToken <- "cnu"
@@ -620,12 +613,6 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
 #' @export
 shutdownJava <- function() {
   .killJava()
-  # listJavaReferences <- getListOfJavaReferences()
-  # if (!is.null(listJavaReferences) & length(listJavaReferences) > 0) {
-  #   message("Your global environment now contains some useless Java references.")
-  #   message("To delete them, you can use the following line of code:")
-  #   message("rm(list = getListOfJavaReferences())")
-  # }
 }
 
 .internalShutdown <- function() {
@@ -702,42 +689,16 @@ getListOfJavaReferences <- function(just.names = T) {
 #'
 #' Synchronize the Java environment with the R environment
 #'
-#' This function synchronizes the Java environment with the R environment. Objects that
-#' are removed from the R environment are not automatically removed from the Java
-#' environment. This function scans the R environment for the java.object instance and
-#' commands the gateway server to get rid of the Java instances that are not longer referred
-#' to in the R environment.
-#'
-#' To avoid a memory leak, the function should be called on a regular basis.
-#'
-#' @return An integer which is the number of Java objects still registered in the Java environment
+#' This function call the garbage collector in R and sends the list of Java references
+#' that have been collected to the Java server. These references are then removed from
+#' the internal map.
 #'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
 callJavaGC <- function() {
-  command <- "sync"
-  javaReferences <- unlist(getListOfJavaReferences(just.names = F), recursive = F)
-  ### TODO find a way to collapse if we have two environments
-  subcommands <- .marshallSubcommand(javaReferences)
-  command <- paste(command, subcommands, sep = MainSplitter)
-  # if (length(environments) > 0) {
-  #   for (environment in environments) {
-  #     if (class(environment) == "environment") {
-  #       if (!identical(environment, globalenv())) {
-  #         for (objectName in ls(envir = environment)) {
-  #           object <- get(objectName, envir = environment)
-  #           if (methods::is(object, "java.object") || methods::is(object, "java.list")) {
-  #             command <- paste(command, paste("java.object",.translateJavaObject(object),sep=""), sep=MainSplitter)
-  #           }
-  #         }
-  #       }
-  #     }
-  #   }
-  # }
-  utils::write.socket(.getSocket(), command)
-  callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
-  return(.processCallback(callback))
+  gc()
+  .flushDumpPileIfNeeded(1)
 }
 
 .marshallSubcommand <- function(objects) {

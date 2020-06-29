@@ -10,63 +10,37 @@ library(J4R)
 
 j4r.config.setDefaultJVMMemorySize(200)
 
-if (!isConnectedToJava()) {
-  connectToJava()
+if (isConnectedToJava()) {
+  shutdownJava()
 }
 
-rm(list=ls()) ### cleaning up before testing
+rm(list = ls())
 
-myEnv <- new.env()
+connectToJava()
 
-j4r.config.registerEnvironment(environment())
-j4r.config.registerEnvironment(myEnv)
+i <- 0
+while (i < 10) {
+  invisible(createJavaObject("java.util.ArrayList", rep(as.integer(10), 5000)))
+  gc()
+  nbObjects <- getNbInstancesInInternalMap()
+  test_that("Test the number of instances is kept at a low level", {
+    expect_equal(nbObjects < 100, T)
+  })
+  print(nbObjects)
+  i <- i + 1
+}
 
-nbObjects <- callJavaGC()
-test_that("Removing all objects before testing", {
-  expect_equal(nbObjects, 0)
-})
+my100ArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 10))
 
-#### Calling the garbage collector ####
-mySimpleJavaObject <- createJavaObject("java.util.ArrayList", as.integer(3))
-
-myArrayLists <- createJavaObject("java.util.ArrayList", 3:5)
-
-assign("javaRef", createJavaObject("java.util.ArrayList"), envir = myEnv)
-
-myArrayLists[[2]] <- NULL
-
-nbObjects <- callJavaGC()
-
-test_that("Removing one object from the java.list object and synchronizing yield 4 objects registered in the Java environment", {
-  expect_equal(nbObjects, 4)
-})
-
-rm("myArrayLists")
-
-nbObjects <- callJavaGC()
-
-test_that("Removing the java.list object and synchronizing yield two objects left in the Java environment", {
-  expect_equal(nbObjects, 2)
-})
+mySecondArrayList <- createJavaObject("java.util.ArrayList")
 
 rm(list = ls())
 
-nbObjects <- callJavaGC()
+callJavaGC()
 
-test_that("Removing all the java.list object and synchronizing yield a single object left in the Java environment", {
-  expect_equal(nbObjects, 1)
-})
+nbObjects <- getNbInstancesInInternalMap()
 
-listEnv <- get("environments", envir = settingEnv)
-myEnv <- listEnv[[length(listEnv)]]
-
-j4r.config.removeEnvironment(myEnv)
-
-rm(list = ls())
-
-nbObjects <- callJavaGC()
-
-test_that("Removing the additional environment and synchronizing yield no object left in the Java environment", {
+test_that("Test that there is no instance in memory", {
   expect_equal(nbObjects, 0)
 })
 

@@ -195,11 +195,9 @@ getMemorySettings <- function() {
 
 .onLoad <- function(libname, pkgname) {
   assign("environments", list(globalenv()), envir = settingEnv)
-  .welcomeMessage()
 }
 
 .onAttach <- function(libname, pkgname) {
-  assign("environments", list(globalenv()), envir = settingEnv)
   .welcomeMessage()
 }
 
@@ -244,60 +242,4 @@ j4r.config.setDefaultJVMMemorySize <- function(defaultJVMMemory) {
   }
 }
 
-#'
-#' Register an environment to J4R
-#'
-#' Register an additional environment that will be scanned for Java references when
-#' calling the callJavaGC.
-#'
-#' @param envir an environment. Has no effect if the argument is null, not an environment or is already
-#' included in the list of environments in J4R.
-#' @return a logical, true if the environment has been registered or false otherwise
-#'
-#' @export
-j4r.config.registerEnvironment <- function(envir) {
-  if (!is.null(envir) && is.environment(envir)) {
-    oldList <- get("environments", envir = settingEnv)
-    vec <- unlist(lapply(oldList, function(env) {
-      identical(env, envir)
-    }), use.names = F)
-    if (all(vec==F)) {
-      oldList[[length(oldList) + 1]] <- envir
-      assign("environments", oldList, envir = settingEnv)
-      return(T)
-    }
-  }
-  return(F)
-}
 
-#'
-#' Remove an environment to J4R
-#'
-#' Remove an environment that will be scanned for Java references when
-#' calling the callJavaGC.
-#'
-#' @param envir an environment. Has no effect if the argument is null, not an environment or is not
-#' included in the list of environments in J4R.
-#' @return a logical, true if the environment has been removed or false in all other cases
-#'
-#' @export
-j4r.config.removeEnvironment <- function(envir) {
-  if (!is.null(envir) && is.environment(envir)) {
-    if (!identical(envir, globalenv())) {
-      oldList <- get("environments", envir = settingEnv)
-      vec <- unlist(lapply(oldList, function(env) {
-        identical(env, envir)
-      }), use.names = F)
-      if (any(vec==T)) {
-        index <- which(vec==T)
-        if (length(index) != 1)  {
-          stop("It seems that more than one environment were identical to the argument envir!")
-        }
-        oldList[[index]] <- NULL
-        assign("environments", oldList, envir = settingEnv)
-        return(T)
-      }
-    }
-  }
-  return(F)
-}

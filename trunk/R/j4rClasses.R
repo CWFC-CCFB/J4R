@@ -11,6 +11,11 @@ java.list <- function() {
   return(me)
 }
 
+as.java.list <- function(myList) {
+  class(myList) <- append(class(myList), "java.list")
+  return(myList)
+}
+
 #'
 #' Print a java.list object
 #'
@@ -34,47 +39,17 @@ print.java.list <- function(x, ...) {
   }
 }
 
-# .finalize <- function(e) {
-#   print("I am cleaning")
-# }
-
 .toString <- function(x) {
   return(paste(x$class, format(x$hashcode, scientific = F), sep="@"))
 }
 
-.isFound <- function(objToBeFound, objToBeSearched) {
-  if (!is.null(objToBeSearched)) {
-    if (methods::is(objToBeSearched,  "java.object")) {
-      return(objToBeFound$class == objToBeSearched$class && objToBeFound$hashcode == objToBeSearched$hashcode)
-    } else if (methods::is(objToBeSearched, "java.list")) {
-      vec <- unlist(lapply(objToBeSearched, function(obj) {
-        .isFound(objToBeFound, obj)
-      }))
-      return(any(vec == TRUE))
-    }
-  }
-  return(FALSE)   ### in all other cases return false
-}
-
-
-.isObjectFoundInThisEnvironment <- function(objToBeFound, envir = globalenv()) {
-  javaObjectsInGlobalEnvironment <- lapply(getListOfJavaReferences(),
-                                           function(obj) {
-                                             get(obj, envir = envir)
-                                           })
-  vec <- lapply(javaObjectsInGlobalEnvironment, function(obj) {
-    .isFound(objToBeFound, obj)
-  })
-  return(any(vec==TRUE))
-}
-
-.flushDumpPileIfNeeded <- function() {
+.flushDumpPileIfNeeded <- function(nbMaxObjects = 100) {
   dumpPile <- .getDumpPile()
-  # if (length(dumpPile) > 100) {
-  #   .flush(dumpPile)
-  #   assign("dumpPile", java.list(), envir = cacheEnv)
-  #   print("I've just flushed the dump pile!")
-  # }
+  if (length(dumpPile) >= nbMaxObjects) {
+     .flush(dumpPile)
+     assign("dumpPile", java.list(), envir = cacheEnv)
+     # print("I've just flushed the dump pile!")
+  }
 }
 
 .getDumpPile <- function() {
@@ -85,26 +60,23 @@ print.java.list <- function(x, ...) {
 }
 
 
-.finalize <- function(env) {
-  javaObject <- env$me  ### created through the constructor java.object
-  isFound <- .isObjectFoundInThisEnvironment(javaObject) #### FIXME this bugs when tested because of the wrong environment
-  ### might need to have a list of registered environment
-  if (!isFound) {
+.finalize <- function(javaObj) {
+  if (isConnectedToJava()) {
     df <- .getDumpPile()
-    df[[length(df) + 1]] <- javaObject
+    df[[length(df) + 1]] <- javaObj
     assign("dumpPile", df, envir = cacheEnv)
     .flushDumpPileIfNeeded()
   }
 }
 
 java.object <- function(classname, hashcodeInt) {
-#  reg.finalizer(environment(), .finalize)
-  me <- list(class = classname, hashcode = hashcodeInt)
+  me <- new.env(parent = emptyenv())
+  me$class <- classname
+  me$hashcode <- hashcodeInt
   class(me) <- append(class(me), "java.object")
+  reg.finalizer(me, .finalize)
   return(me)
 }
-
-
 
 
 #'
@@ -216,10 +188,6 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
   return(connectionHandler$backdoorSocket)
 }
 
-as.java.list <- function(javaList) {
-   class(javaList) <- append(class(javaList), "java.list")
-   return(javaList)
-}
 
 
 

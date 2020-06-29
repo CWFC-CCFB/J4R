@@ -53,7 +53,7 @@ getAllValuesFromListObject <- function(object) {
 #' @return a logical
 #'
 #' @export
-isArray <- function(object) {
+isJavaArray <- function(object) {
   if (!methods::is(object, "java.object")) {
     stop("The object must be an instance of java.object")
   }
@@ -79,7 +79,7 @@ isArray <- function(object) {
 #'
 #' @export
 setValueInArray <- function(object, value, index = NULL) {
-  if (!isArray(object)) {
+  if (!isJavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
   if (is.null(index)) {
@@ -101,12 +101,28 @@ setValueInArray <- function(object, value, index = NULL) {
 #' @return the value at the location
 #'
 #' @export
-getValueFromArray <- function(object, index) {
-  if (!isArray(object)) {
+getValueFromArray <- function(object, ...) {
+  if (!isJavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
-  return(J4R::callJavaMethod("java.lang.reflect.Array", "get", object, as.integer(index)))
+  parms <- list(...)
+  lParms <- length(parms)
+  value <- object
+  i <- 1
+  while (i <= lParms) {
+    value <- J4R::callJavaMethod("java.lang.reflect.Array", "get", value, as.integer(parms[[i]]))
+    i <- i + 1
+  }
+  return(value)
 }
+
+# .getValueFromJavaArray <- function(object, index) {
+#   if (!isJavaArray(object)) {
+#     stop("The object parameter must represent an array!")
+#   }
+#   return(J4R::callJavaMethod("java.lang.reflect.Array", "get", object, as.integer(index)))
+# }
+
 
 #'
 #' Return the length of an Array instance
@@ -119,7 +135,7 @@ getValueFromArray <- function(object, index) {
 #'
 #' @export
 getArrayLength <- function(object) {
-  if (!isArray(object)) {
+  if (!isJavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
   return(J4R::callJavaMethod("java.lang.reflect.Array", "getLength", object))
@@ -138,7 +154,7 @@ getArrayLength <- function(object) {
 #'
 #' @export
 getAllValuesFromArray <- function(object) {
-  if (!isArray(object)) {
+  if (!isJavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
   length <- getArrayLength(object)
@@ -158,4 +174,63 @@ getAllValuesFromArray <- function(object) {
   }
 }
 
+classMatchForArrayConstruction <- c("numeric" = "double", "integer" = "int", "character" = "java.lang.String", "logical" = "boolean")
+
+#'
+#' Create array
+#'
+#' Creates an array of particular class. The dimension of the
+#' array are controled through the length1 and length2 arguments.
+#' The argument length2 is set to 0 by default so that the function
+#' returns a one-dimension array.
+#'
+#' If any of the three parameters is a vector, then the method relies on vectorization and the
+#' value of the function will be a java.list with all the java.object references.
+#'
+#' @param class the class name of the instance of the array
+#' @param length1 a positive integer that defines the length of the array
+#' @param length2 an optional positive integer that defines the second dimension of the array
+#'
+#' @return a java.object or a java.list object if the vectorization was used.
+#'
+#' @export
+createArray <- function(values) {
+  if (!is.null(values)) {
+    if (length(values) > 0) {
+      if (is.atomic(values)) {
+        if (is.array(values)) {
+          dimensions <- dim(values)
+        } else {
+          dimensions <- length(values)
+        }
+        thisClass <- class(values[1])
+        matchNames <- names(classMatchForArrayConstruction)
+        if (!thisClass %in% matchNames) {
+          stop("The argument values should be of the integer, numeric, logical or character type")
+        }
+        thisClass <- classMatchForArrayConstruction[thisClass]
+        nbDimensions <- length(dimensions)
+        if (nbDimensions == 1) {
+          myArray <- createJavaObject(thisClass, dimensions, isArray = T)
+          setValueInArray(myArray,values)
+        } else if (nbDimensions == 2) {
+          myArray <- createJavaObject(thisClass, dimensions[1], dimensions[2], isArray = T)
+          lapply(1:nbDimensions[1], function(i) {
+            mySubArray <- callJavaMethod("java.lang.reflect.Array", "get", myArray, i)
+            setValueInArray(mySubArray,values[i,])
+          })
+        } else if (nbDimensions == 3) {
+          myArray <- createJavaObject(thisClass, dimensions[1], dimensions[2], dimensions[3], isArray = T)
+        }
+        return(myArray)
+      } else {
+        stop("The argument values should be of atomic types!")
+      }
+    } else {
+      stop("The argument values should at least contain one element!")
+    }
+  } else {
+    stop("The argument values cannot be null!")
+  }
+}
 
