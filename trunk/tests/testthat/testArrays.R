@@ -13,6 +13,7 @@ library(J4R)
 j4r.config.setDefaultJVMMemorySize(200)
 
 if (!isConnectedToJava()) {
+  # connectToJava(c(18011,18012), debug = T)
   connectToJava()
 }
 
@@ -80,24 +81,57 @@ test_that("Check values in the array", {
 })
 
 
-# myOtherArray <- createArray("int", 3)
-#
-# test_that("Check the class of the first and the second array", {
-#   expect_equal(myOtherArray$class, "[I")
-# })
-#
-#
-# myOther2DArray <- createArray("int", 3, 4)
-#
-# test_that("Check the class of the first and the second array", {
-#   expect_equal(myOther2DArray$class, "[[I")
-# })
-#
-# myOther2DArrays <- createArray("int", c(3,3), 4)
-#
-# test_that("Check the class of the first and the second array", {
-#   expect_equal(myOther2DArrays[[1]]$class, "[[I")
-#   expect_equal(myOther2DArrays[[2]]$class, "[[I")
-# })
+myOtherArray <- as.JavaArray(as.integer(3))
+returnValue <- getAllValuesFromArray(myOtherArray)
+
+test_that("Check the class of the first and the second array", {
+  expect_equal(myOtherArray$class, "[I")
+  expect_equal(returnValue, 3)
+})
+
+
+m <- matrix(1:6, ncol=2, nrow=3)
+myOther2DArray <- as.JavaArray(m)
+returnValue <- getAllValuesFromArray(myOther2DArray)
+
+test_that("Check the back conversion from array to matrix", {
+  expect_equal(myOther2DArray$class, "[[I")
+  expect_equal(all(m == returnValue, TRUE), TRUE)
+})
+
+m2 <- matrix(c("carotte", "patate", "choux", "genoux", "hiboux", "tomate"), nrow = 2, ncol=3)
+myOther2DArray <- as.JavaArray(m2)
+returnValue <- getAllValuesFromArray(myOther2DArray)
+
+test_that("Check the back conversion from array to matrix", {
+  expect_equal(myOther2DArray$class, "[[Ljava.lang.String")
+  expect_equal(all(m2 == returnValue, TRUE), TRUE)
+})
+
+myArrayOfArrayList <- createJavaObject("java.util.ArrayList", 3, isArray = T)
+setValueInArray(myArrayOfArrayList, createJavaObject("java.util.ArrayList", rep(as.integer(10),3)))
+returnValue <- getAllValuesFromArray(myArrayOfArrayList)
+test_that("Check the instances stored in the array", {
+  expect_equal(getValueFromArray(myArrayOfArrayList, 0)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(myArrayOfArrayList, 1)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(myArrayOfArrayList, 2)$class == "java.util.ArrayList", TRUE)
+  expect_equal(is.list(returnValue), TRUE)
+  expect_equal(length(returnValue), 3)
+})
+
+
+my2DArrayOfArrayList <- createJavaObject("java.util.ArrayList", 3, 2, isArray = T)
+lapply(1:3, function(i, my2DArrayOfArrayList) {
+  setValueInArray(getValueFromArray(my2DArrayOfArrayList, as.integer(i-1)), createJavaObject("java.util.ArrayList", rep(as.integer(10),2)))
+}, my2DArrayOfArrayList)
+returnValue <- getAllValuesFromArray(my2DArrayOfArrayList)
+test_that("Check the instances stored in the array", {
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 0, 0)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 1, 0)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 2, 0)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 0, 1)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 1, 1)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 2, 1)$class == "java.util.ArrayList", TRUE)
+})
 
 shutdownJava()
