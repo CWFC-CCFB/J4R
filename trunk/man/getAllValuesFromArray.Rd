@@ -2,16 +2,18 @@
 % Please edit documentation in R/javaFunctions.R
 \name{getAllValuesFromArray}
 \alias{getAllValuesFromArray}
-\title{Returns all the elements of an array}
+\title{Returns all the elements of a Java array}
 \usage{
 getAllValuesFromArray(object)
 }
 \arguments{
-\item{object}{a java.object that represents a Java List instance}
+\item{object}{a java.object reference pointing to a Java array}
 }
 \value{
-either a java.arraylist object or an R vector
+either a java.list object, a vector or a matrix
 }
 \description{
-All the elements of an array are returned.
+All the elements of an array are returned. If these elements are Java instances,
+then the function value is a java.list of java.object references. Otherwise,
+the value is either a vector or a matrix
 }

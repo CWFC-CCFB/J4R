@@ -223,7 +223,7 @@ classMatchForArrayConstruction <- c("numeric" = "double", "integer" = "int", "ch
 #' @return a java.object reference that points a Java array
 #'
 #' @export
-as.Java.array <- function(values) {
+as.JavaArray <- function(values) {
   if (!is.null(values)) {
     if (length(values) > 0) {
       if (is.atomic(values)) {

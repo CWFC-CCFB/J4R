@@ -10,7 +10,7 @@ as.JavaArray(values)
 \item{values}{a vector or a matrix}
 }
 \value{
-a java.object that points a Java array
+a java.object reference that points a Java array
 }
 \description{
 Converts an R array into a Java array.
