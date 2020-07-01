@@ -9,7 +9,7 @@ getValueFromArray(object, ...)
 \arguments{
 \item{object}{a java.object that represents an array}
 
-\item{index}{the index of the location at which the value is retrieved. Note that in Java
+\item{...}{a series of integers that correspond to the index of the value. Note that in Java
 the first index is 0}
 }
 \value{

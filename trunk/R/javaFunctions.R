@@ -114,7 +114,7 @@ setValueInArray <- function(object, value, index = NULL) {
 #' the index parameter.
 #'
 #' @param object a java.object that represents an array
-#' @param index the index of the location at which the value is retrieved. Note that in Java
+#' @param ... a series of integers that correspond to the index of the value. Note that in Java
 #' the first index is 0
 #'
 #' @return the value at the location
