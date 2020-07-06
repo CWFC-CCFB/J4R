@@ -112,6 +112,23 @@ length.java.object <- function(x) {
   return(1)
 }
 
+.createJavaObjectReference <- function(str) {
+  inputList <- strsplit(str,MainSplitter)
+  innerList <- strsplit(inputList[[1]][2], SubSplitter)
+  vecStr <- innerList[[1]]
+  argumentList <- strsplit(vecStr,"@")
+  outputList <- lapply(argumentList, function(arguments) {
+    classname <- arguments[1]
+    hashcodeInt <- as.integer(arguments[2])
+    javaObject <- java.object(classname, hashcodeInt)
+  })
+  if (length(outputList) == 1) {
+    return (outputList[[1]])
+  } else {
+    return(as.java.list(outputList))
+  }
+}
+
 
 J4RConnectionHandler <- function(port, key, backdoorport) {
   me <- list(port = port, key = key, backdoorport = backdoorport, connections = list())
@@ -146,16 +163,7 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
       }
     )
     if (isConnected) {
-      isSecure <- tryCatch(
-        {
-          .testSecurityKey(connectionHandler, socket)
-        },
-        error=function(cond) {
-          message("An error occurred while checking security key.")
-          message(cond)
-          return(FALSE)
-        }
-      )
+      isSecure <- .testSecurityKey(connectionHandler, socket)
       if (!isSecure) {
         connectionHandler$connections[[nbOfConnections + 1]] <- NULL ### we delete this invalid connection
         return(FALSE)
@@ -169,34 +177,50 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
 }
 
 .testSecurityKey <- function(connectionHandler, socket) {
-  if (exists(".testKey", envir = cacheEnv)) {
-    key <- get(".testKey", envir = cacheEnv)
-  } else {
-    key <- connectionHandler$key
-  }
-  key <- format(key, scientific = F)
-  utils::write.socket(socket, as.character(key))
-  outcome <- utils::read.socket(socket, maxlen = bufferLength)
-  if (outcome == "SecurityFailed") {
-    message("The client got connected but security could not be confirmed.")
-  }
-  return(outcome == "SecurityChecked")
+  isSecure <- tryCatch(
+    {
+      if (exists(".testKey", envir = cacheEnv)) {
+        key <- get(".testKey", envir = cacheEnv)
+      } else {
+        key <- connectionHandler$key
+      }
+      key <- format(key, scientific = F)
+      utils::write.socket(socket, as.character(key))
+      outcome <- utils::read.socket(socket, maxlen = bufferLength)
+      if (outcome == "SecurityFailed") {
+        message("The client got connected but security could not be confirmed.")
+      }
+      return(outcome == "SecurityChecked")
+    },
+    error=function(cond) {
+      message("An error occurred while checking security key.")
+      message(cond)
+      return(FALSE)
+    }
+  )
 }
 
 
 .getBackdoorSocket <- function() {
   connectionHandler <- get("connectionHandler", envir = cacheEnv)
   if (is.null(connectionHandler)) {
-    stop("The connection handler is null!")
+    tryCatch({
+      .instantiateConnectionHandler()
+    },
+    error=function(cond) {
+      stop("The connection handler was null and it could not be reinstantiated!")
+    }
+    )
   }
-  if (is.null(connectionHandler$backdoorSocket)) {
-    backdoorport <- connectionHandler$backdoorport
-    socket <- utils::make.socket("localhost", backdoorport)
-    #### TODO security should be tested here as well
-    connectionHandler$backdoorSocket <- socket
-    assign("connectionHandler", connectionHandler, envir = cacheEnv)
+  backdoorport <- connectionHandler$backdoorport
+  socket <- utils::make.socket("localhost", backdoorport)
+  utils::read.socket(socket, maxlen = bufferLength)
+  isSecure <- .testSecurityKey(connectionHandler, socket)
+  if (!isSecure) {
+    return(NULL)
+  } else {
+    return(socket)
   }
-  return(connectionHandler$backdoorSocket)
 }
 
 

@@ -43,4 +43,4 @@ test_that("Check if the Matrix object has been created", {
   expect_equal("java.object" %in% class(myMatrix), TRUE)
 })
 
-
+shutdownJava()

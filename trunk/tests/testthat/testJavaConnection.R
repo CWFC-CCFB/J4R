@@ -83,12 +83,12 @@ remainingObjectsInCache <- ls(envir = J4R::cacheEnv, all.names = T)
 
 test_that("Testing if the server is properly shutted down when the key is not validated", {
   expect_equal(isConnected, FALSE)
-  expect_equal(length(remainingObjectsInCache), 1)
+  expect_equal(length(remainingObjectsInCache), 2)
   expect_equal(remainingObjectsInCache[1], ".testKey")
 })
 
-rm(list = ls(envir = J4R::cacheEnv, all.names = T), envir = J4R::cacheEnv)
+rm(".testKey", envir = J4R::cacheEnv)
 
-shutdownJava()
+killJava()
 
 
