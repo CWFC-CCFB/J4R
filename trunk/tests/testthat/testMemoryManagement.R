@@ -17,10 +17,11 @@ if (isConnectedToJava()) {
 rm(list = ls())
 
 connectToJava()
+# connectToJava(port = c(18011,18012), debug = T)
 
 i <- 0
 while (i < 10) {
-  invisible(createJavaObject("java.util.ArrayList", rep(as.integer(10), 5000)))
+  invisible(createJavaObject("java.util.ArrayList", rep(as.integer(10), 1000)))
   gc()
   nbObjects <- getNbInstancesInInternalMap()
   test_that("Test the number of instances is kept at a low level", {
@@ -35,6 +36,29 @@ my100ArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 1
 mySecondArrayList <- createJavaObject("java.util.ArrayList")
 
 rm(list = ls())
+
+callJavaGC()
+
+nbObjects <- getNbInstancesInInternalMap()
+
+test_that("Test that there is no instance in memory", {
+  expect_equal(nbObjects, 0)
+})
+
+
+assign("delayDumpPileFlush", TRUE, envir = settingEnv)
+i <- 0
+while (i < 10) {
+  invisible(createJavaObject("java.util.ArrayList", rep(as.integer(10), 1000)))
+  gc()
+  nbObjects <- getNbInstancesInInternalMap()
+  test_that("Test if the delay dump pile flush is enabled", {
+    expect_equal(nbObjects >  i * 800, T)
+  })
+  print(nbObjects)
+  i <- i + 1
+}
+assign("delayDumpPileFlush", FALSE, envir = settingEnv)
 
 callJavaGC()
 

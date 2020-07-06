@@ -24,15 +24,14 @@ settingEnv <- new.env()
 #'
 #' Length of the buffer when reading from the socket connection.
 #'
-#' The buffer has a length of 100Kb by default.
+#' The buffer has a length of 16Kb by default.
 #'
 #' @export
-bufferLength <- 100000
+bufferLength <- 16000
 
 MainSplitter <- "/;"
 SubSplitter <- "/,"
 ExceptionPrefix <- "j4r.net.server.JavaLocalGatewayServer$JavaGatewayException"
-
 
 
 #'
@@ -194,7 +193,7 @@ getMemorySettings <- function() {
 
 
 .onLoad <- function(libname, pkgname) {
-  assign("environments", list(globalenv()), envir = settingEnv)
+  assign("delayDumpPileFlush", FALSE, envir = settingEnv)
 }
 
 .onAttach <- function(libname, pkgname) {
@@ -241,5 +240,6 @@ j4r.config.setDefaultJVMMemorySize <- function(defaultJVMMemory) {
     assign("defaultJVMMemory", defaultJVMMemory, envir = settingEnv)
   }
 }
+
 
 

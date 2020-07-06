@@ -11,6 +11,6 @@ An object of class \code{numeric} of length 1.
 bufferLength
 }
 \description{
-The buffer has a length of 100Kb by default.
+The buffer has a length of 16Kb by default.
 }
 \keyword{datasets}

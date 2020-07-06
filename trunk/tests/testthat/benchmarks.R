@@ -1,5 +1,5 @@
-connectToJava()
-myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 500))
+connectToJava(port=c(18011, 18012), debug = T)
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 50))
 
 system.time(replicate(100, callJavaMethod(myArrayLists, "add", 5)))
 system.time(replicate(100, callJavaMethod(myArrayLists, "clear")))

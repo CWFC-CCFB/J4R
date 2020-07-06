@@ -55,6 +55,9 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
       message("Starting Java server...")
       parms <- c("-firstcall", "true")
       if (!is.null(port)) {
+        if (any(port < 0)) {
+          stop("Ports should be integers equal to or greater than 0!")
+        }
         parms <- c(parms, "-ports", paste(port,collapse=portSplitter))
       }
       if (!is.null(extensionPath)) {
@@ -100,15 +103,7 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
           stop("It seems the server has failed to start!")
         }
       }
-      info <- suppressWarnings(utils::read.table("J4RTmpFile", header=F, sep=";", stringsAsFactors = F))
-      key <- as.integer(info[1,1])
-      backdoorport <- as.integer(info[1,2])
-      if (is.integer(info[1,3])) { ### happens with a single port
-        port <- as.integer(info[1,3])
-      } else {
-        port <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
-      }
-      assign("connectionHandler", J4RConnectionHandler(port, key, backdoorport), envir = cacheEnv)
+      .instantiateConnectionHandler()
     }
     isSecure <- .createAndSecureConnection()
 
@@ -117,6 +112,18 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
     }
     return(isSecure)
   }
+}
+
+.instantiateConnectionHandler <- function() {
+  info <- suppressWarnings(utils::read.table("J4RTmpFile", header=F, sep=";", stringsAsFactors = F))
+  key <- as.integer(info[1,1])
+  backdoorport <- as.integer(info[1,2])
+  if (is.integer(info[1,3])) { ### happens with a single port
+    port <- as.integer(info[1,3])
+  } else {
+    port <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
+  }
+  assign("connectionHandler", J4RConnectionHandler(port, key, backdoorport), envir = cacheEnv)
 }
 
 .getSocket <- function(affinity = 1) {
@@ -617,6 +624,7 @@ shutdownJava <- function() {
 
 .internalShutdown <- function() {
   if (isConnectedToJava()) {
+    ### TODO shutdown all Connections
     utils::write.socket(.getSocket(), "closeConnection")
     message("Closing connection and removing socket...")
   }
@@ -660,6 +668,7 @@ shutdownJava <- function() {
 #'
 #' @export
 getListOfJavaReferences <- function(just.names = T) {
+  ### TODO set to deprecated
   output <- lapply(get("environments", envir = settingEnv), function(envir) {
     listObjectNames <- ls(envir = envir, all.names = T)
     javaReferenceNames <- unlist(lapply(listObjectNames, function(objName) {
@@ -701,21 +710,31 @@ callJavaGC <- function() {
   .flushDumpPileIfNeeded(1)
 }
 
-.marshallSubcommand <- function(objects) {
-  subcommands <- unlist(lapply(objects, function(obj) {
-      subCommand <- paste("java.object",.translateJavaObject(obj),sep="")
-  }), use.names = F)
-  subcommands <- paste(subcommands, collapse=MainSplitter)
-}
 
-.flush <- function(...) {
-  command <- "flush"
-  objects <- list(...)
-  subcommands <- .marshallSubcommand(objects)
-  command <- paste(command, subcommands, sep=MainSplitter)
-  utils::write.socket(.getSocket(), command)
-  callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
-  return(.processCallback(callback))
+.flush <- function(javaList) {
+  prefix <- "flush"
+  maxLength <- length(javaList)
+  nbCalls <- ceiling(maxLength / maxVectorLength)
+  output <- NULL
+  for (i in 1:nbCalls) {
+    lowerIndex <- (i-1) * maxVectorLength + 1
+    upperIndex <- i * maxVectorLength
+    if (upperIndex > maxLength) {
+      upperIndex <- maxLength
+    }
+    subList <- .getSubsetOfJavaArrayList(javaList, lowerIndex, upperIndex)
+    subcommands <- paste("java.object",.translateJavaObject(subList),sep="")
+    command <- paste(prefix, subcommands, sep=MainSplitter)
+    utils::write.socket(.getSocket(), command)
+    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
+    output <- .processResult(callback, output)
+  }
+  if (!is.null(output)) {
+    warning("The Java server has returned something else than NULL!")
+    return(output)
+  } else {
+    return(invisible(output))
+  }
 }
 
 #' Return the number of instances stored in the
@@ -900,11 +919,18 @@ mclapply.j4r <- function(X, FUN) {
   } else {
     nbCores <- getNbConnections()
   }
+  if (nbCores > 1) {
+    assign("delayDumpPileFlush", TRUE, envir = settingEnv)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
+  }
   f <- function(i) {
     affinity <- (i-1)%%nbCores + 1
     FUN(i,affinity)
   }
-  parallel::mclapply(X, f, mc.cores = nbCores)
+  output <- parallel::mclapply(X, f, mc.cores = nbCores)
+  if (nbCores > 1) {
+    assign("delayDumpPileFlush", FALSE, envir = settingEnv) ### we re enable the garbage collection of java.object instances afterwards
+  }
+  return(output)
 }
 
 

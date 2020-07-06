@@ -45,12 +45,17 @@ print.java.list <- function(x, ...) {
 
 .flushDumpPileIfNeeded <- function(nbMaxObjects = 100) {
   dumpPile <- .getDumpPile()
-  if (length(dumpPile) >= nbMaxObjects) {
+  if (!.isDumpPileFlushDelayed() && length(dumpPile) >= nbMaxObjects) {
      .flush(dumpPile)
      assign("dumpPile", java.list(), envir = cacheEnv)
      # print("I've just flushed the dump pile!")
   }
 }
+
+.isDumpPileFlushDelayed <- function() {
+  return(get("delayDumpPileFlush", envir = settingEnv))
+}
+
 
 .getDumpPile <- function() {
   if (!exists("dumpPile", envir = cacheEnv)) {
@@ -143,18 +148,7 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
     if (isConnected) {
       isSecure <- tryCatch(
         {
-          if (exists(".testKey", envir = cacheEnv)) {
-            key <- get(".testKey", envir = cacheEnv)
-          } else {
-            key <- connectionHandler$key
-          }
-          key <- format(key, scientific = F)
-          utils::write.socket(socket, as.character(key))
-          outcome <- utils::read.socket(socket, maxlen = bufferLength)
-          if (outcome == "SecurityFailed") {
-            message("The client got connected but security could not be confirmed.")
-          }
-          outcome == "SecurityChecked"
+          .testSecurityKey(connectionHandler, socket)
         },
         error=function(cond) {
           message("An error occurred while checking security key.")
@@ -174,6 +168,22 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
   return(TRUE)
 }
 
+.testSecurityKey <- function(connectionHandler, socket) {
+  if (exists(".testKey", envir = cacheEnv)) {
+    key <- get(".testKey", envir = cacheEnv)
+  } else {
+    key <- connectionHandler$key
+  }
+  key <- format(key, scientific = F)
+  utils::write.socket(socket, as.character(key))
+  outcome <- utils::read.socket(socket, maxlen = bufferLength)
+  if (outcome == "SecurityFailed") {
+    message("The client got connected but security could not be confirmed.")
+  }
+  return(outcome == "SecurityChecked")
+}
+
+
 .getBackdoorSocket <- function() {
   connectionHandler <- get("connectionHandler", envir = cacheEnv)
   if (is.null(connectionHandler)) {
@@ -182,6 +192,7 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
   if (is.null(connectionHandler$backdoorSocket)) {
     backdoorport <- connectionHandler$backdoorport
     socket <- utils::make.socket("localhost", backdoorport)
+    #### TODO security should be tested here as well
     connectionHandler$backdoorSocket <- socket
     assign("connectionHandler", connectionHandler, envir = cacheEnv)
   }
