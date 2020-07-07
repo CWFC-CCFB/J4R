@@ -21,7 +21,7 @@ test_that("Classpath to J4RTestClass makes it possible to call the testFunction 
   expect_equal(result, "Hello World!")
 })
 
-result <- callJavaMethod("J4RTestClass", "testLong", as.long(4))
+result <- callJavaMethod("J4RTestClass", "testLong", as.long(4000000))
 test_that("A long has been properly processed by Java", {
   expect_equal(result, "It worked well!")
 })
@@ -35,7 +35,7 @@ test_that("Two longs have been properly processed by Java", {
 })
 
 
-result <- callJavaMethod("J4RTestClass", "testFloat", as.float(4))
+result <- callJavaMethod("J4RTestClass", "testFloat", as.float(400000))
 test_that("A float has been properly processed by Java", {
   expect_equal(result, "It worked well!")
 })

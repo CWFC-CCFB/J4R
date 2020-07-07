@@ -202,16 +202,15 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
 
 
 .getBackdoorSocket <- function() {
-  connectionHandler <- get("connectionHandler", envir = cacheEnv)
-  if (is.null(connectionHandler)) {
+  if (!exists("connectionHandler", envir = cacheEnv)) {
     tryCatch({
       .instantiateConnectionHandler()
     },
     error=function(cond) {
-      stop("The connection handler was null and it could not be reinstantiated!")
-    }
-    )
+      stop("The connection handler was null and it could not be instantiated!")
+    })
   }
+  connectionHandler <- get("connectionHandler", envir = cacheEnv)
   backdoorport <- connectionHandler$backdoorport
   socket <- utils::make.socket("localhost", backdoorport)
   utils::read.socket(socket, maxlen = bufferLength)
@@ -231,6 +230,7 @@ as.long <- function(obj) {
   if (!is.numeric(obj)) {
     stop("The argument obj should be a numeric or a vector of numerics!")
   }
+  obj <- format(obj, scientific = F)
   class(obj) <- "long"
   return(obj)
 }

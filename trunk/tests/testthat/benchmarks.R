@@ -57,11 +57,9 @@ system.time(replicate(1000, callJavaMethod(myArrayLists, "size")))
 shutdownJava()
 
 
-##### Test with mclapply
-
-connectToJava(port=c(18011,18012), debug = T)
-class(as.long(100000))
+connectToJava()
 callJavaMethod("java.lang.Thread", "sleep", as.long(100000))
+shutdownJava()
 
 
 
