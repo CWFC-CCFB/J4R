@@ -38,6 +38,9 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
         if (any(port < 0)) {
           stop("Ports should be integers equal to or greater than 0!")
         }
+        if (length(port) > 4) {
+          stop("J4R allows for a maximum of 4 ports!")
+        }
         parms <- c(parms, "-ports", paste(port,collapse=portSplitter))
       }
       if (!is.null(extensionPath)) {
