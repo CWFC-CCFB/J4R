@@ -6,6 +6,9 @@
 \usage{
 as.long(obj)
 }
+\arguments{
+\item{obj}{a numeric or a vector of numerics}
+}
 \description{
 Cast the object into a Java long type
 }

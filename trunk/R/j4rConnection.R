@@ -327,7 +327,7 @@ killJava <- function() {
     {
       emergencySocket <- .getBackdoorSocket()
       utils::write.socket(socket = emergencySocket, "emergencyShutdown")
-      close.socket(emergencySocket)
+      utils::close.socket(emergencySocket)
     },
     error=function(cond) {
       message("Unable to connect the server. It might be already down!")
@@ -349,7 +349,7 @@ interruptJava <- function() {
     {
       emergencySocket <- .getBackdoorSocket()
       utils::write.socket(socket = emergencySocket, "interrupt")
-      invisible(close.socket(emergencySocket))
+      invisible(utils::close.socket(emergencySocket))
     },
     error=function(cond) {
       message("Unable to connect to the server. It might be already down!")
@@ -363,7 +363,7 @@ interruptJava <- function() {
     {
       emergencySocket <- .getBackdoorSocket()
       utils::write.socket(socket = emergencySocket, "softExit")
-      close.socket(emergencySocket)
+      utils::close.socket(emergencySocket)
     },
     error=function(cond) {
       message("Unable to connect the server. It might be already down!")

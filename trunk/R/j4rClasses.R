@@ -225,6 +225,8 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
 #'
 #' Cast the object into a Java long type
 #'
+#' @param obj a numeric or a vector of numerics
+#'
 #' @export
 as.long <- function(obj) {
   if (!is.numeric(obj)) {
@@ -238,6 +240,8 @@ as.long <- function(obj) {
 
 #'
 #' Cast the object into a Java float type
+#'
+#' @param obj a numeric or a vector of numerics
 #'
 #' @export
 as.float <- function(obj) {
