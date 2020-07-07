@@ -13,12 +13,26 @@ if (isConnectedToJava()) {
 }
 
 connectToJava(extensionPath = file.path(getwd(),"javatests"))
-
+connectToJava(port=c(18011,18012), debug = T)
 result <- callJavaMethod("J4RTestClass", "testFunction")
 
 test_that("Classpath to J4RTestClass makes it possible to call the testFunction in that class", {
   expect_equal(result, "Hello World!")
 })
+
+result <- callJavaMethod("J4RTestClass", "testLong", as.long(4))
+test_that("A long has been properly processed by Java", {
+  expect_equal(result, "It worked well!")
+})
+
+# longs <- as.long(c(5,4))
+# class(longs)
+#
+# result <- callJavaMethod("J4RTestClass", "testLong", longs)
+# test_that("A long has been properly processed by Java", {
+#   expect_equal(result, "It worked well!")
+# })
+
 
 shutdownJava()
 

@@ -59,8 +59,9 @@ shutdownJava()
 
 ##### Test with mclapply
 
-connectToJava(port=c(0,0))
-
+connectToJava(port=c(18011,18012), debug = T)
+class(as.long(100000))
+callJavaMethod("java.lang.Thread", "sleep", as.long(100000))
 
 
 

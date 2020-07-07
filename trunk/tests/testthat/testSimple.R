@@ -47,11 +47,11 @@ myArrayLists <- createJavaObject("java.util.ArrayList", 3:5)
 myArrayLists
 
 test_that("myArrayLists object has three java.object instances", {
-  expect_equal(class(myArrayLists)[length(class(myArrayLists))], "java.list")
+  expect_equal(methods::is(myArrayLists, "java.list"), TRUE)
   expect_equal(length(myArrayLists), 3)
-  expect_equal(class(myArrayLists[[1]])[length(class(myArrayLists[[1]]))], "java.object")
-  expect_equal(class(myArrayLists[[2]])[length(class(myArrayLists[[2]]))], "java.object")
-  expect_equal(class(myArrayLists[[3]])[length(class(myArrayLists[[3]]))], "java.object")
+  expect_equal(class(myArrayLists[[1]]), "java.object")
+  expect_equal(class(myArrayLists[[2]]), "java.object")
+  expect_equal(class(myArrayLists[[3]]), "java.object")
 })
 
 # myListOfJavaReferences <- getListOfJavaReferences()

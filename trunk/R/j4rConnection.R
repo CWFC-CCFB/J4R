@@ -330,12 +330,31 @@ killJava <- function() {
       close.socket(emergencySocket)
     },
     error=function(cond) {
-      message("Unable to contact the server. It might be already down!")
+      message("Unable to connect the server. It might be already down!")
     }
   )
   .internalShutdown()
   Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
   message("Done.")
+}
+
+
+#'
+#' Interrupt the current task on the Java server
+#'
+#'
+#' @export
+interruptJava <- function() {
+  tryCatch(
+    {
+      emergencySocket <- .getBackdoorSocket()
+      utils::write.socket(socket = emergencySocket, "interrupt")
+      invisible(close.socket(emergencySocket))
+    },
+    error=function(cond) {
+      message("Unable to connect to the server. It might be already down!")
+    }
+  )
 }
 
 
@@ -347,7 +366,7 @@ killJava <- function() {
       close.socket(emergencySocket)
     },
     error=function(cond) {
-      message("Unable to contact the server. It might be already down!")
+      message("Unable to connect the server. It might be already down!")
     }
   )
   .internalShutdown()

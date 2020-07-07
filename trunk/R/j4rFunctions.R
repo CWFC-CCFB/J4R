@@ -176,8 +176,9 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
         parm <- parm[lowerBoundIndex:upperBoundIndex]
       }
     }
-    classes <- class(parm)
-    class <- (classes[length(classes)])
+    # classes <- class(parm)
+    # class <- (classes[length(classes)])
+    class <- class(parm)[1]
     if (methods::is(parm, "java.object") || methods::is(parm, "java.list")) {
       class <- "java.object"
       parm <- .translateJavaObject(parm)

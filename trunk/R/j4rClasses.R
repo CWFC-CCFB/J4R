@@ -7,12 +7,12 @@
 
 java.list <- function() {
   me <- list()
-  class(me) <- append(class(me), "java.list")
+  class(me) <- c("java.list", class(me))
   return(me)
 }
 
 as.java.list <- function(myList) {
-  class(myList) <- append(class(myList), "java.list")
+  class(myList) <- c("java.list", class(myList))
   return(myList)
 }
 
@@ -78,7 +78,7 @@ java.object <- function(classname, hashcodeInt) {
   me <- new.env(parent = emptyenv())
   me$class <- classname
   me$hashcode <- hashcodeInt
-  class(me) <- append(class(me), "java.object")
+  class(me) <- c("java.object") ##, class(me))
   reg.finalizer(me, .finalize)
   return(me)
 }
@@ -133,7 +133,7 @@ length.java.object <- function(x) {
 J4RConnectionHandler <- function(port, key, backdoorport) {
   me <- list(port = port, key = key, backdoorport = backdoorport, connections = list())
   me$numberOfSockets <- 0
-  class(me) <- append(class(me), "J4RConnectionHandler")
+  class(me) <- c("J4RConnectionHandler", class(me))
   return(me)
 }
 
@@ -223,6 +223,23 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
   }
 }
 
+#'
+#' Cast the object into a Java long type
+#'
+#' @export
+as.long <- function(obj) {
+  # class(obj) <- append(class(obj), "long")
+  class(obj) <- "long"
+  return(obj)
+}
 
 
+#'
+#' Cast the object into a Java float type
+#'
+#' @export
+as.float <- function(obj) {
+  class(obj) <- append(class(obj), "float")
+  return(obj)
+}
 
