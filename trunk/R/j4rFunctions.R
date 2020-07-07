@@ -173,7 +173,9 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
       if (methods::is(parm, "java.list")) {
         parm <- .getSubsetOfJavaArrayList(parm, lowerBoundIndex, upperBoundIndex)
       } else {
+        classParm <- class(parm)
         parm <- parm[lowerBoundIndex:upperBoundIndex]
+        class(parm) <- classParm ### the object might have lost its special class here (e.g. long or float)
       }
     }
     # classes <- class(parm)

@@ -13,7 +13,8 @@ if (isConnectedToJava()) {
 }
 
 connectToJava(extensionPath = file.path(getwd(),"javatests"))
-connectToJava(port=c(18011,18012), debug = T)
+# connectToJava(port=c(18011,18012), debug = T)
+
 result <- callJavaMethod("J4RTestClass", "testFunction")
 
 test_that("Classpath to J4RTestClass makes it possible to call the testFunction in that class", {
@@ -25,14 +26,27 @@ test_that("A long has been properly processed by Java", {
   expect_equal(result, "It worked well!")
 })
 
-# longs <- as.long(c(5,4))
-# class(longs)
-#
-# result <- callJavaMethod("J4RTestClass", "testLong", longs)
-# test_that("A long has been properly processed by Java", {
-#   expect_equal(result, "It worked well!")
-# })
+longs <- as.long(c(5,4))
 
+result <- callJavaMethod("J4RTestClass", "testLong", longs)
+test_that("Two longs have been properly processed by Java", {
+  expect_equal(length(result), 2)
+  expect_equal(all(result == "It worked well!"), TRUE)
+})
+
+
+result <- callJavaMethod("J4RTestClass", "testFloat", as.float(4))
+test_that("A float has been properly processed by Java", {
+  expect_equal(result, "It worked well!")
+})
+
+floats <- as.float(c(5,4))
+
+result <- callJavaMethod("J4RTestClass", "testFloat", floats)
+test_that("Two floats have been properly processed by Java", {
+  expect_equal(length(result), 2)
+  expect_equal(all(result == "It worked well!"), TRUE)
+})
 
 shutdownJava()
 
@@ -44,9 +58,9 @@ test_that("The JVM has been properly shutted down by the shutdownJava function",
 
 #### Testing that two calls to connectToJava will not affect the socket connection ####
 
-callback <- connectToJava()
+isConnected <- connectToJava()
 test_that("Testing if the second call to connectToJava returns TRUE", {
-  expect_equal(callback, TRUE)
+  expect_equal(isConnected, TRUE)
 })
 
 jVersion <- getJavaVersion()

@@ -228,7 +228,9 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
 #'
 #' @export
 as.long <- function(obj) {
-  # class(obj) <- append(class(obj), "long")
+  if (!is.numeric(obj)) {
+    stop("The argument obj should be a numeric or a vector of numerics!")
+  }
   class(obj) <- "long"
   return(obj)
 }
@@ -239,7 +241,10 @@ as.long <- function(obj) {
 #'
 #' @export
 as.float <- function(obj) {
-  class(obj) <- append(class(obj), "float")
+  if (!is.numeric(obj)) {
+    stop("The argument obj should be a numeric or a vector of numerics!")
+  }
+  class(obj) <- "float"
   return(obj)
 }
 
