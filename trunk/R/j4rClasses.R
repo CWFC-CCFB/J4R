@@ -101,17 +101,31 @@ java.object <- function(classname, hashcodeInt) {
   classname <- obj$.class
   if (!exists(classname, envir = .getClassMap())) {
     functionNames <- .getClassInfo(classname)
+    endOfMethodIndex <- which(functionNames == "endOfMethods")
+    if (endOfMethodIndex > 1) {
+      functions <- functionNames[1:(endOfMethodIndex-1)]
+    } else {
+      functions <- NULL
+    }
+    if (endOfMethodIndex < length(functionNames)) {
+      members <- functionNames[(endOfMethodIndex + 1):length(functionNames)]
+    } else {
+      members <- NULL
+    }
     frameForThisClass <- new.env(parent = emptyenv())
-    frameForThisClass$functionNames <- functionNames
+    frameForThisClass$functions <- functions
+    frameForThisClass$members <- members
     assign(classname, frameForThisClass, envir = .getClassMap())
   }
-  functionNames <- get(classname, envir = .getClassMap())$functionNames
-  invisible(lapply(functionNames, function(name, obj) {
-    f <- function(..., affinity = 1) {
-      callJavaMethod(obj, name, ..., affinity = affinity)
-    }
-    assign(name, f, envir = obj)
-  }, obj))
+  functionNames <- get(classname, envir = .getClassMap())$functions
+  if (!is.null(functionNames)) {
+    invisible(lapply(functionNames, function(name, obj) {
+      f <- function(..., affinity = 1) {
+        callJavaMethod(obj, name, ..., affinity = affinity)
+      }
+      assign(name, f, envir = obj)
+    }, obj))
+  }
 }
 
 
