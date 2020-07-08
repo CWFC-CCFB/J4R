@@ -22,14 +22,22 @@ connectToJava()
 i <- 0
 while (i < 10) {
   invisible(createJavaObject("java.util.ArrayList", rep(as.integer(10), 1000)))
-  gc()
+  # gc()
   nbObjects <- getNbInstancesInInternalMap()
-  test_that("Test the number of instances is kept at a low level", {
-    expect_equal(nbObjects < 100, T)
-  })
   print(nbObjects)
+  # test_that("Test the number of instances is kept at a low level", {
+  #   expect_equal(nbObjects <= 1000, T)
+  # })
   i <- i + 1
 }
+
+gc()
+nbObjects <- getNbInstancesInInternalMap()
+print(nbObjects)
+test_that("Test the number of instances is kept at a low level", {
+   expect_equal(nbObjects <= 1000, T)
+})
+
 
 my100ArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 10))
 
@@ -49,14 +57,15 @@ test_that("Test that there is no instance in memory", {
 assign("delayDumpPileFlush", TRUE, envir = settingEnv)
 i <- 0
 while (i < 10) {
+  i <- i + 1
   invisible(createJavaObject("java.util.ArrayList", rep(as.integer(10), 1000)))
-  gc()
+  # gc()
+  # gc()
   nbObjects <- getNbInstancesInInternalMap()
   test_that("Test if the delay dump pile flush is enabled", {
-    expect_equal(nbObjects >  i * 800, T)
+    expect_equal(nbObjects >=  i * 1000, T)
   })
   print(nbObjects)
-  i <- i + 1
 }
 assign("delayDumpPileFlush", FALSE, envir = settingEnv)
 
@@ -67,6 +76,8 @@ nbObjects <- getNbInstancesInInternalMap()
 test_that("Test that there is no instance in memory", {
   expect_equal(nbObjects, 0)
 })
+
+gctorture(on = FALSE)
 
 shutdownJava()
 

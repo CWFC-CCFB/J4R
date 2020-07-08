@@ -4,9 +4,7 @@
 \name{maxVectorLength}
 \alias{maxVectorLength}
 \title{Maximum length of the vector in the parameters.}
-\format{
-An object of class \code{numeric} of length 1.
-}
+\format{An object of class \code{numeric} of length 1.}
 \usage{
 maxVectorLength
 }

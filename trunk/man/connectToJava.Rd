@@ -4,12 +4,8 @@
 \alias{connectToJava}
 \title{Connect to Java environment}
 \usage{
-connectToJava(
-  port = NULL,
-  extensionPath = NULL,
-  memorySize = NULL,
-  debug = FALSE
-)
+connectToJava(port = NULL, extensionPath = NULL, memorySize = NULL,
+  debug = FALSE)
 }
 \arguments{
 \item{port}{the ports the server sockets listen to}

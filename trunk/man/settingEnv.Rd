@@ -4,9 +4,7 @@
 \name{settingEnv}
 \alias{settingEnv}
 \title{The settings environment for this package}
-\format{
-An object of class \code{environment} of length 1.
-}
+\format{An object of class \code{environment} of length 1.}
 \usage{
 settingEnv
 }
