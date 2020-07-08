@@ -24,7 +24,7 @@ mySimpleJavaObject <- createJavaObject("java.util.ArrayList")
 mySimpleJavaObject
 
 test_that("Returned object is of class java.object", {
-  expect_equal(class(mySimpleJavaObject)[length(class(mySimpleJavaObject))], "java.object")
+  expect_equal(methods::is(mySimpleJavaObject, "java.object"), TRUE)
   expect_equal(length(mySimpleJavaObject), 1)
 })
 
@@ -36,7 +36,7 @@ mySimpleJavaObject <- createJavaObject("java.util.ArrayList", as.integer(3))
 mySimpleJavaObject
 
 test_that("Returned object is of class java.object", {
-  expect_equal(class(mySimpleJavaObject)[length(class(mySimpleJavaObject))], "java.object")
+  expect_equal(methods::is(mySimpleJavaObject, "java.object"), TRUE)
 })
 
 #### Creating many objects with a parameterized constructor ####
@@ -49,9 +49,9 @@ myArrayLists
 test_that("myArrayLists object has three java.object instances", {
   expect_equal(methods::is(myArrayLists, "java.list"), TRUE)
   expect_equal(length(myArrayLists), 3)
-  expect_equal(class(myArrayLists[[1]]), "java.object")
-  expect_equal(class(myArrayLists[[2]]), "java.object")
-  expect_equal(class(myArrayLists[[3]]), "java.object")
+  expect_equal(methods::is(myArrayLists[[1]], "java.object"), TRUE)
+  expect_equal(methods::is(myArrayLists[[2]], "java.object"), TRUE)
+  expect_equal(methods::is(myArrayLists[[3]], "java.object"), TRUE)
 })
 
 # myListOfJavaReferences <- getListOfJavaReferences()
@@ -140,7 +140,7 @@ result <- createJavaObject("java.util.ArrayList", isNullObject = TRUE)
 result
 
 test_that("Create a NullWrapper instance", {
-  expect_equal(result$class, "j4r.lang.codetranslator.REnvironment$NullWrapper")
+  expect_equal(result$.class, "j4r.lang.codetranslator.REnvironment$NullWrapper")
 })
 
 
@@ -164,7 +164,7 @@ output <- getAllValuesFromListObject(myNewList)
 
 test_that("Check if the getAllValuesFromListObject returns a list even if the original list contains a single object", {
   expect_equal(length(output), 1)
-  expect_equal(output[[1]]$class, "java.util.HashMap")
+  expect_equal(output[[1]]$.class, "java.util.HashMap")
 })
 
 
@@ -256,7 +256,7 @@ test_that("If the null array has been considered then there should be an excepti
 myException <- createJavaObject("java.lang.Exception")
 test_that("myException has been instantiated", {
   expect_equal("java.object" %in% class(myException), TRUE)
-  expect_equal(myException$class == "java.lang.Exception", TRUE)
+  expect_equal(myException$.class == "java.lang.Exception", TRUE)
 })
 
 #### Testing if the call to a non static method throws an exception when looking for a static method

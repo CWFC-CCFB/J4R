@@ -40,7 +40,15 @@ print.java.list <- function(x, ...) {
 }
 
 .toString <- function(x) {
-  return(paste(x$class, format(x$hashcode, scientific = F), sep="@"))
+  classname <- x$class
+  if (startsWith(classname, "[")) {
+    if (startsWith(classname, "[[")) {
+      classname <- paste("Two-dimension array of", substring(classname,3))
+    } else {
+      classname <- paste("One-dimension array of", substring(classname, 2))
+    }
+  }
+  return(paste(classname, format(x$.hashcode, scientific = F), sep="@"))
 }
 
 .flushDumpPileIfNeeded <- function(nbMaxObjects = 100) {
@@ -76,12 +84,37 @@ print.java.list <- function(x, ...) {
 
 java.object <- function(classname, hashcodeInt) {
   me <- new.env(parent = emptyenv())
-  me$class <- classname
-  me$hashcode <- hashcodeInt
+  me$.class <- classname
+  me$.hashcode <- hashcodeInt
   class(me) <- c("java.object") ##, class(me))
   reg.finalizer(me, .finalize)
+  if (get("delaySettingFunctions", envir = settingEnv) == F) {
+    .setFunctionsForThisJavaReference(me)
+  }
   return(me)
 }
+
+.setFunctionsForThisJavaReference <- function(obj) {
+  if (methods::is(java.object, "java.object")) {
+    stop("The argument should be a java.object instance!")
+  }
+  classname <- obj$.class
+  if (!exists(classname, envir = .getClassMap())) {
+    functionNames <- .getClassInfo(classname)
+    frameForThisClass <- new.env(parent = emptyenv())
+    frameForThisClass$functionNames <- functionNames
+    assign(classname, frameForThisClass, envir = .getClassMap())
+  }
+  functionNames <- get(classname, envir = .getClassMap())$functionNames
+  invisible(lapply(functionNames, function(name, obj) {
+    f <- function(..., affinity = 1) {
+      callJavaMethod(obj, name, ..., affinity = affinity)
+    }
+    assign(name, f, envir = obj)
+  }, obj))
+}
+
+
 
 
 #'
@@ -141,6 +174,12 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
   return(length(connectionHandler$connections) > 0)
 }
 
+.getClassMap <- function() {
+  if (!exists("classMap", envir = cacheEnv)) {
+    assign("classMap", new.env(parent = emptyenv()), envir = cacheEnv)
+  }
+  return(get("classMap", envir = cacheEnv))
+}
 
 .createAndSecureConnection <- function() {
   connectionHandler <- get("connectionHandler", envir = cacheEnv)
@@ -251,4 +290,7 @@ as.float <- function(obj) {
   class(obj) <- "float"
   return(obj)
 }
+
+
+
 

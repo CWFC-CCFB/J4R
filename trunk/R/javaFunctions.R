@@ -57,7 +57,7 @@ is.JavaArray <- function(object) {
   if (!methods::is(object, "java.object")) {
     stop("The object must be an instance of java.object")
   }
-  if (startsWith(object$class,"[")) {
+  if (startsWith(object$.class,"[")) {
     return(TRUE)
   } else {
     return(FALSE)
@@ -177,7 +177,7 @@ getAllValuesFromArray <- function(object) {
   if (!is.JavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
-  is2DArray <- startsWith(object$class, "[[")
+  is2DArray <- startsWith(object$.class, "[[")
   length <- getArrayLength(object)
   if (length == 0) {
     return(c())

@@ -194,6 +194,7 @@ getMemorySettings <- function() {
 
 .onLoad <- function(libname, pkgname) {
   assign("delayDumpPileFlush", FALSE, envir = settingEnv)
+  assign("delaySettingFunctions", FALSE, envir = settingEnv)
 }
 
 .onAttach <- function(libname, pkgname) {

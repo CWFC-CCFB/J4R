@@ -62,5 +62,16 @@ callJavaMethod("java.lang.Thread", "sleep", as.long(100000))
 shutdownJava()
 
 
+connectToJava(port = c(18011,18012), debug = T)
+myArrayList <- createJavaObject("java.util.ArrayList")
+setFunctionsForThisJavaReference(myArrayList)
+
+system.time(replicate(100,callJavaMethod(myArrayList, "add", 1:100)))
+system.time(replicate(100,myArrayList$add(1:100)))
+
+myArrayList$size()
+
+shutdownJava()
+
 
 

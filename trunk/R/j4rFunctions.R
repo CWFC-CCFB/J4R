@@ -4,10 +4,11 @@
 # Date: January 2019
 ########################################################
 
-createCommandToken <- "c"
-createNullArrayToken <- "cnarr"
-createNullToken <- "cnu"
-createArrayToken <- "carr"
+createCommandToken <- "co"
+createNullArrayToken <- "cona"
+createNullToken <- "conu"
+createArrayToken <- "coar"
+classInfoToken <- "cli"
 
 numericToken <- "nu"
 integerToken <- "in"
@@ -29,10 +30,10 @@ portSplitter <- ":"
 .translateJavaObject <- function(javaObject) {
   if (methods::is(javaObject, "java.list")) {
     hashcode <- sapply(javaObject, function(obj) {
-      as.character(obj$hashcode)
+      as.character(obj$.hashcode)
     })
   } else if (methods::is(javaObject, "java.object")) {
-    hashcode <- as.character(javaObject$hashcode)
+    hashcode <- as.character(javaObject$.hashcode)
   } else {
     stop(".translateJavaObject: the argument should be an instance of java.object or java.list")
   }
@@ -457,7 +458,7 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
 
 .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
   newList <- javaArrayList[start:end]
-  class(newList) <- append(class(newList), "java.list")
+  class(newList) <- append("java.list", class(newList))
   return(newList)
 }
 
@@ -472,34 +473,26 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
 #' just.names is set to true, the value is a vector with the names of the instances. If false,
 #' then the function returns a list with the instances.
 #'
-#' @param just.names true for the names of the instances (by default) or false for the instances
-#' @return a vector with the names of the instances or a list with the instances that belong to the java.object
-#' and java.list classes in the environment.
+#' @param envir the environment to be scanned for java.object and java.list instances. By default, it is the global
+#' environment
+#' @return a vector with the names of the instances
 #'
 #' @export
-getListOfJavaReferences <- function(just.names = T) {
-  ### TODO set to deprecated
-  output <- lapply(get("environments", envir = settingEnv), function(envir) {
-    listObjectNames <- ls(envir = envir, all.names = T)
-    javaReferenceNames <- unlist(lapply(listObjectNames, function(objName) {
-      obj <- get(objName, envir = envir)
-      if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
-        return(objName)
-      } else {
-        return(NULL)
-      }
-    }), use.names = F)
-    if (is.null(javaReferenceNames) || length(javaReferenceNames) == 0) {
-      return(list())
+getListOfJavaReferences <- function(envir = .GlobalEnv) {
+  listObjectNames <- ls(envir = envir, all.names = T)
+  javaReferenceNames <- unlist(lapply(listObjectNames, function(objName) {
+    obj <- get(objName, envir = envir)
+    if (methods::is(obj, "java.object") || methods::is(obj, "java.list")) {
+      return(objName)
     } else {
-      if (just.names) {
-        return(javaReferenceNames)
-      } else {
-        return(mget(javaReferenceNames, envir = envir))
-      }
+      return(NULL)
     }
-  })
-  output
+  }), use.names = F)
+  if (is.null(javaReferenceNames) || length(javaReferenceNames) == 0) {
+    return(c())
+  } else {
+    return(unlist(javaReferenceNames))
+  }
 }
 
 
@@ -535,6 +528,7 @@ mclapply.j4r <- function(X, FUN) {
   }
   if (nbCores > 1) {
     assign("delayDumpPileFlush", TRUE, envir = settingEnv)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
+    assign("delaySettingFunctions", TRUE, envir = settingEnv)
   }
   f <- function(i) {
     affinity <- (i-1)%%nbCores + 1
@@ -543,7 +537,16 @@ mclapply.j4r <- function(X, FUN) {
   output <- parallel::mclapply(X, f, mc.cores = nbCores)
   if (nbCores > 1) {
     assign("delayDumpPileFlush", FALSE, envir = settingEnv) ### we re enable the garbage collection of java.object instances afterwards
+    assign("delaySettingFunctions", FALSE, envir = settingEnv)
   }
+  return(output)
+}
+
+.getClassInfo <- function(classname, affinity = 1) {
+  command <- paste(classInfoToken, classname, sep=MainSplitter)
+  utils::write.socket(.getSocket(affinity), command)
+  callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
+  output <- .processCallback(callback)
   return(output)
 }
 

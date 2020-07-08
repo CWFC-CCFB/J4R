@@ -110,7 +110,14 @@ connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, 
 }
 
 .getSocket <- function(affinity = 1) {
-  return(get("connectionHandler", envir = cacheEnv)$connections[[affinity]])
+  if (affinity < 1 || !is.numeric(affinity)) {
+    stop("The affinity should be a strictly positive integer (e.g. >= 1)!")
+  }
+  connections <- get("connectionHandler", envir = cacheEnv)$connections
+  if (affinity > length(connections)) {
+    stop("The affinity should be equal to or smaller than the number of connections!")
+  }
+  return(connections[[affinity]])
 }
 
 
@@ -171,6 +178,9 @@ shutdownJava <- function() {
   }
   if (exists("dumpPile", envir = cacheEnv)) {
     rm("dumpPile", envir = cacheEnv)
+  }
+  if (exists("classMap", envir = cacheEnv)) {
+    rm("classMap", envir = cacheEnv)
   }
   filename <- file.path(getwd(), "J4RTmpFile")
   if (file.exists(filename)) {

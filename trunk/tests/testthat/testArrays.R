@@ -23,7 +23,7 @@ output <- getAllValuesFromArray(myArray)
 
 test_that("Check if the getAllValuesFromArray returns a list even if the original array contains a single object", {
   expect_equal(length(output), 1)
-  expect_equal(output[[1]]$class, "java.util.HashMap")
+  expect_equal(output[[1]]$.class, "java.util.HashMap")
 })
 
 myArray <- createJavaObject("int", 1, isArray = TRUE)
@@ -39,7 +39,7 @@ test_that("Check if the getAllValuesFromArray returns a numeric even if the orig
 
 myNullDoubleArray <- createJavaObject("double", 3, 3, isArray=T, isNullObject = T)
 test_that("Testing if the array has been produced", {
-  expect_equal(myNullDoubleArray$class, "j4r.lang.codetranslator.REnvironment$NullWrapper")
+  expect_equal(myNullDoubleArray$.class, "j4r.lang.codetranslator.REnvironment$NullWrapper")
 })
 
 
@@ -56,7 +56,7 @@ test_that("Check the values returned from the array", {
 myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
 
 test_that("Check the class of the array", {
-  expect_equal(myArray$class, "[[I")
+  expect_equal(myArray$.class, "[[I")
   expect_equal(getArrayLength(myArray), 3)
   expect_equal(getArrayLength(getValueFromArray(myArray,0)), 3)
 })
@@ -65,8 +65,8 @@ test_that("Check the class of the array", {
 
 myArrays <- createJavaObject("int", c(3,3), isArray = TRUE)
 test_that("Check the class of the first and the second array", {
-  expect_equal(myArrays[[1]]$class, "[I")
-  expect_equal(myArrays[[2]]$class, "[I")
+  expect_equal(myArrays[[1]]$.class, "[I")
+  expect_equal(myArrays[[2]]$.class, "[I")
   expect_equal(getArrayLength(myArrays[[1]]), 3)
   expect_equal(getArrayLength(myArrays[[2]]), 3)
 })
@@ -85,7 +85,7 @@ myOtherArray <- as.JavaArray(as.integer(3))
 returnValue <- getAllValuesFromArray(myOtherArray)
 
 test_that("Check the class of the first and the second array", {
-  expect_equal(myOtherArray$class, "[I")
+  expect_equal(myOtherArray$.class, "[I")
   expect_equal(returnValue, 3)
 })
 
@@ -95,7 +95,7 @@ myOther2DArray <- as.JavaArray(m)
 returnValue <- getAllValuesFromArray(myOther2DArray)
 
 test_that("Check the back conversion from array to matrix", {
-  expect_equal(myOther2DArray$class, "[[I")
+  expect_equal(myOther2DArray$.class, "[[I")
   expect_equal(all(m == returnValue, TRUE), TRUE)
 })
 
@@ -104,7 +104,7 @@ myOther2DArray <- as.JavaArray(m2)
 returnValue <- getAllValuesFromArray(myOther2DArray)
 
 test_that("Check the back conversion from array to matrix", {
-  expect_equal(myOther2DArray$class, "[[Ljava.lang.String")
+  expect_equal(myOther2DArray$.class, "[[Ljava.lang.String")
   expect_equal(all(m2 == returnValue, TRUE), TRUE)
 })
 
@@ -112,9 +112,9 @@ myArrayOfArrayList <- createJavaObject("java.util.ArrayList", 3, isArray = T)
 setValueInArray(myArrayOfArrayList, createJavaObject("java.util.ArrayList", rep(as.integer(10),3)))
 returnValue <- getAllValuesFromArray(myArrayOfArrayList)
 test_that("Check the instances stored in the array", {
-  expect_equal(getValueFromArray(myArrayOfArrayList, 0)$class == "java.util.ArrayList", TRUE)
-  expect_equal(getValueFromArray(myArrayOfArrayList, 1)$class == "java.util.ArrayList", TRUE)
-  expect_equal(getValueFromArray(myArrayOfArrayList, 2)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(myArrayOfArrayList, 0)$.class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(myArrayOfArrayList, 1)$.class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(myArrayOfArrayList, 2)$.class == "java.util.ArrayList", TRUE)
   expect_equal(is.list(returnValue), TRUE)
   expect_equal(length(returnValue), 3)
 })
@@ -126,12 +126,12 @@ lapply(1:3, function(i, my2DArrayOfArrayList) {
 }, my2DArrayOfArrayList)
 returnValue <- getAllValuesFromArray(my2DArrayOfArrayList)
 test_that("Check the instances stored in the array", {
-  expect_equal(getValueFromArray(my2DArrayOfArrayList, 0, 0)$class == "java.util.ArrayList", TRUE)
-  expect_equal(getValueFromArray(my2DArrayOfArrayList, 1, 0)$class == "java.util.ArrayList", TRUE)
-  expect_equal(getValueFromArray(my2DArrayOfArrayList, 2, 0)$class == "java.util.ArrayList", TRUE)
-  expect_equal(getValueFromArray(my2DArrayOfArrayList, 0, 1)$class == "java.util.ArrayList", TRUE)
-  expect_equal(getValueFromArray(my2DArrayOfArrayList, 1, 1)$class == "java.util.ArrayList", TRUE)
-  expect_equal(getValueFromArray(my2DArrayOfArrayList, 2, 1)$class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 0, 0)$.class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 1, 0)$.class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 2, 0)$.class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 0, 1)$.class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 1, 1)$.class == "java.util.ArrayList", TRUE)
+  expect_equal(getValueFromArray(my2DArrayOfArrayList, 2, 1)$.class == "java.util.ArrayList", TRUE)
 })
 
 shutdownJava()
