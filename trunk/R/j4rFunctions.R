@@ -512,7 +512,7 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #'
 #' @seealso mclapply in the parallel package
 #'
-#' @param X a vector or a list as per the mclapply function
+#' @param X a vector of numerics
 #' @param FUN a two-argument function. The first argument is called by
 #' the mclapply function and the second argument defines the affinity and MUST
 #' be used in all the calls to the createJavaObject, callJavaMethod,
@@ -520,6 +520,9 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #'
 #' @export
 mclapply.j4r <- function(X, FUN) {
+  if (is.numeric(X)) {
+    stop("The argument X should be a vector of numerics")
+  }
   if (Sys.info()["sysname"] == "Windows") {
     warning("The multithreading is not available on Windows. The function will proceed in a single thread.")
     nbCores <- 1
