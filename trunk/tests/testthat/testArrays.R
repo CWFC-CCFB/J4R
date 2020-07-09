@@ -52,12 +52,18 @@ test_that("Check the values returned from the array", {
   expect_equal(length(which(diffVector != 0)), 0)
 })
 
+test_that("Check the length of the array", {
+  expect_equal(getJavaField(mySimpleArray, 'length'), 3)
+  expect_equal(mySimpleArray$length, 3)
+})
+
 #### Creating a 3x3 array of integers
 myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
 
 test_that("Check the class of the array", {
   expect_equal(myArray$.class, "[[I")
   expect_equal(getArrayLength(myArray), 3)
+  expect_equal(getJavaField(myArray, "length"), 3)
   expect_equal(getArrayLength(getValueFromArray(myArray,0)), 3)
 })
 
@@ -69,6 +75,7 @@ test_that("Check the class of the first and the second array", {
   expect_equal(myArrays[[2]]$.class, "[I")
   expect_equal(getArrayLength(myArrays[[1]]), 3)
   expect_equal(getArrayLength(myArrays[[2]]), 3)
+  expect_equal(all(getJavaField(myArrays, "length") == 3), TRUE)
 })
 
 for (i in 0:2) {

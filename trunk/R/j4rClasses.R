@@ -40,7 +40,7 @@ print.java.list <- function(x, ...) {
 }
 
 .toString <- function(x) {
-  classname <- x$class
+  classname <- x$.class
   if (startsWith(classname, "[")) {
     if (startsWith(classname, "[[")) {
       classname <- paste("Two-dimension array of", substring(classname,3))
@@ -123,7 +123,13 @@ java.object <- function(classname, hashcodeInt) {
       f <- function(..., affinity = 1) {
         callJavaMethod(obj, name, ..., affinity = affinity)
       }
-      assign(name, f, envir = obj)
+      delayedAssign(name, f, assign.env = obj)
+    }, obj))
+  }
+  memberNames <- get(classname, envir = .getClassMap())$members
+  if (!is.null(memberNames)) {
+    invisible(lapply(memberNames, function(name, obj) {
+      delayedAssign(name, getJavaField(obj, name), assign.env = obj)
     }, obj))
   }
 }

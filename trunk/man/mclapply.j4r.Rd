@@ -7,7 +7,7 @@
 mclapply.j4r(X, FUN)
 }
 \arguments{
-\item{X}{a vector or a list as per the mclapply function}
+\item{X}{a vector of numerics}
 
 \item{FUN}{a two-argument function. The first argument is called by
 the mclapply function and the second argument defines the affinity and MUST

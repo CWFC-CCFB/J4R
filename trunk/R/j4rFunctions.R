@@ -520,7 +520,7 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #'
 #' @export
 mclapply.j4r <- function(X, FUN) {
-  if (is.numeric(X)) {
+  if (!is.numeric(X)) {
     stop("The argument X should be a vector of numerics")
   }
   if (Sys.info()["sysname"] == "Windows") {
