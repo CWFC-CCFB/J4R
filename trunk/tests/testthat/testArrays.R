@@ -122,7 +122,7 @@ test_that("Check the instances stored in the array", {
   expect_equal(getValueFromArray(myArrayOfArrayList, 0)$.class == "java.util.ArrayList", TRUE)
   expect_equal(getValueFromArray(myArrayOfArrayList, 1)$.class == "java.util.ArrayList", TRUE)
   expect_equal(getValueFromArray(myArrayOfArrayList, 2)$.class == "java.util.ArrayList", TRUE)
-  expect_equal(is.list(returnValue), TRUE)
+  expect_equal(methods::is(returnValue , "java.list"), TRUE)
   expect_equal(length(returnValue), 3)
 })
 

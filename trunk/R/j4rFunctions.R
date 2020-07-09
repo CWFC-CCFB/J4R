@@ -29,7 +29,7 @@ portSplitter <- ":"
 
 .translateJavaObject <- function(javaObject) {
   if (methods::is(javaObject, "java.list")) {
-    hashcode <- sapply(javaObject, function(obj) {
+    hashcode <- sapply(javaObject$.innerList, function(obj) {
       as.character(obj$.hashcode)
     })
   } else if (methods::is(javaObject, "java.object")) {
@@ -156,10 +156,10 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
 .dropAllIntoFirstList <- function(javaList, javaSomething) {
   initialLength <- length(javaList)
   if (methods::is(javaSomething, "java.object")) {
-    javaList[[initialLength + 1]] <- javaSomething
+    javaList$.innerList[[initialLength + 1]] <- javaSomething
   } else { ### dealing with a list of java object
     lengthIncomingList <- length(javaSomething)
-    javaList[(initialLength + 1):(initialLength + lengthIncomingList)] <- javaSomething
+    javaList$.innerList[(initialLength + 1):(initialLength + lengthIncomingList)] <- javaSomething$.innerList
   }
   return(javaList)
 }
@@ -171,13 +171,13 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
       if (upperBoundIndex > l) {
         stop("The upperBoundIndex paramerer is larger than the size of the parameter!")
       }
-      if (methods::is(parm, "java.list")) {
-        parm <- .getSubsetOfJavaArrayList(parm, lowerBoundIndex, upperBoundIndex)
-      } else {
-        classParm <- class(parm)
-        parm <- parm[lowerBoundIndex:upperBoundIndex]
-        class(parm) <- classParm ### the object might have lost its special class here (e.g. long or float)
-      }
+      # if (methods::is(parm, "java.list")) {
+      #   parm <- .getSubsetOfJavaArrayList(parm, lowerBoundIndex, upperBoundIndex)
+      # } else {
+      # classParm <- class(parm)
+      parm <- parm[lowerBoundIndex:upperBoundIndex]
+      # class(parm) <- classParm ### the object might have lost its special class here (e.g. long or float)
+      # }
     }
     # classes <- class(parm)
     # class <- (classes[length(classes)])
@@ -199,8 +199,9 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
   if (methods::is(source, "java.object")) {   ### non-static method
     command <- paste(prefix, paste("java.object", .translateJavaObject(source), sep=""), targetName, sep=MainSplitter)
   } else if (methods::is(source, "java.list")) {   ### non-static method
-    subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
-    command <- paste(prefix, paste("java.object", .translateJavaObject(subList), sep=""), targetName, sep=MainSplitter)
+    # subList <- .getSubsetOfJavaArrayList(source, lowerIndex, upperIndex)
+    # command <- paste(prefix, paste("java.object", .translateJavaObject(subList), sep=""), targetName, sep=MainSplitter)
+    command <- paste(prefix, paste("java.object", .translateJavaObject(source[lowerIndex:upperIndex]), sep=""), targetName, sep=MainSplitter)
   } else {  ### static method or primitive
     clazz <- class(source)
     if (clazz == "factor") {
@@ -456,11 +457,10 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
 }
 
 
-.getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
-  newList <- javaArrayList[start:end]
-  class(newList) <- append("java.list", class(newList))
-  return(newList)
-}
+# .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
+#   newList <- javaArrayList$.innerList[start:end]
+#   return(new_java.list(newList, isSubList = T))
+# }
 
 
 #'
@@ -546,10 +546,22 @@ mclapply.j4r <- function(X, FUN) {
 }
 
 .getClassInfo <- function(classname, affinity = 1) {
-  command <- paste(classInfoToken, classname, sep=MainSplitter)
-  utils::write.socket(.getSocket(affinity), command)
-  callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
-  output <- .processCallback(callback)
+  # command <- paste(classInfoToken, classname, sep=MainSplitter)
+  # utils::write.socket(.getSocket(affinity), command)
+  # callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
+  # output <- .processCallback(callback)
+  # return(output)
+  output <- tryCatch(
+    {
+      command <- paste(classInfoToken, classname, sep=MainSplitter)
+      utils::write.socket(.getSocket(affinity), command)
+      callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
+      output <- .processCallback(callback)
+    },
+    error = function(cond) {
+      i <- 1000
+    }
+  )
   return(output)
 }
 

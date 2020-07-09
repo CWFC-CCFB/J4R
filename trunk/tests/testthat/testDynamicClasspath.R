@@ -28,6 +28,7 @@ test_that("Check the return value of checkIfClasspathContains", {
   expect_equal(checkIfClasspathContains("repicea.jar"), FALSE)
 })
 
+# urlString <- file.path(getwd(),"tests", "testthat", "javatests", "repicea.jar")
 urlString <- file.path(getwd(),"javatests", "repicea.jar")
 suppressWarnings(addUrlToClassPath(urlString))
 

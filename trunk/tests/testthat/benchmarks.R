@@ -12,7 +12,7 @@ shutdownJava()
 
 connectToJava()
 
-myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 500))
+myArrayLists <- createJavaObject("java.util.ArrayList", rep(as.integer(10), 3))
 
 system.time(doRun(1))
 system.time(

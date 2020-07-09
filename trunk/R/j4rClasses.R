@@ -5,15 +5,128 @@
 ########################################################
 
 
-java.list <- function() {
-  me <- list()
-  class(me) <- c("java.list", class(me))
+# java.list <- function() {
+#   me <- list()
+#   class(me) <- c("java.list", class(me))
+#   return(me)
+# }
+
+# as.java.list <- function(myList) {
+#   if (!is.list(myList)) {
+#     stop("The myList argument must be a list instance!")
+#   }
+#   class(myList) <- c("java.list", class(myList))
+#   if (get("delaySettingFunctions", envir = settingEnv) == F) {
+#     .setFunctionsForThisJavaReference(myList, myList[[1]]$.class)
+#   }
+#   return(myList)
+# }
+
+# new_java.dump <- function() {
+#   me <- new.env(parent = emptyenv())
+#   me$.innerList <- list()
+#   class(me) <- c("java.dump", "java.list")
+#   return(me)
+# }
+#
+# '[[<-.java.dump' <- function(x, y, value) {
+#   invisible(x$.innerList[[y]] <- value)
+# }
+
+#
+# Constructor of the java.dumpPile class.
+#
+# The java.dumpPile class is similar to the java.list class,
+# except that it disables methods and members automated assignment.
+#
+new_java.dumpPile <- function(myList) {
+  if (missing(myList) || is.null(myList)) {
+    myList <- list()
+  }
+  if (!is.list(myList)) {
+    stop("The myList argument must be a list instance!")
+  }
+  me <- new.env(parent = emptyenv())
+  me$.innerList <- myList
+  class(me) <- c("java.dumpPile", "java.list")
   return(me)
 }
 
-as.java.list <- function(myList) {
-  class(myList) <- c("java.list", class(myList))
-  return(myList)
+'[.java.dumpPile' <- function(x,y) {
+  return(new_java.dumpPile(x$.innerList[y]))
+}
+
+
+#
+# Constructor of the java.list class.
+#
+new_java.list <- function(myList) {
+  if (missing(myList) || is.null(myList)) {
+    myList <- list()
+  }
+  if (!is.list(myList)) {
+    stop("The myList argument must be a list instance!")
+  }
+  me <- new.env(parent = emptyenv())
+  me$.innerList <- myList
+  class(me) <- c("java.list")
+  if (length(me$.innerList) > 0) {
+    if (get("delaySettingFunctions", envir = settingEnv) == F) {
+      .setFunctionsForThisJavaReference(me, me$.innerList[[1]]$.class)
+    }
+  }
+  return(me)
+}
+
+#'
+#' Create a subsetting operator for the java.list class.
+#'
+#' The subsetting operator is delegated to the inner list.
+#'
+#' @param x a java.list instance
+#' @param y either a numeric or a character
+#'
+#' @return a java.object instance from the inner list
+#'
+#' @export
+'[[.java.list' <- function(x,y) {
+  if (is.numeric(y)) {
+    return(x$.innerList[[y]])
+  } else if (is.character(y)) {
+    return(get(y, envir = x))
+  } else {
+    return(NULL)
+  }
+}
+
+#'
+#' Create a subsetting operator for the java.list class.
+#'
+#' The subsetting operator is delegated to the inner list.
+#'
+#' @param x a java.list instance
+#' @param y either a numeric or a character
+#'
+#' @return a java.list that contains a subset of the original java.list
+#'
+#' @export
+'[.java.list' <- function(x,y) {
+  return(new_java.list(x$.innerList[y]))
+}
+
+
+#'
+#' Override the default length function
+#'
+#' A java.list class is an environment containing an inner list. The
+#' length of this inner list is returned by this function.
+#'
+#' @param x a java.list instance
+#' @return the length of the inner list
+#'
+#' @export
+length.java.list <- function(x) {
+  return(length(x$.innerList))
 }
 
 #'
@@ -55,7 +168,7 @@ print.java.list <- function(x, ...) {
   dumpPile <- .getDumpPile()
   if (!.isDumpPileFlushDelayed() && length(dumpPile) >= nbMaxObjects) {
      .flush(dumpPile)
-     assign("dumpPile", java.list(), envir = cacheEnv)
+     assign("dumpPile", new_java.dumpPile(), envir = cacheEnv)
      # print("I've just flushed the dump pile!")
   }
 }
@@ -67,7 +180,7 @@ print.java.list <- function(x, ...) {
 
 .getDumpPile <- function() {
   if (!exists("dumpPile", envir = cacheEnv)) {
-    assign("dumpPile", java.list(), envir = cacheEnv)
+    assign("dumpPile", new_java.dumpPile(), envir = cacheEnv)
   }
   return(get("dumpPile", envir = cacheEnv))
 }
@@ -76,29 +189,32 @@ print.java.list <- function(x, ...) {
 .finalize <- function(javaObj) {
   if (isConnectedToJava()) {
     df <- .getDumpPile()
-    df[[length(df) + 1]] <- javaObj
+    df$.innerList[[length(df) + 1]] <- javaObj
     assign("dumpPile", df, envir = cacheEnv)
     .flushDumpPileIfNeeded()
   }
 }
 
-java.object <- function(classname, hashcodeInt) {
+#
+# Constructor of the java.object class
+#
+new_java.object <- function(classname, hashcodeInt) {
   me <- new.env(parent = emptyenv())
   me$.class <- classname
   me$.hashcode <- hashcodeInt
-  class(me) <- c("java.object") ##, class(me))
+  class(me) <- c("java.object")
   reg.finalizer(me, .finalize)
   if (get("delaySettingFunctions", envir = settingEnv) == F) {
-    .setFunctionsForThisJavaReference(me)
+    .setFunctionsForThisJavaReference(me, me$.class)
   }
   return(me)
 }
 
-.setFunctionsForThisJavaReference <- function(obj) {
-  if (methods::is(java.object, "java.object")) {
-    stop("The argument should be a java.object instance!")
+.setFunctionsForThisJavaReference <- function(obj, classname) {
+  if (!methods::is(obj, "java.object") && !methods::is(obj, "java.list")) {
+    stop("The argument should be a java.object or a java.list instance!")
   }
-  classname <- obj$.class
+#  classname <- obj$.class
   if (!exists(classname, envir = .getClassMap())) {
     functionNames <- .getClassInfo(classname)
     endOfMethodIndex <- which(functionNames == "endOfMethods")
@@ -173,12 +289,13 @@ length.java.object <- function(x) {
   outputList <- lapply(argumentList, function(arguments) {
     classname <- arguments[1]
     hashcodeInt <- as.integer(arguments[2])
-    javaObject <- java.object(classname, hashcodeInt)
+    javaObject <- new_java.object(classname, hashcodeInt)
   })
   if (length(outputList) == 1) {
     return (outputList[[1]])
   } else {
-    return(as.java.list(outputList))
+    # return(as.java.list(outputList))
+    return(new_java.list(outputList))
   }
 }
 
@@ -296,6 +413,24 @@ as.long <- function(obj) {
   return(obj)
 }
 
+#'
+#' Override the subsetting for long instances
+#'
+#' This function is required. Otherwise the long class
+#' is lost after the subsetting.
+#'
+#' @param x a long instance
+#' @param y a numeric that stands for the index
+#'
+#' @return a long instance that is a subset of x
+#'
+#' @export
+'[.long' <- function(x,y) {
+  return(as.long(as.numeric(x)[y]))
+}
+
+
+
 
 #'
 #' Cast the object into a Java float type
@@ -311,6 +446,21 @@ as.float <- function(obj) {
   return(obj)
 }
 
+#'
+#' Override the subsetting for float instance
+#'
+#' This function is required. Otherwise the float class
+#' is lost after the subsetting.
+#'
+#' @param x a float instance
+#' @param y a numeric that stands for the index
+#'
+#' @return a float instance that is a subset of x
+#'
+#' @export
+'[.float' <- function(x,y) {
+  return(as.float(as.numeric(x)[y]))
+}
 
 
 
