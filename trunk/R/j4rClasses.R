@@ -5,33 +5,6 @@
 ########################################################
 
 
-# java.list <- function() {
-#   me <- list()
-#   class(me) <- c("java.list", class(me))
-#   return(me)
-# }
-
-# as.java.list <- function(myList) {
-#   if (!is.list(myList)) {
-#     stop("The myList argument must be a list instance!")
-#   }
-#   class(myList) <- c("java.list", class(myList))
-#   if (get("delaySettingFunctions", envir = settingEnv) == F) {
-#     .setFunctionsForThisJavaReference(myList, myList[[1]]$.class)
-#   }
-#   return(myList)
-# }
-
-# new_java.dump <- function() {
-#   me <- new.env(parent = emptyenv())
-#   me$.innerList <- list()
-#   class(me) <- c("java.dump", "java.list")
-#   return(me)
-# }
-#
-# '[[<-.java.dump' <- function(x, y, value) {
-#   invisible(x$.innerList[[y]] <- value)
-# }
 
 #
 # Constructor of the java.dumpPile class.
@@ -71,9 +44,7 @@ new_java.list <- function(myList) {
   me$.innerList <- myList
   class(me) <- c("java.list")
   if (length(me$.innerList) > 0) {
-    if (get("delaySettingFunctions", envir = settingEnv) == F) {
-      .setFunctionsForThisJavaReference(me, me$.innerList[[1]]$.class)
-    }
+    .setFunctionsForThisJavaReference(me, me$.innerList[[1]]$.class) ### no need for affinity here since the object have already called the .getClassInfo function
   }
   return(me)
 }
@@ -198,25 +169,22 @@ print.java.list <- function(x, ...) {
 #
 # Constructor of the java.object class
 #
-new_java.object <- function(classname, hashcodeInt) {
+new_java.object <- function(classname, hashcodeInt, affinity = 1) {
   me <- new.env(parent = emptyenv())
   me$.class <- classname
   me$.hashcode <- hashcodeInt
   class(me) <- c("java.object")
   reg.finalizer(me, .finalize)
-  if (get("delaySettingFunctions", envir = settingEnv) == F) {
-    .setFunctionsForThisJavaReference(me, me$.class)
-  }
+  .setFunctionsForThisJavaReference(me, me$.class, affinity)
   return(me)
 }
 
-.setFunctionsForThisJavaReference <- function(obj, classname) {
+.setFunctionsForThisJavaReference <- function(obj, classname, affinity) {
   if (!methods::is(obj, "java.object") && !methods::is(obj, "java.list")) {
     stop("The argument should be a java.object or a java.list instance!")
   }
-#  classname <- obj$.class
   if (!exists(classname, envir = .getClassMap())) {
-    functionNames <- .getClassInfo(classname)
+    functionNames <- .getClassInfo(classname, affinity)
     endOfMethodIndex <- which(functionNames == "endOfMethods")
     if (endOfMethodIndex > 1) {
       functions <- functionNames[1:(endOfMethodIndex-1)]
@@ -281,7 +249,7 @@ length.java.object <- function(x) {
   return(1)
 }
 
-.createJavaObjectReference <- function(str) {
+.createJavaObjectReference <- function(str, affinity = 1) {
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)
   vecStr <- innerList[[1]]
@@ -289,12 +257,11 @@ length.java.object <- function(x) {
   outputList <- lapply(argumentList, function(arguments) {
     classname <- arguments[1]
     hashcodeInt <- as.integer(arguments[2])
-    javaObject <- new_java.object(classname, hashcodeInt)
+    javaObject <- new_java.object(classname, hashcodeInt, affinity)
   })
   if (length(outputList) == 1) {
     return (outputList[[1]])
   } else {
-    # return(as.java.list(outputList))
     return(new_java.list(outputList))
   }
 }

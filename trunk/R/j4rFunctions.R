@@ -141,7 +141,7 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
     }
     utils::write.socket(.getSocket(affinity), command)
     callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
-    output <- .processResult(callback, output)
+    output <- .processResult(callback, output, affinity)
   }
   return(output)
 }
@@ -171,16 +171,8 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
       if (upperBoundIndex > l) {
         stop("The upperBoundIndex paramerer is larger than the size of the parameter!")
       }
-      # if (methods::is(parm, "java.list")) {
-      #   parm <- .getSubsetOfJavaArrayList(parm, lowerBoundIndex, upperBoundIndex)
-      # } else {
-      # classParm <- class(parm)
       parm <- parm[lowerBoundIndex:upperBoundIndex]
-      # class(parm) <- classParm ### the object might have lost its special class here (e.g. long or float)
-      # }
     }
-    # classes <- class(parm)
-    # class <- (classes[length(classes)])
     class <- class(parm)[1]
     if (methods::is(parm, "java.object") || methods::is(parm, "java.list")) {
       class <- "java.object"
@@ -254,7 +246,7 @@ getJavaField <- function(source, fieldName, affinity = 1) {
 
     utils::write.socket(.getSocket(affinity), command)
     callback <- utils::read.socket(.getSocket(affinity), maxlen=bufferLength)
-    output <- .processResult(callback, output)
+    output <- .processResult(callback, output, affinity)
   }
   return(output)
 }
@@ -304,7 +296,7 @@ setJavaField <- function(source, fieldName, value, affinity = 1) {
     }
     utils::write.socket(.getSocket(affinity), command)
     callback <- utils::read.socket(.getSocket(affinity), maxlen=bufferLength)
-    output <- .processResult(callback, output)
+    output <- .processResult(callback, output, affinity)
   }
   if (!is.null(output)) {
     warning("The Java server has returned something else than NULL!")
@@ -379,7 +371,7 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
     }
     utils::write.socket(.getSocket(affinity), command)
     callback <- utils::read.socket(.getSocket(affinity), maxlen=bufferLength)
-    output <- .processResult(callback, output)
+    output <- .processResult(callback, output, affinity)
   }
   if (is.null(output)) {
     return(invisible(output))
@@ -389,8 +381,8 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
   return(output)
 }
 
-.processResult <- function(callback, output) {
-  result <- .processCallback(callback)
+.processResult <- function(callback, output, affinity = 1) {
+  result <- .processCallback(callback, affinity)
   if (is.null(output)) {
     output <- result
   } else {
@@ -404,12 +396,12 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
 }
 
 
-.processCallback <- function(callback) {
+.processCallback <- function(callback, affinity = 1) {
   .checkForExceptionInCallback(callback)
   if (startsWith(callback, javaObjectToken)) {  ## a single Java object
-    returnObject <- .createJavaObjectReference(callback)
+    returnObject <- .createJavaObjectReference(callback, affinity)
   } else if (startsWith(callback, javaListToken) && regexpr("@", callback) >= 0) { ## a list of Java objects
-    returnObject <- .createJavaObjectReference(callback)
+    returnObject <- .createJavaObjectReference(callback, affinity)
   } else if (startsWith(callback, "Done")) {
     returnObject <- NULL
   } else {
@@ -455,12 +447,6 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
     return(myList)
   }
 }
-
-
-# .getSubsetOfJavaArrayList <- function(javaArrayList, start, end) {
-#   newList <- javaArrayList$.innerList[start:end]
-#   return(new_java.list(newList, isSubList = T))
-# }
 
 
 #'
@@ -531,7 +517,6 @@ mclapply.j4r <- function(X, FUN) {
   }
   if (nbCores > 1) {
     assign("delayDumpPileFlush", TRUE, envir = settingEnv)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
-    assign("delaySettingFunctions", TRUE, envir = settingEnv)
   }
   f <- function(i) {
     affinity <- (i-1)%%nbCores + 1
@@ -540,28 +525,16 @@ mclapply.j4r <- function(X, FUN) {
   output <- parallel::mclapply(X, f, mc.cores = nbCores)
   if (nbCores > 1) {
     assign("delayDumpPileFlush", FALSE, envir = settingEnv) ### we re enable the garbage collection of java.object instances afterwards
-    assign("delaySettingFunctions", FALSE, envir = settingEnv)
   }
   return(output)
 }
 
 .getClassInfo <- function(classname, affinity = 1) {
-  # command <- paste(classInfoToken, classname, sep=MainSplitter)
-  # utils::write.socket(.getSocket(affinity), command)
-  # callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
-  # output <- .processCallback(callback)
-  # return(output)
-  output <- tryCatch(
-    {
-      command <- paste(classInfoToken, classname, sep=MainSplitter)
-      utils::write.socket(.getSocket(affinity), command)
-      callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
-      output <- .processCallback(callback)
-    },
-    error = function(cond) {
-      i <- 1000
-    }
-  )
+  # message(paste("Affinity is", affinity))
+  command <- paste(classInfoToken, classname, sep=MainSplitter)
+  utils::write.socket(.getSocket(affinity), command)
+  callback <- utils::read.socket(.getSocket(affinity), maxlen = bufferLength)
+  output <- .processCallback(callback, affinity)
   return(output)
 }
 

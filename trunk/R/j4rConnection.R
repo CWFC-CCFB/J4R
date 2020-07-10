@@ -227,7 +227,6 @@ callJavaGC <- function() {
     if (upperIndex > maxLength) {
       upperIndex <- maxLength
     }
-    # subList <- .getSubsetOfJavaArrayList(javaList, lowerIndex, upperIndex)
     subList <- javaList[lowerIndex:upperIndex]
     subcommands <- paste("java.object",.translateJavaObject(subList),sep="")
     command <- paste(prefix, subcommands, sep=MainSplitter)
