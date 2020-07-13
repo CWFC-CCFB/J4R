@@ -28,6 +28,8 @@ instances can be returned.
 There is no need to cast a particular parameter to a super class. Actually, the Java server tries to find the method
 that best matches the types of the parameters. Primitive type are converted on the fly, numeric to double, integer to int,
 logical to boolean and character to String. Factors are also converted to String.
+
+When the source is a java.object instance, this function can be substituted for the $ operator.
 }
 \examples{
 ### starting Java
@@ -38,6 +40,9 @@ myList <- createJavaObject("java.util.ArrayList")
 
 ### adding 3 to the list
 callJavaMethod(myList, "add", 3)
+
+### adding 5 to the list
+myList$add(3)
 
 ### shutting down Java
 shutdownJava()

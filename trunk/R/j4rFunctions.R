@@ -205,6 +205,8 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
 #' This function gets the value of a particular field, which can be either static or not. If the field is static,
 #' the source should be a valid class name.
 #'
+#' When the source is a java.object instance, this function can be substituted for the $ operator.
+#'
 #' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
 #' a string representing the Java class name in case of static method
 #' @param fieldName the name of the field to be set
@@ -248,6 +250,8 @@ getJavaField <- function(source, fieldName, affinity = 1) {
 #'
 #' This function sets a particular field, which can be either static or not. If the field is static,
 #' the source should be a valid class name.
+#'
+#' When the source is a java.object instance, this function can be substituted for the $ operator.
 #'
 #' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
 #' a string representing the Java class name in case of static method
@@ -308,12 +312,15 @@ setJavaField <- function(source, fieldName, value, affinity = 1) {
 #' that best matches the types of the parameters. Primitive type are converted on the fly, numeric to double, integer to int,
 #' logical to boolean and character to String. Factors are also converted to String.
 #'
+#' When the source is a java.object instance, this function can be substituted for the $ operator.
+#'
 #' @param source this should be either a java.list instance or a single java.object instance for non-static methods or
 #' a string representing the Java class name in case of static method
 #' @param methodName the name of the method
 #' @param ... the parameters of the method
 #' @param affinity a parameter used by the mclapply.j4r function in case of multithreading.
 #' @return It depends on the method. It can return a primitive type (or a vector of primitive), a Java instance (or a list of Java instances) or nothing at all.
+#'
 #' @examples
 #' ### starting Java
 #' connectToJava(memorySize = 200)
@@ -323,6 +330,9 @@ setJavaField <- function(source, fieldName, value, affinity = 1) {
 #'
 #' ### adding 3 to the list
 #' callJavaMethod(myList, "add", 3)
+#'
+#' ### adding 5 to the list
+#' myList$add(3)
 #'
 #' ### shutting down Java
 #' shutdownJava()

@@ -20,3 +20,6 @@ a string representing the Java class name in case of static method}
 This function sets a particular field, which can be either static or not. If the field is static,
 the source should be a valid class name.
 }
+\details{
+When the source is a java.object instance, this function can be substituted for the $ operator.
+}
