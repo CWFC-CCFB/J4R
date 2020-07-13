@@ -66,16 +66,6 @@ new_java.list <- function(myList) {
 }
 
 
-#'
-#' Create a subsetting operator for the java.list class.
-#'
-#' The subsetting operator is delegated to the inner list.
-#'
-#' @param x a java.list instance
-#' @param y either a numeric or a character
-#'
-#' @return a java.object instance from the inner list
-#'
 #' @export
 '[[.java.list' <- function(x,y) {
   if (is.numeric(y)) {
@@ -87,16 +77,6 @@ new_java.list <- function(myList) {
   }
 }
 
-#'
-#' Create a subsetting operator for the java.list class.
-#'
-#' The subsetting operator is delegated to the inner list.
-#'
-#' @param x a java.list instance
-#' @param y either a numeric or a character
-#'
-#' @return a java.list that contains a subset of the original java.list
-#'
 #' @export
 '[.java.list' <- function(x,y) {
   return(new_java.list(x$.innerList[y]))
@@ -446,24 +426,10 @@ as.long <- function(obj) {
   return(obj)
 }
 
-#'
-#' Override the subsetting for long instances
-#'
-#' This function is required. Otherwise the long class
-#' is lost after the subsetting.
-#'
-#' @param x a long instance
-#' @param y a numeric that stands for the index
-#'
-#' @return a long instance that is a subset of x
-#'
 #' @export
 '[.long' <- function(x,y) {
   return(as.long(as.numeric(x)[y]))
 }
-
-
-
 
 #'
 #' Cast the object into a Java float type
@@ -479,17 +445,6 @@ as.float <- function(obj) {
   return(obj)
 }
 
-#'
-#' Override the subsetting for float instance
-#'
-#' This function is required. Otherwise the float class
-#' is lost after the subsetting.
-#'
-#' @param x a float instance
-#' @param y a numeric that stands for the index
-#'
-#' @return a float instance that is a subset of x
-#'
 #' @export
 '[.float' <- function(x,y) {
   return(as.float(as.numeric(x)[y]))
