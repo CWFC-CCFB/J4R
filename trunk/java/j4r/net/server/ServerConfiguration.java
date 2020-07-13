@@ -19,82 +19,101 @@
 package j4r.net.server;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.ServerSocket;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServerConfiguration implements Serializable {
 
 	private static final long serialVersionUID = 20111222L;
 	
-	protected final int numberOfClientThreads;
+	private static final int MIN_PORT = 1024;
+	private static final int MAX_PORT = 65535;
+	
+	protected final int numberOfClientThreadsPerReceiver;
 	protected final int maxSizeOfWaitingList;
-	protected final int outerPort;
-	protected final int innerPort;
-	protected final Integer key;
-	protected final String wd;
+	protected final int[] listiningPorts;
+	protected final int internalPort;
 	protected final boolean isLocal;
+	protected final int key;
+	protected final String wd;
 
 	
 	/**
 	 * Constructor. 
-	 * @param numberOfClientThreads number of threads that can answer calls.
+	 * @param numberOfClientThreadsPerReceiver number of threads that can answer calls.
 	 * @param maxSizeOfWaitingList number of pending calls
-	 * @param outerPort port on which the server exchange the information with the clients
-	 * @param internalPort port on which the server interface can be accessed
+	 * @param listeningPort port on which the server exchange the information with the clients
+	 * @param internalPort port on which the server can be accessed (backdoor port)
 	 */
-	public ServerConfiguration(int numberOfClientThreads, int maxSizeOfWaitingList, int outerPort, Integer internalPort) {
-		this.isLocal = false;
-		if (numberOfClientThreads < 0 || numberOfClientThreads > 10) {
-			throw new InvalidParameterException("Number of client threads should be between 1 and 10");
+	public ServerConfiguration(int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, int[] listeningPorts, int internalPort) {
+		this(listeningPorts, internalPort, numberOfClientThreadsPerReceiver, maxSizeOfWaitingList, false, -1, null);
+	}
+
+	
+	private ServerConfiguration(int[] listeningPorts, int internalPort, int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, boolean isLocal, int key, String wd) {
+		this.isLocal = isLocal;
+		if (numberOfClientThreadsPerReceiver < 0 || numberOfClientThreadsPerReceiver > 10) {
+			throw new InvalidParameterException("Number of client threads should be between 1 and 10!"); 
 		} else {
-			this.numberOfClientThreads = numberOfClientThreads;
+			this.numberOfClientThreadsPerReceiver = numberOfClientThreadsPerReceiver;
 		}
-		if (outerPort < 1024 || outerPort > 49151) {
-			throw new InvalidParameterException("The outer port must be between 1024 and 49151");
-		} else {
-			this.outerPort = outerPort;
+		if (listeningPorts == null) {
+			throw new InvalidParameterException("The listeningPorts argument cannot be set to null!");
 		}
-		if (internalPort != null && (internalPort < 1024 || internalPort > 49151)) {
-			throw new InvalidParameterException("The inner port must be between 1024 and 49151");
-		} else {
-			this.innerPort = internalPort;
+		for (int port : listeningPorts) {
+			checkPort(port, "listening");
 		}
-		this.key = null;
-		this.wd = null;
+		this.listiningPorts = listeningPorts;
+		checkPort(internalPort, "internal");
+		this.internalPort = internalPort;
 		if (maxSizeOfWaitingList < 0) {
 			this.maxSizeOfWaitingList = 0;
 		} else {
 			this.maxSizeOfWaitingList = maxSizeOfWaitingList;
 		}
+		this.key = key;
+		if (isLocalServer()) {
+			if (wd == null || !new File(wd).exists()) {
+				this.wd = System.getProperty("java.io.tmpdir");
+			} else {
+				this.wd = wd;
+			}
+		} else {
+			this.wd = null;
+		}
 	}
-
+	
 	/**
 	 * Configuration for local server
-	 * @param outerPort
-	 * @param key an integer required as a key for connection
+	 * @param listiningPorts the ports to which the ServerSocket will listen (0 for random port selection)
+	 * @param internalPort the backdoor port (0 for random port selection)
+	 * @param key a security key to ensure the client is really the local user
 	 * @param wd a string representing the working directory. If it is invalid, then Java uses the temporary directory as
 	 * specified in the property 
 	 */
-	public ServerConfiguration(int outerPort, int key, int innerPort, String wd) {
-		this.isLocal = true;
-		if (outerPort != 0) {
-			if (outerPort < 1024 || outerPort > 49151) {
-				throw new InvalidParameterException("The outer port must be between 1024 and 49151");
-			}
-		} 
-		this.outerPort = outerPort;
-		if (wd == null || !new File(wd).exists()) {
-			this.wd = System.getProperty("java.io.tmpdir");
-		} else {
-			this.wd = wd;
-		}
-		
-		this.innerPort = innerPort;
-		numberOfClientThreads = 1;
-		maxSizeOfWaitingList = 0;
-		this.key = key;
+	public ServerConfiguration(int[] listiningPorts, int internalPort, int key, String wd) {
+		this(listiningPorts, internalPort, 1, 0, true, key, wd);
 	}
 	
 	boolean isLocalServer() {return isLocal;}
+
+	protected List<ServerSocket> createServerSockets() throws IOException {
+		List<ServerSocket> sockets = new ArrayList<ServerSocket>();
+		for (int port : listiningPorts) {
+			sockets.add(new ServerSocket(port));
+		}
+		return sockets;
+	}
+	
+	private void checkPort(int port, String portType) {
+		if (port != 0 && (port < MIN_PORT || port > MAX_PORT)) {
+			throw new InvalidParameterException("The " + portType + " port must be between " + MIN_PORT + " and " + MAX_PORT + " (or can be 0 for a random port)!");
+		}			
+	}
+	
 	
 }	

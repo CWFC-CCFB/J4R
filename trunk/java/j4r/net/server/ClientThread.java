@@ -28,7 +28,7 @@ import j4r.net.server.AbstractServer.ServerReply;
 
 public abstract class ClientThread implements Runnable, ActionListener {
 	
-	protected final AbstractServer caller;
+	protected final AbstractServer.CallReceiverThread receiver;
 	protected SocketWrapper socketWrapper;
 	
 	private final int workerID;
@@ -44,9 +44,9 @@ public abstract class ClientThread implements Runnable, ActionListener {
 	 * @param caller a CapsisServer instance
 	 * @param workerID an integer that serves to identify this client thread
 	 */
-	protected ClientThread(AbstractServer caller, int workerID) {
+	protected ClientThread(AbstractServer.CallReceiverThread receiver, int workerID) {
 		super();
-		this.caller = caller;
+		this.receiver = receiver;
 		this.workerID = workerID;
 	}
 
@@ -55,7 +55,7 @@ public abstract class ClientThread implements Runnable, ActionListener {
 		while (true) {
 			try {
 				try {
-					socketWrapper = caller.getWaitingClients();
+					socketWrapper = receiver.clientQueue.take();
 					clientAddress = socketWrapper.getInetAddress();
 
 					processRequest();
@@ -103,6 +103,9 @@ public abstract class ClientThread implements Runnable, ActionListener {
 		worker.start();
 	}
 	
+	protected void interrupt() {
+		worker.interrupt();
+	}
 	
 	/**
 	 * This method returns the ID of the worker.
