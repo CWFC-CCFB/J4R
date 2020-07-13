@@ -23,9 +23,24 @@ Multithreading a function requires that the Java code is
 thread safe. The server must listen to at least two ports.
 Otherwise, this function will reduce to a single thread.
 Each port is given an affinity to a thread, so that each Java thread
-matches an R thread. NOTE: the multithreading is not
-available on Windows. In such a case, the function will proceed
-in a single thread.
+matches an R thread.
+
+The multithreading is not available on Windows. In such a case, the function
+will proceed in a single thread. The $ operator should not be used to substitute
+the getJavaField and setJavaField functions because it does not allow for the
+specification of the affnity. Use the original getJavaField and setJavaField functions.
+The $ operator can be used to call functions though as in the example below.
+}
+\examples{
+\dontrun{
+f <- function(i, aff) {
+   myArrayList <- createJavaObject("java.util.ArrayList", affinity = aff)
+   myArrayList$add(5, affinity = aff)
+}
+
+result <- mclapply.j4r(1:1000, f)
+}
+
 }
 \seealso{
 mclapply in the parallel package
