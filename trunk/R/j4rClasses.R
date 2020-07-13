@@ -249,6 +249,32 @@ length.java.object <- function(x) {
   return(1)
 }
 
+#' @export
+'$<-.java.object' <- function(x, y, value) {
+  if (!exists(y, envir = x)) {
+    stop("The variable does not exist within the java.object instance and it cannot be assigned!")
+  }
+  obj <- get(y, envir = x)
+  if (!is.function(obj) & y != ".class" & y != ".hashcode") {
+    setJavaField(x, y, value)
+    NextMethod()
+    # assign(y, value, envir = x)  ### to synchronize the reference with the true object
+  } else {
+    stop(paste("The variable or function", y, "cannot be redefined!"))
+  }
+}
+
+#' @export
+'$.java.object' <- function(x, y) {
+  returnValue <- NextMethod()
+  if (!is.function(returnValue) & y != ".class" & y != ".hashcode") {
+    returnValue <- getJavaField(x, y)
+    assign(y, returnValue, envir = x)
+  }
+  return(returnValue)
+}
+
+
 .createJavaObjectReference <- function(str, affinity = 1) {
   inputList <- strsplit(str,MainSplitter)
   innerList <- strsplit(inputList[[1]][2], SubSplitter)

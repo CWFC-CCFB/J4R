@@ -1,5 +1,5 @@
 ########################################################
-# Home made tests for J4R
+# Tests for arrays
 # Author: Mathieu Fortin, Canadian Wood Fibre Centre
 # Date: January 2019
 ########################################################
@@ -49,7 +49,7 @@ setValueInArray(mySimpleArray, 7:9)
 diffVector <- getAllValuesFromArray(mySimpleArray) - 7:9
 
 test_that("Check the values returned from the array", {
-  expect_equal(length(which(diffVector != 0)), 0)
+  expect_equal(any(diffVector != 0), FALSE)
 })
 
 test_that("Check the length of the array", {

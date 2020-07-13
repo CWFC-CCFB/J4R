@@ -4,7 +4,7 @@
 \alias{as.JavaArray}
 \title{Create a Java array from an R array}
 \usage{
-as.JavaArray(values)
+as.JavaArray(values, affinity. = 1)
 }
 \arguments{
 \item{values}{a vector or a matrix}

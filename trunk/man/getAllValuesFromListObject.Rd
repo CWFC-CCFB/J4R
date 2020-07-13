@@ -4,7 +4,7 @@
 \alias{getAllValuesFromListObject}
 \title{Returns all the elements of a Java instance of List}
 \usage{
-getAllValuesFromListObject(object)
+getAllValuesFromListObject(object, affinity. = 1)
 }
 \arguments{
 \item{object}{a java.object that represents a Java List instance}

@@ -4,7 +4,7 @@
 \alias{setValueInArray}
 \title{Set a value in an array}
 \usage{
-setValueInArray(object, value, index = NULL)
+setValueInArray(object, value, index = NULL, affinity. = 1)
 }
 \arguments{
 \item{object}{a java.object that represents an array}

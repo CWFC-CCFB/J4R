@@ -1,5 +1,5 @@
 ########################################################
-# Home made tests for J4R
+# Simple tests for J4R
 # Author: Mathieu Fortin, Canadian Wood Fibre Centre
 # Date: January 2019
 ########################################################

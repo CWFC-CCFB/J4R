@@ -4,7 +4,7 @@
 \alias{getValueFromArray}
 \title{Get a value from an array}
 \usage{
-getValueFromArray(object, ...)
+getValueFromArray(object, ..., affinity. = 1)
 }
 \arguments{
 \item{object}{a java.object that represents an array}

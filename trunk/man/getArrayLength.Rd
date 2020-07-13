@@ -4,7 +4,7 @@
 \alias{getArrayLength}
 \title{Return the length of an Array instance}
 \usage{
-getArrayLength(object)
+getArrayLength(object, affinity. = 1)
 }
 \arguments{
 \item{object}{a java.object instance that represents an array}

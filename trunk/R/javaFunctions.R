@@ -15,18 +15,18 @@
 #' @return either a java.list object or an R vector
 #'
 #' @export
-getAllValuesFromListObject <- function(object) {
+getAllValuesFromListObject <- function(object, affinity. = 1) {
   if (!methods::is(object, "java.object")) {
     stop("The object must be an instance of java.object")
   } else {
-    systemClassLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader")
-    listClass <- callJavaMethod(systemClassLoader, "loadClass", "java.util.List")
-    if (callJavaMethod(listClass, "isInstance", object)) {
-      size <- callJavaMethod(object, "size")
+    systemClassLoader <- callJavaMethod("java.lang.ClassLoader", "getSystemClassLoader", affinity = affinity.)
+    listClass <- callJavaMethod(systemClassLoader, "loadClass", "java.util.List", affinity = affinity.)
+    if (callJavaMethod(listClass, "isInstance", object, affinity = affinity.)) {
+      size <- callJavaMethod(object, "size", affinity = affinity.)
       if (size == 0) {
         return(c()) ## an empty vector
       } else if (size == 1) {
-        javaObj <- callJavaMethod(object, "get", 0:(size-1))
+        javaObj <- callJavaMethod(object, "get", 0:(size-1), affinity = affinity.)
         if (methods::is(javaObj, "java.object")) {
           outputList <- list()
           outputList[[1]] <- javaObj
@@ -35,7 +35,7 @@ getAllValuesFromListObject <- function(object) {
           return(c(javaObj))
         }
       } else {
-        return(callJavaMethod(object, "get", 0:(size-1)))
+        return(callJavaMethod(object, "get", 0:(size-1), affinity = affinity.))
       }
     } else {
       stop("The object is not an instance of List")
@@ -97,14 +97,14 @@ isJavaArray <- function(object) {
 #' if this argument is left to NULL.
 #'
 #' @export
-setValueInArray <- function(object, value, index = NULL) {
+setValueInArray <- function(object, value, index = NULL, affinity. = 1) {
   if (!is.JavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
   if (is.null(index)) {
     index <- 0:(length(value)-1)
   }
-  invisible(J4R::callJavaMethod("java.lang.reflect.Array", "set", object, as.integer(index), value))
+  invisible(J4R::callJavaMethod("java.lang.reflect.Array", "set", object, as.integer(index), value, affinity = affinity.))
 }
 
 #'
@@ -120,7 +120,7 @@ setValueInArray <- function(object, value, index = NULL) {
 #' @return the value at the location
 #'
 #' @export
-getValueFromArray <- function(object, ...) {
+getValueFromArray <- function(object, ..., affinity. = 1) {
   if (!is.JavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
@@ -129,18 +129,11 @@ getValueFromArray <- function(object, ...) {
   value <- object
   i <- 1
   while (i <= lParms) {
-    value <- J4R::callJavaMethod("java.lang.reflect.Array", "get", value, as.integer(parms[[i]]))
+    value <- J4R::callJavaMethod("java.lang.reflect.Array", "get", value, as.integer(parms[[i]]), affinity = affinity.)
     i <- i + 1
   }
   return(value)
 }
-
-# .getValueFromJavaArray <- function(object, index) {
-#   if (!is.JavaArray(object)) {
-#     stop("The object parameter must represent an array!")
-#   }
-#   return(J4R::callJavaMethod("java.lang.reflect.Array", "get", object, as.integer(index)))
-# }
 
 
 #'
@@ -153,11 +146,11 @@ getValueFromArray <- function(object, ...) {
 #' @return an integer that is the length of the array
 #'
 #' @export
-getArrayLength <- function(object) {
+getArrayLength <- function(object, affinity. = 1) {
   if (!is.JavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
-  return(J4R::callJavaMethod("java.lang.reflect.Array", "getLength", object))
+  return(J4R::callJavaMethod("java.lang.reflect.Array", "getLength", object, affinity = affinity.))
 }
 
 
@@ -173,16 +166,16 @@ getArrayLength <- function(object) {
 #' @return either a java.list object, a vector or a matrix
 #'
 #' @export
-getAllValuesFromArray <- function(object) {
+getAllValuesFromArray <- function(object, affinity. = 1) {
   if (!is.JavaArray(object)) {
     stop("The object parameter must represent an array!")
   }
   is2DArray <- startsWith(object$.class, "[[")
-  length <- getArrayLength(object)
+  length <- getArrayLength(object, affinity.)
   if (length == 0) {
     return(c())
   } else if (length == 1) {
-     javaObj <- J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1))
+     javaObj <- J4R::callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1), affinity = affinity.)
      if (methods::is(javaObj, "java.object")) {
        outputList <- list()
        # outputList <- java.list()
@@ -194,12 +187,12 @@ getAllValuesFromArray <- function(object) {
      }
   } else {
     if (is2DArray) {
-      tmpObj <- callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1))
-      length2d <- getArrayLength(tmpObj[[1]])
-      output <- lapply(1:length, function(i, tmpObj) {
-        getAllValuesFromArray(tmpObj[[i]])
+      tmpObj <- callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1), affinity = affinity.)
+      length2d <- getArrayLength(tmpObj[[1]], affinity.)
+      output <- lapply(1:length, function(i, tmpObj, affinity.) {
+        getAllValuesFromArray(tmpObj[[i]], affinity.)
         # callJavaMethod("java.lang.reflect.Array", "get", tmpObj, rep(i,length(tmpObj)))
-      }, tmpObj)
+      }, tmpObj, affinity.)
       unlistedOutput <- unlist(output)
       if (is.atomic(unlistedOutput)) {
         return(matrix(unlistedOutput, nrow = length, ncol = length2d, byrow = TRUE))
@@ -207,7 +200,7 @@ getAllValuesFromArray <- function(object) {
         return(output)
       }
     } else {
-      return(callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1)))
+      return(callJavaMethod("java.lang.reflect.Array", "get", object, 0:(length-1), affinity = affinity.))
     }
   }
 }
@@ -225,7 +218,7 @@ classMatchForArrayConstruction <- c("numeric" = "double", "integer" = "int", "ch
 #' @return a java.object reference that points a Java array
 #'
 #' @export
-as.JavaArray <- function(values) {
+as.JavaArray <- function(values, affinity. = 1) {
   if (!is.null(values)) {
     if (length(values) > 0) {
       if (is.atomic(values)) {
@@ -245,14 +238,14 @@ as.JavaArray <- function(values) {
           stop("The as.JavaArray function is not implemented for arrays with more than two dimensions!")
         }
         if (nbDimensions == 1) {
-          myArray <- createJavaObject(thisClass, dimensions, isArray = T)
-          setValueInArray(myArray,values)
+          myArray <- createJavaObject(thisClass, dimensions, isArray = T, affinity = affinity.)
+          setValueInArray(myArray, values, affinity. = affinity.)
         } else if (nbDimensions == 2) {
-          myArray <- createJavaObject(thisClass, dimensions[1], dimensions[2], isArray = T)
-          lapply(1:dimensions[1], function(i, myArray) {
-            mySubArray <- callJavaMethod("java.lang.reflect.Array", "get", myArray, as.integer(i-1))
-            setValueInArray(mySubArray,values[i,])
-          }, myArray)
+          myArray <- createJavaObject(thisClass, dimensions[1], dimensions[2], isArray = T, affinity = affinity.)
+          lapply(1:dimensions[1], function(i, myArray, affinity.) {
+            mySubArray <- callJavaMethod("java.lang.reflect.Array", "get", myArray, as.integer(i-1), affinity = affinity.)
+            setValueInArray(mySubArray, values[i,], affinity. = affinity.)
+          }, myArray, affinity.)
         } else {
           stop("The as.JavaArray function is not implemented for arrays with more than two dimensions!")
         }

@@ -4,7 +4,7 @@
 \alias{getAllValuesFromArray}
 \title{Returns all the elements of a Java array}
 \usage{
-getAllValuesFromArray(object)
+getAllValuesFromArray(object, affinity. = 1)
 }
 \arguments{
 \item{object}{a java.object reference pointing to a Java array}
