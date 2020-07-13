@@ -10,7 +10,8 @@
 #'
 #' All the elements of a Java List instance are returned.
 #'
-#' @param object a java.object that represents a Java List instance
+#' @param object a java.object that represents a List instance in Java
+#' @param affinity. an optional parameter for multithreading (see the mclapply.j4r function)
 #'
 #' @return either a java.list object or an R vector
 #'
@@ -95,6 +96,7 @@ isJavaArray <- function(object) {
 #' the first index is 0. If this argument is set to NULL, then it is assumed that the value
 #' is set to index 0. In case of vectorization, the values are set from 0 to length(value) - 1
 #' if this argument is left to NULL.
+#' @param affinity. an optional parameter for multithreading (see the mclapply.j4r function)
 #'
 #' @export
 setValueInArray <- function(object, value, index = NULL, affinity. = 1) {
@@ -116,6 +118,7 @@ setValueInArray <- function(object, value, index = NULL, affinity. = 1) {
 #' @param object a java.object that represents an array
 #' @param ... a series of integers that correspond to the index of the value. Note that in Java
 #' the first index is 0
+#' @param affinity. an optional parameter for multithreading (see the mclapply.j4r function)
 #'
 #' @return the value at the location
 #'
@@ -143,6 +146,8 @@ getValueFromArray <- function(object, ..., affinity. = 1) {
 #' length of the Array.
 #'
 #' @param object a java.object instance that represents an array
+#' @param affinity. an optional parameter for multithreading (see the mclapply.j4r function)
+#'
 #' @return an integer that is the length of the array
 #'
 #' @export
@@ -162,6 +167,7 @@ getArrayLength <- function(object, affinity. = 1) {
 #' the value is either a vector or a matrix
 #'
 #' @param object a java.object reference pointing to a Java array
+#' @param affinity. an optional parameter for multithreading (see the mclapply.j4r function)
 #'
 #' @return either a java.list object, a vector or a matrix
 #'
@@ -214,6 +220,7 @@ classMatchForArrayConstruction <- c("numeric" = "double", "integer" = "int", "ch
 #' Converts an R array into a Java array.
 #'
 #' @param values a vector or a matrix
+#' @param affinity. an optional parameter for multithreading (see the mclapply.j4r function)
 #'
 #' @return a java.object reference that points a Java array
 #'

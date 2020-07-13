@@ -15,6 +15,8 @@ setValueInArray(object, value, index = NULL, affinity. = 1)
 the first index is 0. If this argument is set to NULL, then it is assumed that the value
 is set to index 0. In case of vectorization, the values are set from 0 to length(value) - 1
 if this argument is left to NULL.}
+
+\item{affinity.}{an optional parameter for multithreading (see the mclapply.j4r function)}
 }
 \description{
 This function sets the value at the location given by the index

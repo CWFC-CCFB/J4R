@@ -153,16 +153,6 @@ createJavaObject <- function(class, ..., isNullObject = FALSE, isArray = FALSE, 
   }
 }
 
-.dropAllIntoFirstList <- function(javaList, javaSomething) {
-  initialLength <- length(javaList)
-  if (methods::is(javaSomething, "java.object")) {
-    javaList$.innerList[[initialLength + 1]] <- javaSomething
-  } else { ### dealing with a list of java object
-    lengthIncomingList <- length(javaSomething)
-    javaList$.innerList[(initialLength + 1):(initialLength + lengthIncomingList)] <- javaSomething$.innerList
-  }
-  return(javaList)
-}
 
 .marshallCommand <- function(list, lowerBoundIndex, upperBoundIndex) {
   subCommands <- unlist(lapply(list, function(parm) {
@@ -387,7 +377,7 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
     output <- result
   } else {
     if (methods::is(output, "java.list")) {
-      output <- .dropAllIntoFirstList(output, result)
+      output <- .addToInnerList(output, result)
     } else {
       output <- c(output, result)
     }
@@ -515,17 +505,13 @@ mclapply.j4r <- function(X, FUN) {
   } else {
     nbCores <- getNbConnections()
   }
-  if (nbCores > 1) {
-    assign("delayDumpPileFlush", TRUE, envir = settingEnv)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
-  }
+  assign("delayDumpPileFlush", TRUE, envir = settingEnv)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
   f <- function(i) {
     affinity <- (i-1)%%nbCores + 1
     FUN(i,affinity)
   }
   output <- parallel::mclapply(X, f, mc.cores = nbCores)
-  if (nbCores > 1) {
-    assign("delayDumpPileFlush", FALSE, envir = settingEnv) ### we re enable the garbage collection of java.object instances afterwards
-  }
+  assign("delayDumpPileFlush", FALSE, envir = settingEnv) ### we re enable the garbage collection of java.object instances afterwards
   return(output)
 }
 

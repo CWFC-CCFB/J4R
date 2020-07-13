@@ -11,6 +11,8 @@ getValueFromArray(object, ..., affinity. = 1)
 
 \item{...}{a series of integers that correspond to the index of the value. Note that in Java
 the first index is 0}
+
+\item{affinity.}{an optional parameter for multithreading (see the mclapply.j4r function)}
 }
 \value{
 the value at the location

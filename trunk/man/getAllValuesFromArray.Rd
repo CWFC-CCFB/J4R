@@ -8,6 +8,8 @@ getAllValuesFromArray(object, affinity. = 1)
 }
 \arguments{
 \item{object}{a java.object reference pointing to a Java array}
+
+\item{affinity.}{an optional parameter for multithreading (see the mclapply.j4r function)}
 }
 \value{
 either a java.list object, a vector or a matrix

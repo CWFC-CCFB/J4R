@@ -7,7 +7,9 @@
 getAllValuesFromListObject(object, affinity. = 1)
 }
 \arguments{
-\item{object}{a java.object that represents a Java List instance}
+\item{object}{a java.object that represents a List instance in Java}
+
+\item{affinity.}{an optional parameter for multithreading (see the mclapply.j4r function)}
 }
 \value{
 either a java.list object or an R vector

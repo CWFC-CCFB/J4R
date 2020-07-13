@@ -8,6 +8,8 @@ as.JavaArray(values, affinity. = 1)
 }
 \arguments{
 \item{values}{a vector or a matrix}
+
+\item{affinity.}{an optional parameter for multithreading (see the mclapply.j4r function)}
 }
 \value{
 a java.object reference that points a Java array

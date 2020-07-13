@@ -8,6 +8,8 @@ getArrayLength(object, affinity. = 1)
 }
 \arguments{
 \item{object}{a java.object instance that represents an array}
+
+\item{affinity.}{an optional parameter for multithreading (see the mclapply.j4r function)}
 }
 \value{
 an integer that is the length of the array

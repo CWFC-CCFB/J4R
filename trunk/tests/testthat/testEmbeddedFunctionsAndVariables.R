@@ -144,6 +144,7 @@ myMatrix$m_iCols <- as.integer(10)
 newNbColumns <- myMatrix$m_iCols
 test_that("Testing that the number of columns was correctly retrieved a Matrix instance", {
   expect_equal(newNbColumns, 10)
+  expect_equal(newNbColumns, getJavaField(myMatrix, "m_iCols"))
 })
 
 out <- tryCatch(
@@ -199,8 +200,50 @@ myMatrices$m_iCols <- as.integer(c(10,7))
 newNbColumns <- myMatrices$m_iCols
 test_that("Testing that the number of columns was correctly set a Matrix instance", {
   expect_equal(newNbColumns, c(10,7))
+  expect_equal(newNbColumns, getJavaField(myMatrices, "m_iCols"))
 })
 
+out <- tryCatch(
+  {
+    myMatrices$allo <- 1
+    "did not throw any exception"
+  },
+  error = function(cond) {
+    return("threw an exception")
+  }
+)
+
+test_that("Assignment of unknown variables should not be permitted", {
+  expect_equal(out, "threw an exception")
+})
+
+out <- tryCatch(
+  {
+    myMatrices$add <- 1
+    "did not throw any exception"
+  },
+  error = function(cond) {
+    return("threw an exception")
+  }
+)
+
+test_that("Redefining a function should not be permitted", {
+  expect_equal(out, "threw an exception")
+})
+
+out <- tryCatch(
+  {
+    myMatrices$.innerList <- list()
+    "did not throw any exception"
+  },
+  error = function(cond) {
+    return("threw an exception")
+  }
+)
+
+test_that("Redefining .innerList should not be permitted", {
+  expect_equal(out, "threw an exception")
+})
 
 
 shutdownJava()

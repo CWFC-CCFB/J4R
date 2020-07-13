@@ -7,12 +7,12 @@
 
 
 #
-# Constructor of the java.dumpPile class.
+# Constructor of the java.pile class.
 #
-# The java.dumpPile class is similar to the java.list class,
+# The java.pile class is similar to the java.list class,
 # except that it disables methods and members automated assignment.
 #
-new_java.dumpPile <- function(myList) {
+new_java.pile <- function(myList) {
   if (missing(myList) || is.null(myList)) {
     myList <- list()
   }
@@ -21,12 +21,12 @@ new_java.dumpPile <- function(myList) {
   }
   me <- new.env(parent = emptyenv())
   me$.innerList <- myList
-  class(me) <- c("java.dumpPile", "java.list")
+  class(me) <- c("java.pile", "java.list")
   return(me)
 }
 
-'[.java.dumpPile' <- function(x,y) {
-  return(new_java.dumpPile(x$.innerList[y]))
+'[.java.pile' <- function(x,y) {
+  return(new_java.pile(x$.innerList[y]))
 }
 
 
@@ -48,6 +48,23 @@ new_java.list <- function(myList) {
   }
   return(me)
 }
+
+.addToInnerList <- function(javaList, obj) {
+  if (!methods::is(obj, "java.list") && !methods::is(obj, "java.object")) {
+    stop("This object must be a java.list or a java.object instance")
+  }
+  innerList <- get(".innerList", envir = javaList)
+  initialLength <- length(innerList)
+  if (methods::is(obj, "java.object")) {
+    innerList[[initialLength + 1]] <- obj
+  } else { ### dealing with a list of java object
+    lengthIncomingList <- length(obj)
+    innerList[(initialLength + 1):(initialLength + lengthIncomingList)] <- get(".innerList", envir = obj)
+  }
+  assign(".innerList", innerList, envir = javaList) ### update the original list
+  return(javaList)
+}
+
 
 #'
 #' Create a subsetting operator for the java.list class.
@@ -83,6 +100,30 @@ new_java.list <- function(myList) {
 #' @export
 '[.java.list' <- function(x,y) {
   return(new_java.list(x$.innerList[y]))
+}
+
+#' @export
+'$<-.java.list' <- function(x, y, value) {
+  if (!exists(y, envir = x)) {
+    stop("The variable does not exist within the java.object instance and it cannot be assigned!")
+  }
+  obj <- get(y, envir = x)
+  if (!is.function(obj) & y != ".innerList") {
+    setJavaField(x, y, value)
+    NextMethod()  ### to synchronize the reference with the true object
+  } else {
+    stop(paste("The variable or function", y, "cannot be redefined!"))
+  }
+}
+
+#' @export
+'$.java.list' <- function(x, y) {
+  returnValue <- NextMethod()
+  if (!is.function(returnValue) & y != ".innerList") {
+    returnValue <- getJavaField(x, y)
+    assign(y, returnValue, envir = x)
+  }
+  return(returnValue)
 }
 
 
@@ -139,7 +180,7 @@ print.java.list <- function(x, ...) {
   dumpPile <- .getDumpPile()
   if (!.isDumpPileFlushDelayed() && length(dumpPile) >= nbMaxObjects) {
      .flush(dumpPile)
-     assign("dumpPile", new_java.dumpPile(), envir = cacheEnv)
+     assign("dumpPile", new_java.pile(), envir = cacheEnv)
      # print("I've just flushed the dump pile!")
   }
 }
@@ -151,7 +192,7 @@ print.java.list <- function(x, ...) {
 
 .getDumpPile <- function() {
   if (!exists("dumpPile", envir = cacheEnv)) {
-    assign("dumpPile", new_java.dumpPile(), envir = cacheEnv)
+    assign("dumpPile", new_java.pile(), envir = cacheEnv)
   }
   return(get("dumpPile", envir = cacheEnv))
 }
@@ -160,8 +201,7 @@ print.java.list <- function(x, ...) {
 .finalize <- function(javaObj) {
   if (isConnectedToJava()) {
     df <- .getDumpPile()
-    df$.innerList[[length(df) + 1]] <- javaObj
-    assign("dumpPile", df, envir = cacheEnv)
+    .addToInnerList(df, javaObj)
     .flushDumpPileIfNeeded()
   }
 }
