@@ -4,7 +4,7 @@
 \alias{mclapply.j4r}
 \title{Using multithreading with J4R}
 \usage{
-mclapply.j4r(X, FUN)
+mclapply.j4r(X, FUN, nbCores = getNbConnections())
 }
 \arguments{
 \item{X}{a vector of numerics}
@@ -13,6 +13,9 @@ mclapply.j4r(X, FUN)
 the mclapply function and the second argument defines the affinity and MUST
 be used in all the calls to the createJavaObject, callJavaMethod,
 getJavaField and setJavaField functions.}
+
+\item{nbCores}{the number of threads to be used. By default, this argument is set
+to the number of available connections.}
 }
 \description{
 Applies the mclapply function in the context of
@@ -22,13 +25,12 @@ the J4R package.
 Multithreading a function requires that the Java code is
 thread safe. The server must listen to at least two ports.
 Otherwise, this function will reduce to a single thread.
-Each port is given an affinity to a thread, so that each Java thread
-matches an R thread.
+Each port is given an affinity to an R thread.
 
 The multithreading is not available on Windows. In such a case, the function
 will proceed in a single thread. The $ operator should not be used to substitute
 the getJavaField and setJavaField functions because it does not allow for the
-specification of the affnity. Use the original getJavaField and setJavaField functions.
+specification of the affinity. Use the original getJavaField and setJavaField functions.
 The $ operator can be used to call functions though as in the example below.
 }
 \examples{
@@ -44,4 +46,6 @@ result <- mclapply.j4r(1:1000, f)
 }
 \seealso{
 mclapply in the parallel package
+
+\code{\link{getNbConnections}}
 }

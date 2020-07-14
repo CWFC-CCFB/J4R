@@ -5,14 +5,14 @@
 \title{Connect to Java environment}
 \usage{
 connectToJava(
-  port = NULL,
+  port = c(0, 0),
   extensionPath = NULL,
   memorySize = NULL,
   debug = FALSE
 )
 }
 \arguments{
-\item{port}{the ports the server sockets listen to}
+\item{port}{a vector of the listening ports for the Java server}
 
 \item{extensionPath}{the path to jar files that can be loaded by the system classloader}
 
@@ -26,4 +26,14 @@ FALSE if the connection has failed
 }
 \description{
 This function connects the R environment to a gateway server that runs in Java.
+}
+\details{
+The first argument of the function provides the listening port for the Java server. A maximum of four ports is
+allowed. When set to 0, these ports are randomly selected. By default, the server listens to two random
+ports.
+
+The extensionPath can either be set in this function or dynamically changed (see the addToClassPath function).
+}
+\seealso{
+\code{\link{addToClassPath}}
 }

@@ -11,16 +11,24 @@
 #'
 #' This function connects the R environment to a gateway server that runs in Java.
 #'
-#' @param port the ports the server sockets listen to
+#' The first argument of the function provides the listening port for the Java server. A maximum of four ports is
+#' allowed. When set to 0, these ports are randomly selected. By default, the server listens to two random
+#' ports.
+#'
+#' The extensionPath can either be set in this function or dynamically changed (see the addToClassPath function).
+#'
+#' @param port a vector of the listening ports for the Java server
 #' @param extensionPath the path to jar files that can be loaded by the system classloader
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
 #' @param debug for debugging only (should be left as is)
+#'
+#' @seealso \code{\link{addToClassPath}}
 #'
 #' @return a logical TRUE if the function managed to get connected to the server or if it was already connected or
 #' FALSE if the connection has failed
 #'
 #' @export
-connectToJava <- function(port = NULL, extensionPath = NULL, memorySize = NULL, debug = FALSE) {
+connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (isConnectedToJava()) {
     message("It seems R is already connected to the Java server.")
     return(TRUE)

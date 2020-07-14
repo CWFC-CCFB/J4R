@@ -491,13 +491,12 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #' Multithreading a function requires that the Java code is
 #' thread safe. The server must listen to at least two ports.
 #' Otherwise, this function will reduce to a single thread.
-#' Each port is given an affinity to a thread, so that each Java thread
-#' matches an R thread.
+#' Each port is given an affinity to an R thread.
 #'
 #' The multithreading is not available on Windows. In such a case, the function
 #' will proceed in a single thread. The $ operator should not be used to substitute
 #' the getJavaField and setJavaField functions because it does not allow for the
-#' specification of the affnity. Use the original getJavaField and setJavaField functions.
+#' specification of the affinity. Use the original getJavaField and setJavaField functions.
 #' The $ operator can be used to call functions though as in the example below.
 #'
 #' @seealso mclapply in the parallel package
@@ -507,6 +506,10 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #' the mclapply function and the second argument defines the affinity and MUST
 #' be used in all the calls to the createJavaObject, callJavaMethod,
 #' getJavaField and setJavaField functions.
+#' @param nbCores the number of threads to be used. By default, this argument is set
+#' to the number of available connections.
+#'
+#' @seealso \code{\link{getNbConnections}}
 #'
 #' @examples
 #' \dontrun{
@@ -519,15 +522,19 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #' }
 #'
 #' @export
-mclapply.j4r <- function(X, FUN) {
+mclapply.j4r <- function(X, FUN, nbCores = getNbConnections()) {
   if (!is.numeric(X)) {
     stop("The argument X should be a vector of numerics")
   }
   if (Sys.info()["sysname"] == "Windows") {
     warning("The multithreading is not available on Windows. The function will proceed in a single thread.")
     nbCores <- 1
-  } else {
+  } else if (nbCores > getNbConnections()) {
+    warning("The number of cores has been set to the number of ports!")
     nbCores <- getNbConnections()
+  } else if (nbCores < 1) {
+    warning("The number of cores has been set to 1!")
+    nbCores <- 1
   }
   assign("delayDumpPileFlush", TRUE, envir = settingEnv)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
   f <- function(i) {

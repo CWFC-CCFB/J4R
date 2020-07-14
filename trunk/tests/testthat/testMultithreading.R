@@ -16,7 +16,7 @@ if (isConnectedToJava()) {
   shutdownJava()
 }
 
-isConnected <- connectToJava(port = c(0,0))
+isConnected <- connectToJava()
 
 test_that("Testing that there are two connections", {
   expect_equal(isConnected, TRUE)
@@ -50,7 +50,7 @@ shutdownJava()
 
 
 
-isConnected <- connectToJava()
+isConnected <- connectToJava(port = 0)
 
 test_that("Testing that there is only one connection", {
   expect_equal(isConnected, TRUE)
