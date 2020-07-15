@@ -90,7 +90,7 @@ connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL
       while (!file.exists(filename)) {
         Sys.sleep(0.5)
         elapsedTime <- Sys.time() - initialTime
-        if (elapsedTime > 5) {
+        if (elapsedTime > 8) {
           stop("It seems the server has failed to start!")
         }
       }
