@@ -37,9 +37,11 @@ connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL
       if (is.null(port)) {
         stop("The port argument cannot be null in debug mode. Please use the ports you specified when you started the server!")
       }
-      assign("connectionHandler", J4RConnectionHandler(port, 1000000, 50000), envir = cacheEnv)
+      assign("connectionHandler", J4RConnectionHandler(port, 1000000, 50000:50001), envir = cacheEnv)
     } else {
-      message(.checkJavaVersionRequirement())
+      if (.isVerbose()) {
+        message(.checkJavaVersionRequirement())
+      }
       message("Starting Java server...")
       parms <- c("-firstcall", "true")
       if (!is.null(port)) {
@@ -108,25 +110,15 @@ connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL
 .instantiateConnectionHandler <- function() {
   info <- suppressWarnings(utils::read.table("J4RTmpFile", header=F, sep=";", stringsAsFactors = F))
   key <- as.integer(info[1,1])
-  backdoorport <- as.integer(info[1,2])
+  internalports <- as.integer(strsplit(info[1,2], split = portSplitter)[[1]])
   if (is.integer(info[1,3])) { ### happens with a single port
     port <- as.integer(info[1,3])
   } else {
     port <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
   }
-  assign("connectionHandler", J4RConnectionHandler(port, key, backdoorport), envir = cacheEnv)
+  assign("connectionHandler", J4RConnectionHandler(port, key, internalports), envir = cacheEnv)
 }
 
-.getSocket <- function(affinity = 1) {
-  if (affinity < 1 || !is.numeric(affinity)) {
-    stop("The affinity should be a strictly positive integer (e.g. >= 1)!")
-  }
-  connections <- get("connectionHandler", envir = cacheEnv)$connections
-  if (affinity > length(connections)) {
-    stop("The affinity should be equal to or smaller than the number of connections!")
-  }
-  return(connections[[affinity]])
-}
 
 
 
@@ -178,8 +170,11 @@ shutdownJava <- function() {
   if (isConnectedToJava()) {
     for (aff in 1:getNbConnections()) {
       utils::write.socket(.getSocket(affinity = aff), "closeConnection")
+      utils::close.socket(.getSocket(affinity = aff))
     }
-    message("Closing connections and removing socket...")
+    utils::write.socket(.getGCSocket(), "closeConnection")
+    utils::close.socket(.getGCSocket())
+    message("Closing connections and removing sockets...")
   }
   if (exists("connectionHandler", envir = cacheEnv)) {  # when security is not validated, the connectionhandler object remains
     rm("connectionHandler", envir = cacheEnv)
@@ -238,12 +233,12 @@ callJavaGC <- function() {
     subList <- javaList[lowerIndex:upperIndex]
     subcommands <- paste("java.object",.translateJavaObject(subList),sep="")
     command <- paste(prefix, subcommands, sep=MainSplitter)
-    utils::write.socket(.getSocket(), command)
-    callback <- utils::read.socket(.getSocket(), maxlen=bufferLength)
+    utils::write.socket(.getGCSocket(), command)
+    callback <- utils::read.socket(.getGCSocket(), maxlen=bufferLength)
     output <- .processResult(callback, output)
   }
   if (!is.null(output)) {
-    warning("The Java server has returned something else than NULL!")
+    stop("The Java server has returned something else than NULL!")
     return(output)
   } else {
     return(invisible(output))

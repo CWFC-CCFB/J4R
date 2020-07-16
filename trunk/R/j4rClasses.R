@@ -313,10 +313,16 @@ length.java.object <- function(x) {
 }
 
 
-J4RConnectionHandler <- function(port, key, backdoorport) {
-  me <- list(port = port, key = key, backdoorport = backdoorport, connections = list())
-  me$numberOfSockets <- 0
-  class(me) <- c("J4RConnectionHandler", class(me))
+J4RConnectionHandler <- function(port, key, internalports) {
+  # me <- list(port = port, key = key, backdoorport = internalPorts[1], gcport = internalports[2], connections = list())
+  me <- new.env(parent = emptyenv())
+  me$port <- port
+  me$key <- key
+  me$backdoorport <- internalports[1]
+  me$gcport <- internalports[2]
+  me$connections <- list()
+  # me$numberOfSockets <- 0
+  class(me) <- c("J4RConnectionHandler")
   return(me)
 }
 
@@ -337,32 +343,56 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
     stop("The connection handler is null!")
   }
   for (port in connectionHandler$port) {
-    isConnected <- tryCatch(
-      {
-        message(paste("Connecting on port", port))
-        socket <- utils::make.socket("localhost", port)
-        nbOfConnections <- length(connectionHandler$connections)
-        connectionHandler$connections[[nbOfConnections + 1]] <- socket
-        utils::read.socket(socket, maxlen = bufferLength)
-        TRUE
-      },
-      error=function(cond) {
-        message("The server has started but it seems the client is unable to get connected to the server.")
-        return(FALSE)
-      }
-    )
-    if (isConnected) {
-      isSecure <- .testSecurityKey(connectionHandler, socket)
-      if (!isSecure) {
-        connectionHandler$connections[[nbOfConnections + 1]] <- NULL ### we delete this invalid connection
-        return(FALSE)
-      }
-    } else {
+    if (!.connectAndSecurePort(connectionHandler, port)) {
       return(FALSE)
     }
   }
-  assign("connectionHandler", connectionHandler, envir = cacheEnv)  ### at this point all the connections have been secured
+  if (!.connectAndSecurePort(connectionHandler, connectionHandler$gcport, isGCSocket = T)) {
+    return(FALSE)
+  }
+#  assign("connectionHandler", connectionHandler, envir = cacheEnv)  ### at this point all the connections have been secured
   return(TRUE)
+}
+
+.connectAndSecurePort <- function(connectionHandler, port, isGCSocket = F) {
+  isConnected <- tryCatch(
+    {
+      if (.isVerbose()) {
+        message(paste("Connecting on port", port))
+      }
+      socket <- utils::make.socket("localhost", port)
+      if (isGCSocket) {
+        connectionHandler$gcSocket <- socket
+      } else {
+        nbOfConnections <- length(connectionHandler$connections)
+        connectionHandler$connections[[nbOfConnections + 1]] <- socket
+      }
+      utils::read.socket(socket, maxlen = bufferLength)
+      TRUE
+    },
+    error=function(cond) {
+      message("The server has started but it seems the client is unable to get connected to the server.")
+      return(FALSE)
+    }
+  )
+  if (isConnected) {
+    isSecure <- .testSecurityKey(connectionHandler, socket)
+    if (!isSecure) {
+      if (isGCSocket) {
+        rm("gcSocket", envir = connectionHandler)
+      } else {
+        connectionHandler$connections[[nbOfConnections + 1]] <- NULL ### we delete this invalid connection
+      }
+      return(FALSE)
+    }
+  } else {
+    return(FALSE)
+  }
+  return(TRUE)
+}
+
+.getGCSocket <- function() {
+  return(get("connectionHandler", envir = cacheEnv)$gcSocket)
 }
 
 .testSecurityKey <- function(connectionHandler, socket) {
@@ -389,6 +419,17 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
   )
 }
 
+.getSocket <- function(affinity = 1) {
+  if (affinity < 1 || !is.numeric(affinity)) {
+    stop("The affinity should be a strictly positive integer (e.g. >= 1)!")
+  }
+  connections <- get("connectionHandler", envir = cacheEnv)$connections
+  if (affinity > length(connections)) {
+    stop("The affinity should be equal to or smaller than the number of connections!")
+  }
+  return(connections[[affinity]])
+}
+
 
 .getBackdoorSocket <- function() {
   if (!exists("connectionHandler", envir = cacheEnv)) {
@@ -410,6 +451,9 @@ J4RConnectionHandler <- function(port, key, backdoorport) {
     return(socket)
   }
 }
+
+
+
 
 #'
 #' Cast the object into a Java long type

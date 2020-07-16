@@ -46,8 +46,10 @@ maxVectorLength <- 200
 .getJavaPath <- function() {
   javaPath <- Sys.getenv("JAVA")
   if (javaPath == "") {
-    message("It seems that the JAVA environment variable has not been set. J4R will rely on the OS path instead.")
-    message("You can consider defining this variable through the setJavaPath function.")
+    if (.isVerbose()) {
+      message("It seems that the JAVA environment variable has not been set. J4R will rely on the OS path instead.")
+      message("You can consider defining this variable through the setJavaPath function.")
+    }
     return("java")
   } else {
     return(javaPath)
@@ -194,6 +196,7 @@ getMemorySettings <- function() {
 
 .onLoad <- function(libname, pkgname) {
   assign("delayDumpPileFlush", FALSE, envir = settingEnv)
+  assign("verbose", FALSE, envir = settingEnv)
 }
 
 .onAttach <- function(libname, pkgname) {
@@ -241,5 +244,14 @@ j4r.config.setDefaultJVMMemorySize <- function(defaultJVMMemory) {
   }
 }
 
+#' @export
+j4r.config.setVerbose <- function(verbose) {
+  if (is.logical(verbose)) {
+    assign("verbose", verbose, envir = settingEnv)
+  }
+}
 
+.isVerbose <- function() {
+  return(get("verbose", envir = settingEnv))
+}
 
