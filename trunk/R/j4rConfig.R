@@ -244,6 +244,14 @@ j4r.config.setDefaultJVMMemorySize <- function(defaultJVMMemory) {
   }
 }
 
+#'
+#' Enabling/disabling Verbose
+#'
+#' It enables or diasble the verbose in hte J4R package.
+#' By default, the verbose is disabled.
+#'
+#' @param verbose a logical
+#'
 #' @export
 j4r.config.setVerbose <- function(verbose) {
   if (is.logical(verbose)) {
