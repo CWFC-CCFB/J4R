@@ -4,7 +4,7 @@
 \alias{mclapply.j4r}
 \title{Using multithreading with J4R}
 \usage{
-mclapply.j4r(X, FUN, nbCores = getNbConnections())
+mclapply.j4r(X, FUN, ..., nbCores = getNbConnections())
 }
 \arguments{
 \item{X}{a vector of numerics}
@@ -13,6 +13,8 @@ mclapply.j4r(X, FUN, nbCores = getNbConnections())
 the mclapply function and the second argument defines the affinity and MUST
 be used in all the calls to the createJavaObject, callJavaMethod,
 getJavaField and setJavaField functions.}
+
+\item{...}{optional arguments to FUN (see mclapply)}
 
 \item{nbCores}{the number of threads to be used. By default, this argument is set
 to the number of available connections.}

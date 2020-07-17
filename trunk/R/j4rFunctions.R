@@ -506,6 +506,7 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #' the mclapply function and the second argument defines the affinity and MUST
 #' be used in all the calls to the createJavaObject, callJavaMethod,
 #' getJavaField and setJavaField functions.
+#' @param ... optional arguments to FUN (see mclapply)
 #' @param nbCores the number of threads to be used. By default, this argument is set
 #' to the number of available connections.
 #'
@@ -522,7 +523,7 @@ getListOfJavaReferences <- function(envir = .GlobalEnv) {
 #' }
 #'
 #' @export
-mclapply.j4r <- function(X, FUN, nbCores = getNbConnections()) {
+mclapply.j4r <- function(X, FUN, ..., nbCores = getNbConnections()) {
   if (!is.numeric(X)) {
     stop("The argument X should be a vector of numerics")
   }
@@ -541,7 +542,7 @@ mclapply.j4r <- function(X, FUN, nbCores = getNbConnections()) {
     affinity <- (i-1)%%nbCores + 1
     FUN(i,affinity)
   }
-  output <- parallel::mclapply(X, f, mc.cores = nbCores)
+  output <- parallel::mclapply(X, f, ..., mc.cores = nbCores)
   assign("delayDumpPileFlush", FALSE, envir = settingEnv) ### we re enable the garbage collection of java.object instances afterwards
   return(output)
 }
