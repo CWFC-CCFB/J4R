@@ -433,20 +433,21 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
     }
   })
 
-  return(.convertListToVectorIfPossible(outputList))
+  return(unlist(outputList, use.names = F)) ### use.names set to F to improve performance
+  # return(.convertListToVectorIfPossible(outputList))
 }
 
 
-.convertListToVectorIfPossible <- function(myList) {
-  classes <- sapply(myList, function(a) { ### check if the classes are the same to avoid coercion
-    class(a)
-  })
-  if (all(classes == classes[1])) {
-    return(unlist(myList, use.names = F)) ### use.names set to F to improve performance
-  } else {
-    return(myList)
-  }
-}
+# .convertListToVectorIfPossible <- function(myList) {
+#   classes <- sapply(myList, function(a) { ### check if the classes are the same to avoid coercion
+#     class(a)
+#   })
+#   if (all(classes == classes[1])) {
+#     return(unlist(myList, use.names = F)) ### use.names set to F to improve performance
+#   } else {
+#     return(myList)
+#   }
+# }
 
 
 #'

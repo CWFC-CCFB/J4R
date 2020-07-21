@@ -63,7 +63,7 @@ test_that("myArrayLists object has three java.object instances", {
 
 # In this example, the value of 15 is added to the ArrayList instance that was previously created. The method add returns a boolean. Then we call the method .get(0) on the same object. The value of 15 is then returned to R.
 
-callJavaMethod(mySimpleJavaObject, "add", as.integer(15))
+callJavaMethod(mySimpleJavaObject, "add", 15)
 
 test_that("Adding 15 to mySimpleJavaObject instance", {
   expect_equal(callJavaMethod(mySimpleJavaObject, "get", as.integer(0)), 15)
