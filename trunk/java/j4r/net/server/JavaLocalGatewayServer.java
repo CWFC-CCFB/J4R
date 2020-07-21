@@ -65,6 +65,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 		}
 	}
 	
+
 	private class JavaGatewayClientThread extends ClientThread {
 
 		REnvironment translator;
@@ -156,7 +157,6 @@ public class JavaLocalGatewayServer extends AbstractServer {
 
 	protected final ConcurrentHashMap<InetAddress, REnvironment> translators;	
 	protected final boolean shutdownOnClosedConnection;
-	protected final BackDoorThread backdoorThread;
 	protected boolean bypassShutdownForTesting;
 	
 	/**
@@ -192,7 +192,6 @@ public class JavaLocalGatewayServer extends AbstractServer {
 		super(servConf, false);
 		this.translators = new ConcurrentHashMap<InetAddress, REnvironment>();
 		this.shutdownOnClosedConnection = shutdownOnClosedConnection;
-		backdoorThread = new BackDoorThread(servConf.internalPort);
 	}
 
 	@Override
@@ -224,7 +223,7 @@ public class JavaLocalGatewayServer extends AbstractServer {
 			realizedListeningPorts += t.serverSocket.getLocalPort();
 		}
 		String outputStr = "" + getConfiguration().key + ";" + 
-				backdoorThread.emergencySocket.getLocalPort() + ";" + 
+				backdoorThread.emergencySocket.getLocalPort() + PortSplitter + gcReceiverThread.serverSocket.getLocalPort() + ";" + 
 				realizedListeningPorts; 
 		FileWriter writer = new FileWriter(file);
 		writer.write(outputStr);

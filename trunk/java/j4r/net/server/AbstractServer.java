@@ -171,9 +171,13 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	}
 
 
-	private ArrayList<ClientThread> clientThreads;
+	private final ArrayList<ClientThread> clientThreads;
+	private final ArrayList<ClientThread> gcThreads;
+	
 	protected final List<CallReceiverThread> callReceiverThreads;
+	protected final CallReceiverThread gcReceiverThread;
 	protected final ConcurrentHashMap<ClientThread, InetAddress> whoIsWorkingForWho;
+	protected final BackDoorThread backdoorThread;
 
 	protected final boolean isCallerAJavaApplication;
 	
@@ -191,6 +195,7 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 		this.configuration = configuration;
 		this.isCallerAJavaApplication = isCallerAJavaApplication;
 		clientThreads = new ArrayList<ClientThread>();
+		gcThreads = new ArrayList<ClientThread>();
 		this.whoIsWorkingForWho = new ConcurrentHashMap<ClientThread, InetAddress>();
 //		clientQueue = new LinkedBlockingQueue<SocketWrapper>();
 		callReceiverThreads = new ArrayList<CallReceiverThread>();
@@ -205,6 +210,15 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 				}
 				i++;
 			}
+			
+			backdoorThread = new BackDoorThread(configuration.internalPorts[0]);
+
+			ServerSocket gcServerSocket = new ServerSocket(configuration.internalPorts[1]);
+			gcReceiverThread = new CallReceiverThread(gcServerSocket, 99);
+			for (int j = 1; j <= configuration.numberOfClientThreadsPerReceiver; j++) {
+				gcThreads.add(createClientThread(gcReceiverThread, 99 * 1000 + j));		// i + 1 serves as id
+			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new Exception("Unable to initialize the server");
@@ -256,8 +270,11 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	 * This method starts the worker thread, which listens to the clients in the queue.
 	 */
 	protected void listenToClients() {	
-		for (ClientThread thread : clientThreads) {
-			thread.start();
+		for (ClientThread t : clientThreads) {
+			t.start();
+		}
+		for (ClientThread t : gcThreads) {
+			t.start();
 		}
 	}
 
@@ -267,11 +284,12 @@ public abstract class AbstractServer extends AbstractGenericEngine implements Pr
 	 * @throws InterruptedException
 	 */
 	protected void startReceiverThread() throws ExecutionException, InterruptedException {
-		System.out.println("Server starting");
 		listenToClients();
 		for (CallReceiverThread t : callReceiverThreads) {
 			t.start();
 		}
+		gcReceiverThread.start();
+		System.out.println("Server started");
 //		callReceiver.join();
 //		System.out.println("Server shutting down");
 	}

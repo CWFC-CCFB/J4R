@@ -36,7 +36,7 @@ public class ServerConfiguration implements Serializable {
 	protected final int numberOfClientThreadsPerReceiver;
 	protected final int maxSizeOfWaitingList;
 	protected final int[] listiningPorts;
-	protected final int internalPort;
+	protected final int[] internalPorts;
 	protected final boolean isLocal;
 	protected final int key;
 	protected final String wd;
@@ -46,15 +46,15 @@ public class ServerConfiguration implements Serializable {
 	 * Constructor. 
 	 * @param numberOfClientThreadsPerReceiver number of threads that can answer calls.
 	 * @param maxSizeOfWaitingList number of pending calls
-	 * @param listeningPort port on which the server exchange the information with the clients
-	 * @param internalPort port on which the server can be accessed (backdoor port)
+	 * @param listeningPort ports on which the server exchange the information with the clients
+	 * @param internalPorts ports on which the server can be accessed (backdoor port)
 	 */
-	public ServerConfiguration(int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, int[] listeningPorts, int internalPort) {
-		this(listeningPorts, internalPort, numberOfClientThreadsPerReceiver, maxSizeOfWaitingList, false, -1, null);
+	public ServerConfiguration(int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, int[] listeningPorts, int[] internalPorts) {
+		this(listeningPorts, internalPorts, numberOfClientThreadsPerReceiver, maxSizeOfWaitingList, false, -1, null);
 	}
 
 	
-	private ServerConfiguration(int[] listeningPorts, int internalPort, int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, boolean isLocal, int key, String wd) {
+	private ServerConfiguration(int[] listeningPorts, int[] internalPorts, int numberOfClientThreadsPerReceiver, int maxSizeOfWaitingList, boolean isLocal, int key, String wd) {
 		this.isLocal = isLocal;
 		if (numberOfClientThreadsPerReceiver < 0 || numberOfClientThreadsPerReceiver > 10) {
 			throw new InvalidParameterException("Number of client threads should be between 1 and 10!"); 
@@ -68,8 +68,10 @@ public class ServerConfiguration implements Serializable {
 			checkPort(port, "listening");
 		}
 		this.listiningPorts = listeningPorts;
-		checkPort(internalPort, "internal");
-		this.internalPort = internalPort;
+		for (int port : internalPorts) {
+			checkPort(port, "internal");
+		}
+		this.internalPorts = internalPorts;
 		if (maxSizeOfWaitingList < 0) {
 			this.maxSizeOfWaitingList = 0;
 		} else {
@@ -90,13 +92,13 @@ public class ServerConfiguration implements Serializable {
 	/**
 	 * Configuration for local server
 	 * @param listiningPorts the ports to which the ServerSocket will listen (0 for random port selection)
-	 * @param internalPort the backdoor port (0 for random port selection)
+	 * @param internalPorts the backdoors port (0 for random port selection)
 	 * @param key a security key to ensure the client is really the local user
 	 * @param wd a string representing the working directory. If it is invalid, then Java uses the temporary directory as
 	 * specified in the property 
 	 */
-	public ServerConfiguration(int[] listiningPorts, int internalPort, int key, String wd) {
-		this(listiningPorts, internalPort, 1, 0, true, key, wd);
+	public ServerConfiguration(int[] listiningPorts, int[] internalPorts, int key, String wd) {
+		this(listiningPorts, internalPorts, 1, 0, true, key, wd);
 	}
 	
 	boolean isLocalServer() {return isLocal;}

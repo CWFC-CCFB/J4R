@@ -24,7 +24,6 @@ import java.io.File;
 import java.util.List;
 
 import j4r.app.AbstractGenericTask;
-import j4r.multiprocess.JavaProcess.JVM_OPTION;
 
 public class JavaProcessWrapper extends AbstractGenericTask implements PropertyChangeListener {
 
@@ -66,10 +65,10 @@ public class JavaProcessWrapper extends AbstractGenericTask implements PropertyC
 
 	@Override
 	public void doThisJob() throws Exception {
-		System.out.println("Launching " + getName() + "...");
-		for (JVM_OPTION option : internalProcess.getJVMSettings().keySet()) {
-			System.out.println(option.name() + " = " + internalProcess.getJVMSettings().get(option).toString());
-		}
+//		System.out.println("Launching " + getName() + "...");
+//		for (JVM_OPTION option : internalProcess.getJVMSettings().keySet()) {
+//			System.out.println(option.name() + " = " + internalProcess.getJVMSettings().get(option).toString());
+//		}
 		internalProcess.execute();
 		int output = -1;
 		try {

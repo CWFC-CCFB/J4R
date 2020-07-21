@@ -183,7 +183,7 @@ public class J4RSystem {
 			}
 //			System.out.println("Parameters received:" + inputString);
 			J4RSystem.setLanguageFromMain(args, Language.English);
-			System.out.println("Language set to: " + J4RTranslator.getCurrentLanguage().name());
+//			System.out.println("Language set to: " + J4RTranslator.getCurrentLanguage().name());
 			return Arrays.asList(args);
 		}
 	}
