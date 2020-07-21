@@ -423,6 +423,9 @@ J4RConnectionHandler <- function(port, key, internalports) {
   if (affinity < 1 || !is.numeric(affinity)) {
     stop("The affinity should be a strictly positive integer (e.g. >= 1)!")
   }
+  if (!exists("connectionHandler", envir = cacheEnv)) {
+    stop("It seems that the client is not connected to the server!")
+  }
   connections <- get("connectionHandler", envir = cacheEnv)$connections
   if (affinity > length(connections)) {
     stop("The affinity should be equal to or smaller than the number of connections!")
