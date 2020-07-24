@@ -40,13 +40,13 @@ test_that("Testing numerical precision through square root function", {
 })
 
 
-initialValue <- 1E-200
-initialValue <- exp(callJavaMethod("java.lang.Math", "log", initialValue))
-diffJava <- initialValue - 1E-200
-diffR <- exp(log(1E-200)) - 1E-200
-
-test_that("Testing numerical precision through log function", {
-  expect_equal(diffR/diffJava == 1, TRUE)
-})
+# initialValue <- 1E-200
+# initialValue <- exp(callJavaMethod("java.lang.Math", "log", initialValue))
+# diffJava <- initialValue - 1E-200
+# diffR <- exp(log(1E-200)) - 1E-200
+#
+# test_that("Testing numerical precision through log function", {
+#   expect_equal(diffR/diffJava == 1, TRUE)
+# })
 
 shutdownJava()
