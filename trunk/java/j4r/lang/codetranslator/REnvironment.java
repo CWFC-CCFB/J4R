@@ -42,7 +42,7 @@ import j4r.net.server.JavaLocalGatewayServer;
 import j4r.net.server.ServerConfiguration;
 
 @SuppressWarnings("serial")
-public class REnvironment extends ConcurrentHashMap<Integer, Object> {
+public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 
 
 	
@@ -319,7 +319,12 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			for (int i = 0; i < newArgs.length; i++) {
 				int hashcodeForThisJavaObject = Integer.parseInt(newArgs[i]);
 				if (containsKey(hashcodeForThisJavaObject)) {
-					remove(hashcodeForThisJavaObject);
+//					remove(hashcodeForThisJavaObject);
+					List<Object> innerList = get(hashcodeForThisJavaObject);
+					innerList.remove(0);
+					if (innerList.isEmpty()) {
+						remove(hashcodeForThisJavaObject);
+					}
 //					nbRemoved++;
 				}
 			}
@@ -342,7 +347,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 			for (int i = 0; i < newArgs.length; i++) {
 				int hashcodeForThisJavaObject = Integer.parseInt(newArgs[i]);
 				if (containsKey(hashcodeForThisJavaObject)) {
-					Object value = get(hashcodeForThisJavaObject);
+//					Object value = get(hashcodeForThisJavaObject);
+					Object value = get(hashcodeForThisJavaObject).get(0);
 					Class<?> type;
 					if (value instanceof NullWrapper) {
 						type = ((NullWrapper) value).type;
@@ -587,10 +593,20 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	private void registerMethodOutput(Object result, JavaObjectList outputList) {
 		if (result != null) {
 			if (!ReflectUtility.JavaWrapperToPrimitiveMap.containsKey(result.getClass())) {
-				put(System.identityHashCode(result), result);
+//				put(System.identityHashCode(result), result);
+				registerInMap(result);
 			}
 			outputList.add(new ParameterWrapper(result.getClass(), result));
 		} 
+	}
+	
+	
+	private void registerInMap(Object result) {
+		int hashCode = System.identityHashCode(result);
+		if (!containsKey(hashCode)) {
+			put(hashCode, new ArrayList<Object>());
+		}
+		get(hashCode).add(result);
 	}
 	
 	private double doParameterTypesMatch(Class<?>[] ref, Class<?>[] obs) {
@@ -732,7 +748,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, Object> {
 	
 	
 	private void registerNewInstance(Object newInstance, JavaObjectList outputList) {
-		put(System.identityHashCode(newInstance), newInstance);
+//		put(System.identityHashCode(newInstance), newInstance);
+		registerInMap(newInstance);
 		outputList.add(new ParameterWrapper(newInstance.getClass(), newInstance));
 	}
 	

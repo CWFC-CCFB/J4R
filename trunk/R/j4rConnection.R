@@ -189,18 +189,10 @@ shutdownJava <- function() {
   if (file.exists(filename)) {
     file.remove(filename)
   }
-  #### Remove because CRAN policy is to leave the global environment untouched
-  # nbObjectRemoved <- 0
-  # for (objectName in ls(envir = globalenv())) {
-  #   # if ("java.object" %in% class(object)) {
-  #   if (.getClass(get(objectName, envir = globalenv())) %in% c("java.object", "java.list")) {
-  #     nbObjectRemoved <- nbObjectRemoved + 1
-  #     if (nbObjectRemoved == 1) {
-  #       message("Removing Java objects from global environment...")
-  #     }
-  #     rm(list = objectName, envir = globalenv())
-  #   }
-  # }
+  listOfJavaReferences <- getListOfJavaReferences()
+  if (!is.null(listOfJavaReferences) && length(listOfJavaReferences) > 0) {
+    rm(list = listOfJavaReferences, envir = .GlobalEnv)
+  }
 }
 
 #'

@@ -77,7 +77,36 @@ test_that("Test that there is no instance in memory", {
   expect_equal(nbObjects, 0)
 })
 
-gctorture(on = FALSE)
+myFirstList <- createJavaObject("java.util.ArrayList")
+mySecondList <- createJavaObject("java.util.ArrayList")
+myFirstList$add(mySecondList)
+myFunction <-function() {
+  for (i in 1:1000) {
+    myFirstList$get(as.integer(0))
+  }
+}
+myFunction()
+gc()
+
+out <- tryCatch(
+  {
+    mySecondList$size()
+  },
+  error = function(cond) {
+    return("threw an exception")
+  }
+)
+
+test_that("Check if the mySecondList is still in memory", {
+  expect_equal(out, 0)
+})
+
+
+nbObjects <- getNbInstancesInInternalMap()
+
+test_that("Test that there is only two instances in memory", {
+  expect_equal(nbObjects, 2)
+})
 
 shutdownJava()
 
