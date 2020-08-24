@@ -179,11 +179,18 @@ print.java.list <- function(x, ...) {
 
 
 .finalize <- function(javaObj) {
-  if (isConnectedToJava()) {
+  if (isConnectedToJava() && .getConnectionId() == javaObj$.connectionId) {  ## the second condition ensures that a java.object from a former connection is simply discarded
     df <- .getDumpPile()
     .addToInnerList(df, javaObj)
     .flushDumpPileIfNeeded()
   }
+}
+
+.getConnectionId <- function() {
+  if (!exists("connectionId", envir = settingEnv)) {
+    assign("connectionId", as.integer(0), envir = settingEnv)
+  }
+  return(get("connectionId", envir = settingEnv))
 }
 
 #
@@ -193,11 +200,13 @@ new_java.object <- function(classname, hashcodeInt, affinity = 1) {
   me <- new.env(parent = emptyenv())
   me$.class <- classname
   me$.hashcode <- hashcodeInt
+  me$.connectionId <- .getConnectionId()
   class(me) <- c("java.object")
   reg.finalizer(me, .finalize)
   .setFunctionsForThisJavaReference(me, me$.class, affinity)
   return(me)
 }
+
 
 .setFunctionsForThisJavaReference <- function(obj, classname, affinity) {
   if (!methods::is(obj, "java.object") && !methods::is(obj, "java.list")) {
@@ -287,7 +296,7 @@ length.java.object <- function(x) {
 #' @export
 '$.java.object' <- function(x, y) {
   returnValue <- NextMethod()
-  if (!is.function(returnValue) & y != ".class" & y != ".hashcode") {
+  if (!is.function(returnValue) && !(y %in% c(".class", ".hashcode", ".connectionId"))) {
     returnValue <- getJavaField(x, y)
     assign(y, returnValue, envir = x)
   }
@@ -323,6 +332,7 @@ J4RConnectionHandler <- function(port, key, internalports) {
   me$connections <- list()
   # me$numberOfSockets <- 0
   class(me) <- c("J4RConnectionHandler")
+  assign("connectionId", as.integer(.getConnectionId() + 1), envir = settingEnv)
   return(me)
 }
 

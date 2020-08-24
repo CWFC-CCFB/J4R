@@ -606,7 +606,14 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 		if (!containsKey(hashCode)) {
 			put(hashCode, new ArrayList<Object>());
 		}
-		get(hashCode).add(result);
+		List<Object> refList = get(hashCode);
+		if (!refList.isEmpty() && !refList.get(0).equals(result)) {
+			String refClass = refList.get(0).getClass().getSimpleName();
+			String objClass = result.getClass().getSimpleName();
+			throw new InvalidParameterException("A hash collision occurred: instance of " + refClass + " expected but was " + objClass);
+		} else {
+			get(hashCode).add(result);
+		}
 	}
 	
 	private double doParameterTypesMatch(Class<?>[] ref, Class<?>[] obs) {
