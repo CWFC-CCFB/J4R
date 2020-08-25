@@ -42,7 +42,7 @@ import j4r.net.server.JavaLocalGatewayServer;
 import j4r.net.server.ServerConfiguration;
 
 @SuppressWarnings("serial")
-public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
+public class REnvironment extends ConcurrentHashMap<Integer, Map<Integer, List<Object>>> { // first integer : hahscode, second integer : collider
 
 
 	
@@ -51,6 +51,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 	public static final String MainSplitter = "/;";
 	
 	public static final String SubSplitter = "/,";
+	
+	public static final String ColliderSplitter = "_";
 	
 	
 //	private static final String R_NUMERIC_TOKEN = "numeric";
@@ -165,10 +167,27 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 		
 		final Class<?> type;
 		final Object value;
+		final int colliderInt;
 		
-		private ParameterWrapper(Class<?> type, Object value) {
+		/**
+		 * Complete constructor for callback to R.
+		 * @param type
+		 * @param value
+		 * @param colliderInt
+		 */
+		private ParameterWrapper(Class<?> type, Object value, int colliderInt) {
 			this.type = type;
 			this.value = value;
+			this.colliderInt = colliderInt;
+		}
+
+		/**
+		 * Temporary wrapper for internal use.
+		 * @param type
+		 * @param value
+		 */
+		private ParameterWrapper(Class<?> type, Object value) {
+			this(type, value, 0);
 		}
 		
 		@Override
@@ -190,7 +209,7 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 				} else if (className.endsWith(MainSplitter)) {
 					className = className.substring(0, className.length() - MainSplitter.length());
 				}
-				return R_JAVA_OBJECT_TOKEN + MainSplitter + className + "@" + System.identityHashCode(value);
+				return R_JAVA_OBJECT_TOKEN + MainSplitter + className + "@" + System.identityHashCode(value) + "_" + colliderInt;
 			}
 		}
 	}
@@ -317,13 +336,22 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 			String[] newArgs = requestStrings[1].substring(prefix.length()).split(SubSplitter);
 //			int nbRemoved = 0;
 			for (int i = 0; i < newArgs.length; i++) {
-				int hashcodeForThisJavaObject = Integer.parseInt(newArgs[i]);
+				String[] hashcodeAndColliderForThisJavaObject = newArgs[i].split(ColliderSplitter);
+//				int hashcodeForThisJavaObject = Integer.parseInt(newArgs[i]);
+				int hashcodeForThisJavaObject = Integer.parseInt(hashcodeAndColliderForThisJavaObject[0]);
+				int collider = Integer.parseInt(hashcodeAndColliderForThisJavaObject[1]);
 				if (containsKey(hashcodeForThisJavaObject)) {
 //					remove(hashcodeForThisJavaObject);
-					List<Object> innerList = get(hashcodeForThisJavaObject);
+//					List<Object> innerList = get(hashcodeForThisJavaObject);
+					Map<Integer, List<Object>> innerMap = get(hashcodeForThisJavaObject);
+					List<Object> innerList = innerMap.get(collider);
 					innerList.remove(0);
 					if (innerList.isEmpty()) {
-						remove(hashcodeForThisJavaObject);
+//						remove(hashcodeForThisJavaObject);
+						innerMap.remove(collider);
+						if (innerMap.isEmpty()) {
+							remove(hashcodeForThisJavaObject);
+						}
 					}
 //					nbRemoved++;
 				}
@@ -345,10 +373,14 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 		if (string.startsWith(prefix)) {
 			String[] newArgs = string.substring(prefix.length()).split(SubSplitter);
 			for (int i = 0; i < newArgs.length; i++) {
-				int hashcodeForThisJavaObject = Integer.parseInt(newArgs[i]);
+				String[] hashcodePlusColliderForThisJavaObject = newArgs[i].split(ColliderSplitter);
+				int hashcodeForThisJavaObject = Integer.parseInt(hashcodePlusColliderForThisJavaObject[0]);
+				int collider = Integer.parseInt(hashcodePlusColliderForThisJavaObject[1]);
 				if (containsKey(hashcodeForThisJavaObject)) {
 //					Object value = get(hashcodeForThisJavaObject);
-					Object value = get(hashcodeForThisJavaObject).get(0);
+					Map<Integer, List<Object>> innerMap = get(hashcodeForThisJavaObject);
+					Object value = innerMap.get(collider).get(0);
+//					Object value = get(hashcodeForThisJavaObject).get(0);
 					Class<?> type;
 					if (value instanceof NullWrapper) {
 						type = ((NullWrapper) value).type;
@@ -594,26 +626,59 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 		if (result != null) {
 			if (!ReflectUtility.JavaWrapperToPrimitiveMap.containsKey(result.getClass())) {
 //				put(System.identityHashCode(result), result);
-				registerInMap(result);
+				int collider = registerInMap(result);
+				outputList.add(new ParameterWrapper(result.getClass(), result, collider));
+			} else {
+				outputList.add(new ParameterWrapper(result.getClass(), result));
 			}
-			outputList.add(new ParameterWrapper(result.getClass(), result));
 		} 
 	}
 	
-	
-	private void registerInMap(Object result) {
+	/**
+	 * Register the object in the pointer map and returns the collider integer. This integer
+	 * prevents from hash collision in the map.
+	 * @param result the object to be stored
+	 * @return an integer
+	 */
+	private int registerInMap(Object result) {
 		int hashCode = System.identityHashCode(result);
 		if (!containsKey(hashCode)) {
-			put(hashCode, new ArrayList<Object>());
+			put(hashCode, new HashMap<Integer, List<Object>>());
 		}
-		List<Object> refList = get(hashCode);
-		if (!refList.isEmpty() && !refList.get(0).equals(result)) {
-			String refClass = refList.get(0).getClass().getSimpleName();
-			String objClass = result.getClass().getSimpleName();
-			throw new InvalidParameterException("A hash collision occurred: instance of " + refClass + " expected but was " + objClass);
-		} else {
-			get(hashCode).add(result);
+		Map<Integer, List<Object>> innerMap = get(hashCode);
+		List<Object> refList;
+		if (innerMap.isEmpty()) {		// a newly created map
+			int collider = 1;
+			refList = new ArrayList<Object>();
+			refList.add(result);
+			innerMap.put(collider, refList);
+			return collider;
+		} else {						// the map already contains something
+			int maxKey = 0;
+			for (Integer key : innerMap.keySet()) {
+				if (key > maxKey) {
+					maxKey = key;
+				}
+				refList = innerMap.get(key);
+				if (refList.get(0).equals(result)) {  // we are dealing with a reference to a previously stored object
+					refList.add(result);
+					return key;
+				}
+			}
+			refList = new ArrayList<Object>();		// if we get here, this means that there was a hash collision
+			refList.add(result);
+			int collider = maxKey + 1;
+			innerMap.put(collider, refList);
+			return collider;
 		}
+//		List<Object> refList = get(hashCode);
+//		if (!refList.isEmpty() && !refList.get(0).equals(result)) {
+//			String refClass = refList.get(0).getClass().getSimpleName();
+//			String objClass = result.getClass().getSimpleName();
+//			throw new InvalidParameterException("A hash collision occurred: instance of " + refClass + " expected but was " + objClass);
+//		} else {
+//			get(hashCode).add(result);
+//		}
 	}
 	
 	private double doParameterTypesMatch(Class<?>[] ref, Class<?>[] obs) {
@@ -756,8 +821,8 @@ public class REnvironment extends ConcurrentHashMap<Integer, List<Object>> {
 	
 	private void registerNewInstance(Object newInstance, JavaObjectList outputList) {
 //		put(System.identityHashCode(newInstance), newInstance);
-		registerInMap(newInstance);
-		outputList.add(new ParameterWrapper(newInstance.getClass(), newInstance));
+		int collider = registerInMap(newInstance);
+		outputList.add(new ParameterWrapper(newInstance.getClass(), newInstance, collider));
 	}
 	
 	

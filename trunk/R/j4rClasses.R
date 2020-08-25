@@ -311,7 +311,7 @@ length.java.object <- function(x) {
   argumentList <- strsplit(vecStr,"@")
   outputList <- lapply(argumentList, function(arguments) {
     classname <- arguments[1]
-    hashcodeInt <- as.integer(arguments[2])
+    hashcodeInt <- arguments[2]
     javaObject <- new_java.object(classname, hashcodeInt, affinity)
   })
   if (length(outputList) == 1) {
