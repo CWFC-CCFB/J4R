@@ -4,12 +4,8 @@
 \alias{connectToJava}
 \title{Connect to Java environment}
 \usage{
-connectToJava(
-  port = c(0, 0),
-  extensionPath = NULL,
-  memorySize = NULL,
-  debug = FALSE
-)
+connectToJava(port = c(0, 0), extensionPath = NULL,
+  memorySize = NULL, debug = FALSE)
 }
 \arguments{
 \item{port}{a vector of the listening ports for the Java server}
