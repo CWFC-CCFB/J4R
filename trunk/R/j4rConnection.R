@@ -68,7 +68,7 @@ connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL
         memorySize <- get("defaultJVMMemory", envir = settingEnv)
         parms <- c(parms, "-mem", as.integer(memorySize))
       }
-      parms <- c(parms, "-wd", getwd())
+      parms <- c(parms, "-wd", paste("\"",getwd(),"\"", sep=""))
       filename <- file.path(getwd(), "J4RTmpFile")
       if (file.exists(filename)) {
         file.remove(filename)
