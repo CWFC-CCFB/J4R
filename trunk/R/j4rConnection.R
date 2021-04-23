@@ -30,19 +30,19 @@
 #' @export
 connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL, debug = FALSE) {
   if (isConnectedToJava()) {
-    message("It seems R is already connected to the Java server.")
+    message("It seems R is already connected to the local Java server.")
     return(TRUE)
   } else {
     if (debug) {
       if (is.null(port)) {
-        stop("The port argument cannot be null in debug mode. Please use the ports you specified when you started the server!")
+        stop("The port argument cannot be null in debug mode. Please use the ports you specified when you started the local server!")
       }
       assign("connectionHandler", J4RConnectionHandler(port, 1000000, 50000:50001), envir = cacheEnv)
     } else {
       if (.isVerbose()) {
         message(.checkJavaVersionRequirement())
       }
-      message("Starting Java server...")
+      message("Starting local Java server...")
       parms <- c("-firstcall", "true")
       if (!is.null(port)) {
         if (any(port < 0)) {
@@ -93,16 +93,12 @@ connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL
         Sys.sleep(0.5)
         elapsedTime <- Sys.time() - initialTime
         if (elapsedTime > 8) {
-          stop("It seems the server has failed to start!")
+          stop("It seems the local Java server has failed to start!")
         }
       }
       .instantiateConnectionHandler()
     }
     isSecure <- .createAndSecureConnection()
-
-    # if (!isSecure) {
-    #   shutdownJava()  ### for a clean exit
-    # }
     return(isSecure)
   }
 }
@@ -230,7 +226,7 @@ callJavaGC <- function() {
     output <- .processResult(callback, output)
   }
   if (!is.null(output)) {
-    stop("The Java server has returned something else than NULL!")
+    stop("The local Java server has returned something else than NULL!")
     return(output)
   } else {
     return(invisible(output))
@@ -302,7 +298,7 @@ checkIfClasspathContains <- function(myJavaLibrary) {
     }
     return(isLibIn)
   } else {
-    message("The Java server is not running.")
+    message("The local Java server is not running.")
   }
 }
 
@@ -338,7 +334,7 @@ killJava <- function() {
       utils::close.socket(emergencySocket)
     },
     error=function(cond) {
-      message("Unable to connect the server. It might be already down!")
+      message("Unable to connect the local Java server. It might be already down!")
     }
   )
   .internalShutdown()
@@ -360,7 +356,7 @@ interruptJava <- function() {
       invisible(utils::close.socket(emergencySocket))
     },
     error=function(cond) {
-      message("Unable to connect to the server. It might be already down!")
+      message("Unable to connect to the local Java server. It might be already down!")
     }
   )
 }
@@ -374,7 +370,7 @@ interruptJava <- function() {
       utils::close.socket(emergencySocket)
     },
     error=function(cond) {
-      message("Unable to connect the server. It might be already down!")
+      message("Unable to connect the local Java server. It might be already down!")
     }
   )
   .internalShutdown()
@@ -406,7 +402,7 @@ addToClassPath <- function(path, packageName = NULL) {
     }
     callJavaMethod("j4r.lang.J4RSystem", "addToClassPath", normalizePath(path))
   } else {
-    message("The Java server is not running.")
+    message("The local Java server is not running.")
   }
 }
 
