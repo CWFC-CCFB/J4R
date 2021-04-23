@@ -1,7 +1,7 @@
 Package: J4R
 Type: Package
 Title: Create 'Java' Objects and Execute 'Java' Methods
-Version: 1.0.10-199
+Version: 1.0.9-201
 Author: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service
 Maintainer: Mathieu Fortin <mathieu.fortin.re@gmail.com>
 Copyright: Her Majesty the Queen in right of Canada
@@ -16,7 +16,7 @@ URL: https://sourceforge.net/p/repiceasource/wiki/J4R/
 Imports:
     utils (>= 3.4),
     methods (>= 3.4)
-License: GPL-3
+License: LGPL-3
 BugReports: https://sourceforge.net/p/repiceasource/tickets/
 Encoding: UTF-8
 LazyData: true

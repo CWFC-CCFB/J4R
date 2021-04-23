@@ -1,7 +1,7 @@
 The J4R package
 ===============
 
-The J4R package is licensed under the GNU General Public License v3.0 (GPL-3).
+Since version 1.0.9, the J4R package is licensed under the Lesser GNU General Public License v3.0 (LGPL-3).
 
 The J4R package makes it possible to execute native Java code in an R environment.
 More specifically, it allows to create Java objects and to invoke Java methods,
