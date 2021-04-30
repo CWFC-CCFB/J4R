@@ -45,7 +45,7 @@ callJavaMethod(myList, "add", 3)
 myList$add(3)
 
 ### shutting down Java
-shutdownJava()
+shutdownClient()
 
 }
 \seealso{

@@ -103,7 +103,7 @@ portSplitter <- ":"
 #' myArrays <- createJavaObject("int", c(3,3), isArray = TRUE)
 #'
 #' ### shutting down Java
-#' shutdownJava()
+#' shutdownClient()
 #'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
@@ -335,7 +335,7 @@ setJavaField <- function(source, fieldName, value, affinity = 1) {
 #' myList$add(3)
 #'
 #' ### shutting down Java
-#' shutdownJava()
+#' shutdownClient()
 #'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'

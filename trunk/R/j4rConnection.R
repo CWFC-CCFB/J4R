@@ -22,6 +22,8 @@
 #' @param extensionPath the path to jar files that can be loaded by the system classloader
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
 #' @param public true to tonnect to a server that is already running locally (FALSE by default)
+#' @param internalPort a vector of two integers representing the backdoor port and the garboage collector port
+#' @param key an integar used as a token to ensure a secure connection
 #'
 #' @seealso \code{\link{addToClassPath}}
 #'
@@ -97,8 +99,9 @@ connectToJava <- function(host = "localhost",
       #    message(rootPath)
       architecture <- suppressMessages(getJavaVersion()$architecture)
       if (architecture == "32-Bit") {
-        jarFilename <- "j4r_x86.jar"
-        message("Running the 32-Bit version")
+#        jarFilename <- "j4r_x86.jar"
+#        message("Running the 32-Bit version")
+        stop("Java 32-Bit version are no longer supported!")
       } else {
         jarFilename <- "j4r.jar"
       }

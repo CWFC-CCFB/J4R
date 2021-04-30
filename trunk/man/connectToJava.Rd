@@ -18,6 +18,10 @@ connectToJava(host = "localhost", port = c(0, 0),
 \item{memorySize}{the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)}
 
 \item{public}{true to tonnect to a server that is already running locally (FALSE by default)}
+
+\item{internalPort}{a vector of two integers representing the backdoor port and the garboage collector port}
+
+\item{key}{an integar used as a token to ensure a secure connection}
 }
 \value{
 a logical TRUE if the function managed to get connected to the server or if it was already connected or

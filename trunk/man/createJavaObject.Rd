@@ -47,7 +47,7 @@ myArray <- createJavaObject("int", 3, 3, isArray = TRUE)
 myArrays <- createJavaObject("int", c(3,3), isArray = TRUE)
 
 ### shutting down Java
-shutdownJava()
+shutdownClient()
 
 }
 \seealso{
