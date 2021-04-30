@@ -123,6 +123,7 @@ shutdownClient()
 assign(".testKey", 1, envir = J4R::cacheEnv)
 
 isConnected <- connectToJava()
+
 remainingObjectsInCache <- ls(envir = J4R::cacheEnv, all.names = T)
 
 test_that("Testing if the server is properly shutted down when the key is not validated", {

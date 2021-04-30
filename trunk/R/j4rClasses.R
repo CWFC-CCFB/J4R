@@ -322,7 +322,7 @@ length.java.object <- function(x) {
 }
 
 
-J4RConnectionHandler <- function(port, key, internalports) {
+J4RConnectionHandler <- function(host, port, key, internalports) {
   # me <- list(port = port, key = key, backdoorport = internalPorts[1], gcport = internalports[2], connections = list())
   me <- new.env(parent = emptyenv())
   me$port <- port
@@ -330,6 +330,7 @@ J4RConnectionHandler <- function(port, key, internalports) {
   me$backdoorport <- internalports[1]
   me$gcport <- internalports[2]
   me$connections <- list()
+  me$host <- host
   # me$numberOfSockets <- 0
   class(me) <- c("J4RConnectionHandler")
   assign("connectionId", as.integer(.getConnectionId() + 1), envir = settingEnv)
@@ -370,7 +371,7 @@ J4RConnectionHandler <- function(port, key, internalports) {
       if (.isVerbose()) {
         message(paste("Connecting on port", port))
       }
-      socket <- utils::make.socket("localhost", port)
+      socket <- utils::make.socket(connectionHandler$host, port)
       if (isGCSocket) {
         connectionHandler$gcSocket <- socket
       } else {
@@ -447,7 +448,7 @@ J4RConnectionHandler <- function(port, key, internalports) {
 .getBackdoorSocket <- function() {
   if (!exists("connectionHandler", envir = cacheEnv)) {
     tryCatch({
-      .instantiateConnectionHandler()
+      .instantiateConnectionHandlerFromFile()
     },
     error=function(cond) {
       stop("The connection handler was null and it could not be instantiated!")
@@ -455,7 +456,7 @@ J4RConnectionHandler <- function(port, key, internalports) {
   }
   connectionHandler <- get("connectionHandler", envir = cacheEnv)
   backdoorport <- connectionHandler$backdoorport
-  socket <- utils::make.socket("localhost", backdoorport)
+  socket <- utils::make.socket(connectionHandler$host, backdoorport)
   utils::read.socket(socket, maxlen = bufferLength)
   isSecure <- .testSecurityKey(connectionHandler, socket)
   if (!isSecure) {

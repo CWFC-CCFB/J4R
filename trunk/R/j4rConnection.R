@@ -17,6 +17,7 @@
 #'
 #' The extensionPath can either be set in this function or dynamically changed (see the addToClassPath function).
 #'
+#' @param host the URL or IP address of the host ("localhost" by default )
 #' @param port a vector of the listening ports for the Java server
 #' @param extensionPath the path to jar files that can be loaded by the system classloader
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
@@ -28,7 +29,8 @@
 #' FALSE if the connection has failed
 #'
 #' @export
-connectToJava <- function(port = c(0,0),
+connectToJava <- function(host = "localhost",
+                          port = c(0,0),
                           extensionPath = NULL,
                           memorySize = NULL,
                           public = FALSE,
@@ -42,7 +44,7 @@ connectToJava <- function(port = c(0,0),
       if (is.null(port)) {
         stop("The port argument cannot be null in public mode. Please use the ports you specified when you started the local server!")
       }
-      assign("connectionHandler", J4RConnectionHandler(port, key, internalPort), envir = cacheEnv)
+      assign("connectionHandler", J4RConnectionHandler(host, port, key, internalPort), envir = cacheEnv)
     } else {
       if (.isVerbose()) {
         message(.checkJavaVersionRequirement())
@@ -110,17 +112,17 @@ connectToJava <- function(port = c(0,0),
           stop("It seems the local Java server has failed to start!")
         }
       }
-      .instantiateConnectionHandler()
+      .instantiateConnectionHandlerFromFile()
     }
     isSecure <- .createAndSecureConnection()
     if (!isSecure) {
-      .internalShutdown()  ### to make sure the connectionHandler is removed
+       .internalShutdown()  ### to make sure the connectionHandler is removed
     }
     return(isSecure)
   }
 }
 
-.instantiateConnectionHandler <- function() {
+.instantiateConnectionHandlerFromFile <- function() {
   info <- suppressWarnings(utils::read.table("J4RTmpFile", header=F, sep=";", stringsAsFactors = F))
   key <- as.integer(info[1,1])
   internalports <- as.integer(strsplit(info[1,2], split = portSplitter)[[1]])
@@ -129,7 +131,7 @@ connectToJava <- function(port = c(0,0),
   } else {
     port <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
   }
-  assign("connectionHandler", J4RConnectionHandler(port, key, internalports), envir = cacheEnv)
+  assign("connectionHandler", J4RConnectionHandler("localhost", port, key, internalports), envir = cacheEnv)  ### instantiated in the context of a private server
 }
 
 
@@ -204,16 +206,18 @@ shutdownClient <- function() {
   if (exists("classMap", envir = cacheEnv)) {
     rm("classMap", envir = cacheEnv)
   }
-  filename <- file.path(getwd(), "J4RTmpFile")
-  if (file.exists(filename)) {
-    file.remove(filename)
-  }
   listOfJavaReferences <- getListOfJavaReferences()
   if (!is.null(listOfJavaReferences) && length(listOfJavaReferences) > 0) {
     rm(list = listOfJavaReferences, envir = .GlobalEnv)
   }
 }
 
+.removeTmpFile <- function() {
+  filename <- file.path(getwd(), "J4RTmpFile")
+  if (file.exists(filename)) {
+    file.remove(filename)
+  }
+}
 
 
 #'
@@ -371,13 +375,14 @@ killJava <- function() {
     {
       emergencySocket <- .getBackdoorSocket()
       utils::write.socket(emergencySocket, "emergencyShutdown")
-      utils::close.socket(emergencySocket)
+      invisible(utils::close.socket(emergencySocket))
     },
     error=function(cond) {
-      message("Unable to connect the local Java server. It might be already down!")
+      message("Unable to connect the Java server. It might be already down!")
     }
   )
   .internalShutdown()
+  .removeTmpFile()
   Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
   message("Done.")
 }
@@ -409,7 +414,7 @@ interruptJava <- function() {
   tryCatch(
     {
       emergencySocket <- .getBackdoorSocket()
-      utils::write.socket(socket = emergencySocket, "interrupt")
+      utils::write.socket(emergencySocket, "interrupt")
       invisible(utils::close.socket(emergencySocket))
     },
     error=function(cond) {
@@ -424,13 +429,14 @@ interruptJava <- function() {
     {
       emergencySocket <- .getBackdoorSocket()
       utils::write.socket(emergencySocket, "softExit")
-      utils::close.socket(emergencySocket)
+      invisible(utils::close.socket(emergencySocket))
     },
     error=function(cond) {
       message("Unable to connect the local Java server. It might be already down!")
     }
   )
   .internalShutdown()
+  .removeTmpFile()
   Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
   message("Done.")
 }

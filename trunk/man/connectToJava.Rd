@@ -4,11 +4,13 @@
 \alias{connectToJava}
 \title{Connect to Java environment}
 \usage{
-connectToJava(port = c(0, 0), extensionPath = NULL,
-  memorySize = NULL, public = FALSE, internalPort = c(0, 0),
-  key = NULL)
+connectToJava(host = "localhost", port = c(0, 0),
+  extensionPath = NULL, memorySize = NULL, public = FALSE,
+  internalPort = c(0, 0), key = NULL)
 }
 \arguments{
+\item{host}{the URL or IP address of the host ("localhost" by default )}
+
 \item{port}{a vector of the listening ports for the Java server}
 
 \item{extensionPath}{the path to jar files that can be loaded by the system classloader}
