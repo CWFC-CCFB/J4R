@@ -13,7 +13,7 @@ library(J4R)
 j4r.config.setDefaultJVMMemorySize(200)
 
 if (isConnectedToJava()) {
-  shutdownJava()
+  shutdownClient()
 }
 
 isConnected <- connectToJava()
@@ -46,7 +46,7 @@ test_that("Testing if the output has the appropriate length", {
   expect_equal(all(unlist(result) == T), TRUE)
 })
 
-shutdownJava()
+shutdownClient()
 
 
 
@@ -80,5 +80,5 @@ test_that("Testing if the output has the appropriate length", {
   expect_equal(all(unlist(result) == T), TRUE)
 })
 
-shutdownJava()
+shutdownClient()
 

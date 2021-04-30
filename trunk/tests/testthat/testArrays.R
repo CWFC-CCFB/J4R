@@ -141,4 +141,4 @@ test_that("Check the instances stored in the array", {
   expect_equal(getValueFromArray(my2DArrayOfArrayList, 2, 1)$.class == "java.util.ArrayList", TRUE)
 })
 
-shutdownJava()
+shutdownClient()

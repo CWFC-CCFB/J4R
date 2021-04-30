@@ -246,6 +246,6 @@ test_that("Redefining .innerList should not be permitted", {
 })
 
 
-shutdownJava()
+shutdownClient()
 
 

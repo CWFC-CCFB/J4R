@@ -7,7 +7,8 @@
 shutdownJava()
 }
 \description{
-This function shuts down Java and the gateway server.
+This function shuts down Java and the gateway server. THIS FUNCTION IS DEPRECATED.
+PLEASE USE shutdownClient instead
 }
 \seealso{
 \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}

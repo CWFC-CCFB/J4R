@@ -377,6 +377,6 @@ test_that("Testing that a String created through the String constructor is retur
 })
 
 
-shutdownJava()
+shutdownClient()
 
 

@@ -9,7 +9,7 @@ library(J4R)
 j4r.config.setDefaultJVMMemorySize(200)
 
 if (isConnectedToJava()) {
-  shutdownJava()
+  shutdownClient()
 }
 
 connectToJava(extensionPath = file.path(getwd(),"javatests"))
@@ -48,10 +48,10 @@ test_that("Two floats have been properly processed by Java", {
   expect_equal(all(result == "It worked well!"), TRUE)
 })
 
-shutdownJava()
+shutdownClient()
 
 connectionEstablished <- connectToJava()
-test_that("The JVM has been properly shutted down by the shutdownJava function", {
+test_that("The JVM has been properly shutted down by the shutdownClient function", {
   expect_equal(connectionEstablished, TRUE)
 })
 
@@ -69,9 +69,9 @@ architectureIn <- jVersion$architecture
 
 ####  Shutting down Java ####
 
-# The server is shutted down through the shutdownJava function:
+# The server is shutted down through the shutdownClient function:
 
-shutdownJava()
+shutdownClient()
 
 jVersion <- getJavaVersion()
 versionOut <- jVersion$version
@@ -84,10 +84,26 @@ test_that("Testing if the getJavaVersion gives the same result whether or not th
 
 ### Testing when the client cannot get connected to the server ###
 
-isConnected <- connectToJava(debug = T, port=18013)
+isConnected <- connectToJava(public = T, key = 1000, port=18013)
 
 test_that("Testing if the connectToJava function returns FALSE when it does not connect to the server", {
   expect_equal(isConnected, FALSE)
+})
+
+
+
+### Testing that wrong number of internal ports throw an exception ###
+
+out <- tryCatch({
+  connectToJava(port=c(18000,19000), internalPort = c(20000))
+  },
+  error=function(cond) {
+    return("Failed")
+  }
+)
+
+test_that("Testing that the connection has failed due to wrong number of internal ports", {
+  expect_equal(out, "Failed")
 })
 
 
@@ -99,7 +115,7 @@ test_that("Testing if the connectToJava function with another port works", {
   expect_equal(isConnected, TRUE)
 })
 
-shutdownJava()
+shutdownClient()
 
 
 ### Testing if server automatically shut down if the key is not validated ###
@@ -111,7 +127,7 @@ remainingObjectsInCache <- ls(envir = J4R::cacheEnv, all.names = T)
 
 test_that("Testing if the server is properly shutted down when the key is not validated", {
   expect_equal(isConnected, FALSE)
-  expect_equal(length(remainingObjectsInCache), 2)
+  expect_equal(length(remainingObjectsInCache), 1)
   expect_equal(remainingObjectsInCache[1], ".testKey")
 })
 

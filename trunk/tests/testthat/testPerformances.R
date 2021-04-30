@@ -9,7 +9,7 @@ context("Testing JVM memory")
 library(J4R)
 
 if (isConnectedToJava()) {
-  shutdownJava()
+  shutdownClient()
 }
 
 if (getJavaVersion()$architecture == "32-Bit") {
@@ -24,7 +24,7 @@ test_that("Increased memory", {
   expect_equal(as.numeric(getMemorySettings()[1]) > (memorySize * .85), TRUE)
 })
 
-shutdownJava()
+shutdownClient()
 
 j4r.config.setDefaultJVMMemorySize(200)
 
@@ -49,4 +49,4 @@ test_that("Testing numerical precision through square root function", {
 #   expect_equal(diffR/diffJava == 1, TRUE)
 # })
 
-shutdownJava()
+shutdownClient()

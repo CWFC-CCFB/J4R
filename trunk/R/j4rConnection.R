@@ -20,7 +20,7 @@
 #' @param port a vector of the listening ports for the Java server
 #' @param extensionPath the path to jar files that can be loaded by the system classloader
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
-#' @param debug for debugging only (should be left as is)
+#' @param public true to tonnect to a server that is already running locally (FALSE by default)
 #'
 #' @seealso \code{\link{addToClassPath}}
 #'
@@ -28,16 +28,21 @@
 #' FALSE if the connection has failed
 #'
 #' @export
-connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL, debug = FALSE) {
+connectToJava <- function(port = c(0,0),
+                          extensionPath = NULL,
+                          memorySize = NULL,
+                          public = FALSE,
+                          internalPort = c(0,0),
+                          key = NULL) {
   if (isConnectedToJava()) {
     message("It seems R is already connected to the local Java server.")
     return(TRUE)
   } else {
-    if (debug) {
+    if (public) {
       if (is.null(port)) {
-        stop("The port argument cannot be null in debug mode. Please use the ports you specified when you started the local server!")
+        stop("The port argument cannot be null in public mode. Please use the ports you specified when you started the local server!")
       }
-      assign("connectionHandler", J4RConnectionHandler(port, 1000000, 50000:50001), envir = cacheEnv)
+      assign("connectionHandler", J4RConnectionHandler(port, key, internalPort), envir = cacheEnv)
     } else {
       if (.isVerbose()) {
         message(.checkJavaVersionRequirement())
@@ -52,6 +57,15 @@ connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL
           stop("J4R allows for a maximum of 4 ports!")
         }
         parms <- c(parms, "-ports", paste(port,collapse=portSplitter))
+      }
+      if (!is.null(internalPort)) {
+        if (any(internalPort < 0)) {
+          stop("Internal ports should be integers equal to or greater than 0!")
+        }
+        if (length(internalPort) != 2) {
+          stop("There should be two internal ports!")
+        }
+        parms <- c(parms, "-backdoorport", paste(internalPort,collapse=portSplitter))
       }
       if (!is.null(extensionPath)) {
         parms <- c(parms, "-ext", extensionPath)
@@ -99,6 +113,9 @@ connectToJava <- function(port = c(0,0), extensionPath = NULL, memorySize = NULL
       .instantiateConnectionHandler()
     }
     isSecure <- .createAndSecureConnection()
+    if (!isSecure) {
+      .internalShutdown()  ### to make sure the connectionHandler is removed
+    }
     return(isSecure)
   }
 }
@@ -151,25 +168,31 @@ getNbConnections <- function() {
 
 
 #'
-#' Shut down Java
+#' Shut down R client
 #'
-#' This function shuts down Java and the gateway server.
+#' This function shuts down the client. If the server is private, it is also shut down.
 #'
 #' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
 #'
 #' @export
-shutdownJava <- function() {
+shutdownClient <- function() {
   .softExit()
 }
 
 .internalShutdown <- function() {
   if (isConnectedToJava()) {
     for (aff in 1:getNbConnections()) {
-      utils::write.socket(.getSocket(affinity = aff), "closeConnection")
-      utils::close.socket(.getSocket(affinity = aff))
+      socket <- .getSocket(affinity = aff)
+      if (!is.null(socket)) {
+        utils::write.socket(socket, "closeConnection")
+        utils::close.socket(socket)
+      }
     }
-    utils::write.socket(.getGCSocket(), "closeConnection")
-    utils::close.socket(.getGCSocket())
+    gcSocket <- .getGCSocket()
+    if (!is.null(gcSocket)) {
+      utils::write.socket(gcSocket, "closeConnection")
+      utils::close.socket(gcSocket)
+    }
     message("Closing connections and removing sockets...")
   }
   if (exists("connectionHandler", envir = cacheEnv)) {  # when security is not validated, the connectionhandler object remains
@@ -190,6 +213,23 @@ shutdownJava <- function() {
     rm(list = listOfJavaReferences, envir = .GlobalEnv)
   }
 }
+
+
+
+#'
+#' Shut down Java
+#'
+#' This function shuts down Java and the gateway server. THIS FUNCTION IS DEPRECATED.
+#' PLEASE USE shutdownClient instead
+#'
+#' @seealso \href{https://sourceforge.net/p/repiceasource/wiki/J4R/}{J4R webpage}
+#'
+#' @export
+shutdownJava <- function() {
+  .Deprecated("shutdownClient")
+  .softExit()
+}
+
 
 #'
 #' Synchronize the Java environment with the R environment
@@ -330,7 +370,7 @@ killJava <- function() {
   tryCatch(
     {
       emergencySocket <- .getBackdoorSocket()
-      utils::write.socket(socket = emergencySocket, "emergencyShutdown")
+      utils::write.socket(emergencySocket, "emergencyShutdown")
       utils::close.socket(emergencySocket)
     },
     error=function(cond) {
@@ -341,6 +381,23 @@ killJava <- function() {
   Sys.sleep(2)  ### wait two seconds to make sure the server is really shut down
   message("Done.")
 }
+
+
+
+#'
+#' Return the main instance in the case of a public server
+#'
+#' An instance of a particular class can be associated to a public server. The approach
+#' is similar to that of Py4j package, where the gateway server is just a channel to get
+#' to a particular instance. This R function retrieves this instance.
+#'
+#' @return a java.object instance or null if the main instance was not set
+#'
+#' @export
+getMainInstance <- function() {
+  return(callJavaMethod("j4r.net.server.JavaGatewayServer", "getMainInstance"))
+}
+
 
 
 #'
@@ -366,7 +423,7 @@ interruptJava <- function() {
   tryCatch(
     {
       emergencySocket <- .getBackdoorSocket()
-      utils::write.socket(socket = emergencySocket, "softExit")
+      utils::write.socket(emergencySocket, "softExit")
       utils::close.socket(emergencySocket)
     },
     error=function(cond) {

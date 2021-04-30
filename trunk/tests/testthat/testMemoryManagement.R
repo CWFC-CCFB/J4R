@@ -11,7 +11,7 @@ library(J4R)
 j4r.config.setDefaultJVMMemorySize(200)
 
 if (isConnectedToJava()) {
-  shutdownJava()
+  shutdownClient()
 }
 
 rm(list = ls())
@@ -108,5 +108,5 @@ test_that("Test that there is only two instances in memory", {
   expect_equal(nbObjects, 2)
 })
 
-shutdownJava()
+shutdownClient()
 
