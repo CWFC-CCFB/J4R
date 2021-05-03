@@ -31,7 +31,7 @@ bufferLength <- 16000
 
 MainSplitter <- "/;"
 SubSplitter <- "/,"
-ExceptionPrefix <- "j4r.net.server.JavaLocalGatewayServer$JavaGatewayException"
+ExceptionPrefix <- "j4r.net.server.JavaGatewayServer$JavaGatewayException"
 
 
 #'
