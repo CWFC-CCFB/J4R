@@ -397,7 +397,7 @@ callJavaMethod <- function(source, methodName, ..., affinity = 1) {
 
 
 .processCallback <- function(callback, affinity = 1) {
-  callback <- enc2utf8(callback)  # to make sure the encoding is compatible with the server which is now forcing the UTF-8 MF2021-05-10
+#  callback <- enc2utf8(callback)  # to make sure the encoding is compatible with the server which is now forcing the UTF-8 MF2021-05-10
   .checkForExceptionInCallback(callback)
   if (startsWith(callback, javaObjectToken)) {  ## a single Java object
     returnObject <- .createJavaObjectReference(callback, affinity)

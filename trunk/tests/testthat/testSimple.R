@@ -376,6 +376,10 @@ test_that("Testing that a String created through the String constructor is retur
   expect_equal(length(which(d == as.integer(1))), 10)
 })
 
+myString <- createJavaObject("java.lang.String", "ééé")
+test_that("Testing that accentuated character strings are properly processed", {
+  expect_equal(myString, "ééé")
+})
 
 shutdownClient()
 
