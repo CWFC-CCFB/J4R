@@ -39,18 +39,16 @@ require(J4R)
 connectToJava(host="192.168.0.194", port = 18000:18001, internalPort = 50000:50001, public=T, key=212)
 
 obj <- getMainInstance()
-obj$add(5)
+obj$toString()
 
-shutdownClient()
-
-connectToJava(host="192.168.0.194", port = 18000:18001, internalPort = 50000:50001, public=T, key=212)  ### reconnection
-obj <- getMainInstance()
-obj$get(as.integer(0))
+a <- createJavaObject("java.lang.String", "ééé")
+a
 
 shutdownClient()
 
 
 connectToJava(host="192.168.0.194", port = 18000:18001, internalPort = 50000:50001, public=T, key=212)  ### reconnection
+
 killJava()
 
 
