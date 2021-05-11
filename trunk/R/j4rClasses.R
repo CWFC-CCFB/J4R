@@ -420,7 +420,7 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
       if (outcome == "SecurityFailed") {
         message("The client got connected but security could not be confirmed.")
       } else {
-        utils::write.socket(socket, "éèàïû")  ### check encoding here
+        utils::write.socket(socket, "\u00E9\u00E8\u00E0\u00EF\u00FB")  ### check encoding here
         utils::read.socket(socket, maxlen = bufferLength)
       }
       return(outcome == "SecurityChecked")
