@@ -18,10 +18,14 @@ shutdownClient()
 require(J4R)
 connectToJava(port = 18000:18001, internalPort = 50000:50001, public=T, key=212)
 
+defaultCharset <- callJavaMethod("java.nio.charset.Charset", "defaultCharset")
+print(paste("Encoding on JVM set to", defaultCharset$toString()))
+
 myArray <- createJavaObject("java.util.ArrayList")
 myArray$add(5)
 
 obj <- getMainInstance()
+obj$toString()
 obj$add(5)
 
 shutdownClient()
