@@ -42,6 +42,9 @@ shutdownClient()
 require(J4R)
 connectToJava(host="192.168.0.194", port = 18000:18001, internalPort = 50000:50001, public=T, key=212)
 
+defaultCharset <- callJavaMethod("java.nio.charset.Charset", "defaultCharset")
+print(paste("Encoding on JVM set to", defaultCharset$toString()))
+
 obj <- getMainInstance()
 obj$toString()
 
