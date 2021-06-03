@@ -46,7 +46,7 @@ connectToJava <- function(host = "localhost",
       if (is.null(port)) {
         stop("The port argument cannot be null in public mode. Please use the ports you specified when you started the local server!")
       }
-      assign("connectionHandler", J4RConnectionHandler(host, port, key, internalPort), envir = cacheEnv)
+      assign("connectionHandler", J4RConnectionHandler(host, port, key, internalPort), envir = cacheEnv, inherits = F)
     } else {
       if (.isVerbose()) {
         message(.checkJavaVersionRequirement())
@@ -82,8 +82,8 @@ connectToJava <- function(host = "localhost",
           stop("The minimum memory for the JVM is 50 Mb!")
         }
         parms <- c(parms, "-mem", as.integer(memorySize))
-      } else if (exists("defaultJVMMemory", envir = settingEnv)) {
-        memorySize <- get("defaultJVMMemory", envir = settingEnv)
+      } else if (exists("defaultJVMMemory", envir = settingEnv, inherits = F)) {
+        memorySize <- get("defaultJVMMemory", envir = settingEnv, inherits = F)
         parms <- c(parms, "-mem", as.integer(memorySize))
       }
       parms <- c(parms, "-wd", paste("\"",getwd(),"\"", sep=""))
@@ -134,7 +134,7 @@ connectToJava <- function(host = "localhost",
   } else {
     port <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
   }
-  assign("connectionHandler", J4RConnectionHandler("localhost", port, key, internalports), envir = cacheEnv)  ### instantiated in the context of a private server
+  assign("connectionHandler", J4RConnectionHandler("localhost", port, key, internalports), envir = cacheEnv, inherits = F)  ### instantiated in the context of a private server
 }
 
 
@@ -149,8 +149,8 @@ connectToJava <- function(host = "localhost",
 #'
 #' @export
 isConnectedToJava <- function() {
-  if (exists("connectionHandler", envir = cacheEnv)) {
-    stillConnected <- .isThereAtLeastOneConnection(get("connectionHandler", envir = cacheEnv))
+  if (exists("connectionHandler", envir = cacheEnv, inherits = F)) {
+    stillConnected <- .isThereAtLeastOneConnection(get("connectionHandler", envir = cacheEnv, inherits = F))
     return(stillConnected)
   } else {
     return(FALSE)
@@ -164,8 +164,8 @@ isConnectedToJava <- function() {
 #'
 #' @export
 getNbConnections <- function() {
-  if (exists("connectionHandler", envir = cacheEnv)) {
-    return(length(get("connectionHandler", envir = cacheEnv)$connections))
+  if (exists("connectionHandler", envir = cacheEnv, inherits = F)) {
+    return(length(get("connectionHandler", envir = cacheEnv, inherits = F)$connections))
   } else {
     return(0)
   }
@@ -200,13 +200,13 @@ shutdownClient <- function() {
     }
     message("Closing connections and removing sockets...")
   }
-  if (exists("connectionHandler", envir = cacheEnv)) {  # when security is not validated, the connectionhandler object remains
+  if (exists("connectionHandler", envir = cacheEnv, inherits = F)) {  # when security is not validated, the connectionhandler object remains
     rm("connectionHandler", envir = cacheEnv)
   }
-  if (exists("dumpPile", envir = cacheEnv)) {
+  if (exists("dumpPile", envir = cacheEnv, inherits = F)) {
     rm("dumpPile", envir = cacheEnv)
   }
-  if (exists("classMap", envir = cacheEnv)) {
+  if (exists("classMap", envir = cacheEnv, inherits = F)) {
     rm("classMap", envir = cacheEnv)
   }
   listOfJavaReferences <- getListOfJavaReferences()

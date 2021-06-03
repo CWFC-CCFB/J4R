@@ -53,15 +53,15 @@ new_java.list <- function(myList) {
   if (!methods::is(obj, "java.list") && !methods::is(obj, "java.object")) {
     stop("This object must be a java.list or a java.object instance")
   }
-  innerList <- get(".innerList", envir = javaList)
+  innerList <- get(".innerList", envir = javaList, inherits = F)
   initialLength <- length(innerList)
   if (methods::is(obj, "java.object")) {
     innerList[[initialLength + 1]] <- obj
   } else { ### dealing with a list of java object
     lengthIncomingList <- length(obj)
-    innerList[(initialLength + 1):(initialLength + lengthIncomingList)] <- get(".innerList", envir = obj)
+    innerList[(initialLength + 1):(initialLength + lengthIncomingList)] <- get(".innerList", envir = obj, inherits = F)
   }
-  assign(".innerList", innerList, envir = javaList) ### update the original list
+  assign(".innerList", innerList, envir = javaList, inherits = F) ### update the original list
   return(javaList)
 }
 
@@ -71,7 +71,7 @@ new_java.list <- function(myList) {
   if (is.numeric(y)) {
     return(x$.innerList[[y]])
   } else if (is.character(y)) {
-    return(get(y, envir = x))
+    return(get(y, envir = x, inherits = F))
   } else {
     return(NULL)
   }
@@ -84,10 +84,10 @@ new_java.list <- function(myList) {
 
 #' @export
 '$<-.java.list' <- function(x, y, value) {
-  if (!exists(y, envir = x)) {
+  if (!exists(y, envir = x, inherits = F)) {
     stop("The variable does not exist within the java.object instance and it cannot be assigned!")
   }
-  obj <- get(y, envir = x)
+  obj <- get(y, envir = x, inherits = F)
   if (!is.function(obj) & y != ".innerList") {
     setJavaField(x, y, value)
     NextMethod()  ### to synchronize the reference with the true object
@@ -101,7 +101,7 @@ new_java.list <- function(myList) {
   returnValue <- NextMethod()
   if (!is.function(returnValue) & y != ".innerList") {
     returnValue <- getJavaField(x, y)
-    assign(y, returnValue, envir = x)
+    assign(y, returnValue, envir = x, inherits = F)
   }
   return(returnValue)
 }
@@ -160,21 +160,21 @@ print.java.list <- function(x, ...) {
   dumpPile <- .getDumpPile()
   if (!.isDumpPileFlushDelayed() && length(dumpPile) >= nbMaxObjects) {
      .flush(dumpPile)
-     assign("dumpPile", new_java.pile(), envir = cacheEnv)
+     assign("dumpPile", new_java.pile(), envir = cacheEnv, inherits = F)
      # print("I've just flushed the dump pile!")
   }
 }
 
 .isDumpPileFlushDelayed <- function() {
-  return(get("delayDumpPileFlush", envir = settingEnv))
+  return(get("delayDumpPileFlush", envir = settingEnv, inherits = F))
 }
 
 
 .getDumpPile <- function() {
-  if (!exists("dumpPile", envir = cacheEnv)) {
-    assign("dumpPile", new_java.pile(), envir = cacheEnv)
+  if (!exists("dumpPile", envir = cacheEnv, inherits = F)) {
+    assign("dumpPile", new_java.pile(), envir = cacheEnv, inherits = F)
   }
-  return(get("dumpPile", envir = cacheEnv))
+  return(get("dumpPile", envir = cacheEnv, inherits = F))
 }
 
 
@@ -187,10 +187,10 @@ print.java.list <- function(x, ...) {
 }
 
 .getConnectionId <- function() {
-  if (!exists("connectionId", envir = settingEnv)) {
-    assign("connectionId", as.integer(0), envir = settingEnv)
+  if (!exists("connectionId", envir = settingEnv, inherits = F)) {
+    assign("connectionId", as.integer(0), envir = settingEnv, inherits = F)
   }
-  return(get("connectionId", envir = settingEnv))
+  return(get("connectionId", envir = settingEnv, inherits = F))
 }
 
 #
@@ -212,7 +212,7 @@ new_java.object <- function(classname, hashcodeInt, affinity = 1) {
   if (!methods::is(obj, "java.object") && !methods::is(obj, "java.list")) {
     stop("The argument should be a java.object or a java.list instance!")
   }
-  if (!exists(classname, envir = .getClassMap())) {
+  if (!exists(classname, envir = .getClassMap(), inherits = F)) {
     functionNames <- .getClassInfo(classname, affinity)
     endOfMethodIndex <- which(functionNames == "endOfMethods")
     if (endOfMethodIndex > 1) {
@@ -228,9 +228,9 @@ new_java.object <- function(classname, hashcodeInt, affinity = 1) {
     frameForThisClass <- new.env(parent = emptyenv())
     frameForThisClass$functions <- functions
     frameForThisClass$members <- members
-    assign(classname, frameForThisClass, envir = .getClassMap())
+    assign(classname, frameForThisClass, envir = .getClassMap(), inherits = F)
   }
-  functionNames <- get(classname, envir = .getClassMap())$functions
+  functionNames <- get(classname, envir = .getClassMap(), inherits = F)$functions
   if (!is.null(functionNames)) {
     invisible(lapply(functionNames, function(name, obj) {
       f <- function(..., affinity = 1) {
@@ -239,7 +239,7 @@ new_java.object <- function(classname, hashcodeInt, affinity = 1) {
       delayedAssign(name, f, assign.env = obj)
     }, obj))
   }
-  memberNames <- get(classname, envir = .getClassMap())$members
+  memberNames <- get(classname, envir = .getClassMap(), inherits = F)$members
   if (!is.null(memberNames)) {
     invisible(lapply(memberNames, function(name, obj) {
       delayedAssign(name, getJavaField(obj, name), assign.env = obj)
@@ -280,10 +280,10 @@ length.java.object <- function(x) {
 
 #' @export
 '$<-.java.object' <- function(x, y, value) {
-  if (!exists(y, envir = x)) {
+  if (!exists(y, envir = x, inherits = F)) {
     stop("The variable does not exist within the java.object instance and it cannot be assigned!")
   }
-  obj <- get(y, envir = x)
+  obj <- get(y, envir = x, inherits = F)
   if (!is.function(obj) & y != ".class" & y != ".hashcode") {
     setJavaField(x, y, value)
     NextMethod()
@@ -298,7 +298,7 @@ length.java.object <- function(x) {
   returnValue <- NextMethod()
   if (!is.function(returnValue) && !(y %in% c(".class", ".hashcode", ".connectionId"))) {
     returnValue <- getJavaField(x, y)
-    assign(y, returnValue, envir = x)
+    assign(y, returnValue, envir = x, inherits = F)
   }
   return(returnValue)
 }
@@ -333,7 +333,7 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
   me$host <- host
   # me$numberOfSockets <- 0
   class(me) <- c("J4RConnectionHandler")
-  assign("connectionId", as.integer(.getConnectionId() + 1), envir = settingEnv)
+  assign("connectionId", as.integer(.getConnectionId() + 1), envir = settingEnv, inherits = F)
   return(me)
 }
 
@@ -342,14 +342,14 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
 }
 
 .getClassMap <- function() {
-  if (!exists("classMap", envir = cacheEnv)) {
-    assign("classMap", new.env(parent = emptyenv()), envir = cacheEnv)
+  if (!exists("classMap", envir = cacheEnv, inherits = F)) {
+    assign("classMap", new.env(parent = emptyenv()), envir = cacheEnv, inherits = F)
   }
-  return(get("classMap", envir = cacheEnv))
+  return(get("classMap", envir = cacheEnv, inherits = F))
 }
 
 .createAndSecureConnection <- function() {
-  connectionHandler <- get("connectionHandler", envir = cacheEnv)
+  connectionHandler <- get("connectionHandler", envir = cacheEnv, inherits = F)
   if (is.null(connectionHandler)) {
     stop("The connection handler is null!")
   }
@@ -403,14 +403,14 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
 }
 
 .getGCSocket <- function() {
-  return(get("connectionHandler", envir = cacheEnv)$gcSocket)
+  return(get("connectionHandler", envir = cacheEnv, inherits = F)$gcSocket)
 }
 
 .testSecurityKey <- function(connectionHandler, socket) {
   isSecure <- tryCatch(
     {
-      if (exists(".testKey", envir = cacheEnv)) {
-        key <- get(".testKey", envir = cacheEnv)
+      if (exists(".testKey", envir = cacheEnv, inherits = F)) {
+        key <- get(".testKey", envir = cacheEnv, inherits = F)
       } else {
         key <- connectionHandler$key
       }
@@ -437,10 +437,10 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
   if (affinity < 1 || !is.numeric(affinity)) {
     stop("The affinity should be a strictly positive integer (e.g. >= 1)!")
   }
-  if (!exists("connectionHandler", envir = cacheEnv)) {
+  if (!exists("connectionHandler", envir = cacheEnv, inherits = F)) {
     stop("It seems that the client is not connected to the server!")
   }
-  connections <- get("connectionHandler", envir = cacheEnv)$connections
+  connections <- get("connectionHandler", envir = cacheEnv, inherits = F)$connections
   if (affinity > length(connections)) {
     stop("The affinity should be equal to or smaller than the number of connections!")
   }
@@ -449,7 +449,7 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
 
 
 .getBackdoorSocket <- function() {
-  if (!exists("connectionHandler", envir = cacheEnv)) {
+  if (!exists("connectionHandler", envir = cacheEnv, inherits = F)) {
     tryCatch({
       .instantiateConnectionHandlerFromFile()
     },
@@ -457,7 +457,7 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
       stop("The connection handler was null and it could not be instantiated!")
     })
   }
-  connectionHandler <- get("connectionHandler", envir = cacheEnv)
+  connectionHandler <- get("connectionHandler", envir = cacheEnv, inherits = F)
   backdoorport <- connectionHandler$backdoorport
   socket <- utils::make.socket(connectionHandler$host, backdoorport)
   utils::read.socket(socket, maxlen = bufferLength)

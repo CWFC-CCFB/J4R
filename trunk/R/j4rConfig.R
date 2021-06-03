@@ -195,8 +195,8 @@ getMemorySettings <- function() {
 
 
 .onLoad <- function(libname, pkgname) {
-  assign("delayDumpPileFlush", FALSE, envir = settingEnv)
-  assign("verbose", FALSE, envir = settingEnv)
+  assign("delayDumpPileFlush", FALSE, envir = settingEnv, inherits = F)
+  assign("verbose", FALSE, envir = settingEnv, inherits = F)
 }
 
 .onAttach <- function(libname, pkgname) {
@@ -233,14 +233,14 @@ getJavaArchitecture <- function() {
 #' @export
 j4r.config.setDefaultJVMMemorySize <- function(defaultJVMMemory) {
   if (is.null(defaultJVMMemory)) {
-    if (exists("defaultJVMMemory", envir = settingEnv)) {
+    if (exists("defaultJVMMemory", envir = settingEnv, inherits = F)) {
       rm("defaultJVMMemory", envir = settingEnv)
     }
   } else {
     if (defaultJVMMemory < 50) {
       stop("The minimum default size for the JVM is 50 Mb")
     }
-    assign("defaultJVMMemory", defaultJVMMemory, envir = settingEnv)
+    assign("defaultJVMMemory", defaultJVMMemory, envir = settingEnv, inherits = F)
   }
 }
 
@@ -255,11 +255,11 @@ j4r.config.setDefaultJVMMemorySize <- function(defaultJVMMemory) {
 #' @export
 j4r.config.setVerbose <- function(verbose) {
   if (is.logical(verbose)) {
-    assign("verbose", verbose, envir = settingEnv)
+    assign("verbose", verbose, envir = settingEnv, inherits = F)
   }
 }
 
 .isVerbose <- function() {
-  return(get("verbose", envir = settingEnv))
+  return(get("verbose", envir = settingEnv, inherits = F))
 }
 

@@ -538,13 +538,13 @@ mclapply.j4r <- function(X, FUN, ..., nbCores = getNbConnections()) {
     warning("The number of cores has been set to 1!")
     nbCores <- 1
   }
-  assign("delayDumpPileFlush", TRUE, envir = settingEnv)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
+  assign("delayDumpPileFlush", TRUE, envir = settingEnv, inherits = F)  ### we disable the garbage collection of java.object instances here to avoid concurrent exceptions in R
   f <- function(i) {
     affinity <- (i-1)%%nbCores + 1
     FUN(i,affinity)
   }
   output <- parallel::mclapply(X, f, ..., mc.cores = nbCores)
-  assign("delayDumpPileFlush", FALSE, envir = settingEnv) ### we re enable the garbage collection of java.object instances afterwards
+  assign("delayDumpPileFlush", FALSE, envir = settingEnv, inherits = F) ### we re enable the garbage collection of java.object instances afterwards
   return(output)
 }
 
