@@ -4,11 +4,13 @@
 \name{bufferLength}
 \alias{bufferLength}
 \title{Length of the buffer when reading from the socket connection.}
-\format{An object of class \code{numeric} of length 1.}
+\format{
+An object of class \code{numeric} of length 1.
+}
 \usage{
 bufferLength
 }
 \description{
-The buffer has a length of 16Kb by default.
+The buffer has a length of 100Kb by default.
 }
 \keyword{datasets}

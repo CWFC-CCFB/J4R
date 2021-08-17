@@ -4,9 +4,15 @@
 \alias{connectToJava}
 \title{Connect to Java environment}
 \usage{
-connectToJava(host = "localhost", port = c(0, 0),
-  extensionPath = NULL, memorySize = NULL, public = FALSE,
-  internalPort = c(0, 0), key = NULL)
+connectToJava(
+  host = "localhost",
+  port = c(0, 0),
+  extensionPath = NULL,
+  memorySize = NULL,
+  public = FALSE,
+  internalPort = c(0, 0),
+  key = NULL
+)
 }
 \arguments{
 \item{host}{the URL or IP address of the host ("localhost" by default )}

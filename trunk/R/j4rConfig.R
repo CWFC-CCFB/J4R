@@ -24,10 +24,10 @@ settingEnv <- new.env()
 #'
 #' Length of the buffer when reading from the socket connection.
 #'
-#' The buffer has a length of 16Kb by default.
+#' The buffer has a length of 100Kb by default.
 #'
 #' @export
-bufferLength <- 16000
+bufferLength <- 100000
 
 MainSplitter <- "/;"
 SubSplitter <- "/,"
