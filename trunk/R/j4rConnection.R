@@ -91,11 +91,11 @@ connectToJava <- function(host = "localhost",
       if (file.exists(filename)) {
         file.remove(filename)
       }
-      if (file.exists(system.file("inst", "java", "j4r.jar", package = "J4R"))) {  ### test mode
-        rootPath <- system.file("inst", "java", package = "J4R")
-      } else {  ### normal mode
+#      if (file.exists(system.file("inst", "java", "j4r.jar", package = "J4R"))) {  ### test mode
+#        rootPath <- system.file("inst", "java", package = "J4R")
+#      } else {  ### normal mode
         rootPath <- system.file("java", package = "J4R")
-      }
+#      }
       #    message(rootPath)
       architecture <- suppressMessages(getJavaVersion()$architecture)
       if (architecture == "32-Bit") {
