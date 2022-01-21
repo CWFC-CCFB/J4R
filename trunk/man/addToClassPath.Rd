@@ -19,5 +19,5 @@ to the class path. If the packageName parameter is null then the urlString
 parameter must be the complete path to the directory. Otherwise, it can be
 the name of the JAR file and the function will find the path through the package
 name. A non null packageName parameter is typically used in packages that rely
-on J4R.
+on J4R. IMPORTANT This function is not compatible with Java 16 and later.
 }

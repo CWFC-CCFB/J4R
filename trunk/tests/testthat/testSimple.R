@@ -147,11 +147,7 @@ test_that("Create a NullWrapper instance", {
 
 #### Check if libraries are part of the path ####
 
-if (getJavaVersion()$architecture == "32-Bit") {
-  expectedJar <- "j4r_x86.jar"
-} else {
-  expectedJar <- "j4r.jar"
-}
+expectedJar <- "j4r-1.1.1.jar"
 
 test_that("Check the return value of checkIfClasspathContains", {
   expect_equal(checkIfClasspathContains(expectedJar), TRUE)

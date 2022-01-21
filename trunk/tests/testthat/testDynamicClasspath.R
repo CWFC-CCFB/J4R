@@ -16,11 +16,7 @@ if (!isConnectedToJava()) {
   connectToJava()
 }
 
-if (getJavaVersion()$architecture == "32-Bit") {
-  expectedJar <- "j4r_x86.jar"
-} else {
-  expectedJar <- "j4r.jar"
-}
+expectedJar <- "j4r-1.1.1.jar"
 
 
 test_that("Check the return value of checkIfClasspathContains", {

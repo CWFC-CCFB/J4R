@@ -6,6 +6,8 @@
 
 
 
+J4RVersion <- "1.1.1"
+
 #'
 #' Connect to Java environment
 #'
@@ -103,7 +105,7 @@ connectToJava <- function(host = "localhost",
 #        message("Running the 32-Bit version")
         stop("Java 32-Bit version are no longer supported!")
       } else {
-        jarFilename <- "j4r.jar"
+        jarFilename <- paste("j4r-", J4RVersion, ".jar", sep="")
       }
       path <- file.path(rootPath, jarFilename)
       system2(.getJavaPath(), args = c("-Xmx50m", "-jar", path, parms), wait = F)
@@ -453,7 +455,7 @@ interruptJava <- function() {
 #' parameter must be the complete path to the directory. Otherwise, it can be
 #' the name of the JAR file and the function will find the path through the package
 #' name. A non null packageName parameter is typically used in packages that rely
-#' on J4R.
+#' on J4R. IMPORTANT This function is not compatible with Java 16 and later.
 #'
 #' @param path a character representing the path to the directory or the JAR file
 #' if the packageName parameter is null. Otherwise, it can just be the name of the JAR file. This path

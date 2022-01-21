@@ -4,6 +4,11 @@
 # Date: January 2019
 ########################################################
 
+#setJavaPath("C:\\Program Files\\Java\\jdk-11.0.6\\bin\\java.exe")
+setJavaPath("C:\\Program Files\\Java\\jdk-13.0.2\\bin\\java.exe")
+
+print(getJavaVersion())
+
 context("Tests for arrays in J4R")
 
 #### Starting the Java server and connecting to it ####
