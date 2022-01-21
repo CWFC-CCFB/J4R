@@ -5,7 +5,7 @@
 ########################################################
 
 #setJavaPath("C:\\Program Files\\Java\\jdk-11.0.6\\bin\\java.exe")
-setJavaPath("C:\\Program Files\\Java\\jdk-13.0.2\\bin\\java.exe")
+#setJavaPath("C:\\Program Files\\Java\\jdk-13.0.2\\bin\\java.exe")
 
 print(getJavaVersion())
 
