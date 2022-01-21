@@ -1,7 +1,7 @@
 Package: J4R
 Type: Package
 Title: Create 'Java' Objects and Execute 'Java' Methods
-Version: 1.1.0-226
+Version: 1.1.0-228
 Author: Mathieu Fortin, Canadian Wood Fibre Centre, Canadian Forest Service
 Maintainer: Mathieu Fortin <mathieu.fortin.re@gmail.com>
 Copyright: Her Majesty the Queen in right of Canada
