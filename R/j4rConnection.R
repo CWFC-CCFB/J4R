@@ -201,7 +201,12 @@ connectToJava <- function(host = "localhost",
   }
 
   rootPath <- system.file("java", package = "J4R")
-  architecture <- suppressMessages(getJavaVersion()$architecture)
+  javaVersion <- getJavaVersion()
+  versionNumber <- .parseJavaVersion(javaVersion$version)
+  if (versionNumber > 8 & versionNumber < 16) { # from version 9 to 15 the classloader can be accessed dynamically
+    JVMparms <- c(JVMparms, "--add-opens java.base/jdk.internal.loader=ALL-UNNAMED")
+  }
+  architecture <- suppressMessages(javaVersion$architecture)
   if (architecture == "32-Bit") {
     stop("Java 32-Bit version are no longer supported!")
   } else {
@@ -222,6 +227,15 @@ connectToJava <- function(host = "localhost",
   }
   JVMparms <- c(JVMparms, "-cp", paste(extensionPath, collapse = ";"), "j4r.app.Startup")
   return(JVMparms)
+}
+
+.parseJavaVersion <- function(strVersion) {
+  versionNumbers <- as.numeric(strsplit(strVersion, "\\.")[[1]][1:2])
+  if (versionNumbers[1] == 1) {
+    return(versionNumbers[2])
+  } else {
+    return(versionNumbers[1])
+  }
 }
 
 .instantiateConnectionHandlerFromFile <- function() {
