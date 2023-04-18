@@ -10,6 +10,6 @@ j4r.config.setVerbose(verbose)
 \item{verbose}{a logical}
 }
 \description{
-It enables or diasble the verbose in hte J4R package.
+It enables or disable the verbose in the J4R package.
 By default, the verbose is disabled.
 }

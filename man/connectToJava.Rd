@@ -25,7 +25,7 @@ or to the classes that are to be loaded by the system classloader.}
 
 \item{memorySize}{the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)}
 
-\item{public}{true to tonnect to a server that is already running locally (FALSE by default)}
+\item{public}{true to connect to a server that is already running locally (FALSE by default)}
 
 \item{internalPort}{a vector of two integers representing the backdoor port and the garbage collector port}
 

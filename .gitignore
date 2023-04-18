@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+
+J4RTmpFile
+J4RServer*.log
+J4RServer*.log.lck

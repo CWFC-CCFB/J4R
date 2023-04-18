@@ -1,6 +1,10 @@
 The J4R package
 ===============
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/CWFC-CCFB/J4R/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CWFC-CCFB/J4R/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 The J4R package makes it possible to execute native Java code in an R environment.
 More specifically, it allows to create Java objects and to invoke Java methods,
 whether they are static or not. The package is based on a local Java server that

@@ -30,7 +30,7 @@ J4R_Server_Version <- "1.1.7"
 #' @param extensionPath a vector of characters that contains the paths to jar files
 #'  or to the classes that are to be loaded by the system classloader.
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
-#' @param public true to tonnect to a server that is already running locally (FALSE by default)
+#' @param public true to connect to a server that is already running locally (FALSE by default)
 #' @param internalPort a vector of two integers representing the backdoor port and the garbage collector port
 #' @param key an integer used as a token to ensure a secure connection
 #' @param headless a boolean to enable the headless mode (is true by default).
