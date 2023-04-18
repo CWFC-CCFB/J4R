@@ -8,14 +8,14 @@
 #' The current version of the J4R Java server
 #'
 #' @export
-J4R_Server_Version <- "1.1.7"
+J4R_Server_Version <- "v1.2.0"
 
 #'
 #' Connect to Java environment
 #'
 #' This function connects the R environment to a gateway server that runs in Java.
 #'
-#' The first argument of the function provides the listening port for the Java server. A maximum of four ports is
+#' The first argument of the function provides the listening ports for the Java server. A maximum of four ports is
 #' allowed. When set to 0, these ports are randomly selected. By default, the server listens to two random
 #' ports.
 #'
@@ -26,12 +26,12 @@ J4R_Server_Version <- "1.1.7"
 #' the UI on the Java end, the headless argument should be set to false.
 #'
 #' @param host the URL or IP address of the host ("localhost" by default )
-#' @param port a vector of the listening ports for the Java server
+#' @param ports a vector of the listening ports for the Java server
 #' @param extensionPath a vector of characters that contains the paths to jar files
 #'  or to the classes that are to be loaded by the system classloader.
 #' @param memorySize the memory size of the Java Virtual Machine in Mb (if not specified, the JVM runs with the default memory size)
 #' @param public true to connect to a server that is already running locally (FALSE by default)
-#' @param internalPort a vector of two integers representing the backdoor port and the garbage collector port
+#' @param internalPorts a vector of two integers representing the backdoor port and the garbage collector port
 #' @param key an integer used as a token to ensure a secure connection
 #' @param headless a boolean to enable the headless mode (is true by default).
 #'
@@ -42,11 +42,11 @@ J4R_Server_Version <- "1.1.7"
 #'
 #' @export
 connectToJava <- function(host = "localhost",
-                          port = c(0,0),
+                          ports = c(0,0),
                           extensionPath = NULL,
                           memorySize = NULL,
                           public = FALSE,
-                          internalPort = c(0,0),
+                          internalPorts = c(0,0),
                           key = NULL,
                           headless = T) {
   if (isConnectedToJava()) {
@@ -54,80 +54,90 @@ connectToJava <- function(host = "localhost",
     return(TRUE)
   } else {
     if (public) {
-      if (is.null(port)) {
-        stop("The port argument cannot be null in public mode. Please use the ports you specified when you started the local server!")
+      if (is.null(ports)) {
+        stop("The ports argument cannot be null in public mode. Please use the ports you specified when you started the local server!")
       }
-      assign("connectionHandler", J4RConnectionHandler(host, port, key, internalPort), envir = cacheEnv, inherits = F)
+      assign("connectionHandler", J4RConnectionHandler(host, ports, key, internalPorts), envir = cacheEnv, inherits = F)
     } else {
       if (.isVerbose()) {
         message(.checkJavaVersionRequirement())
       }
       message("Starting local Java server...")
-      parms <- c("-firstcall", "true")
-
-      if (!is.null(port)) {
-        if (any(port < 0)) {
+#      parms <- c("-firstcall", "true")  deprecated
+      parms <- c()
+      if (!is.null(ports)) {
+        if (any(ports < 0)) {
           stop("Ports should be integers equal to or greater than 0!")
         }
-        if (length(port) > 4) {
+        if (length(ports) > 4) {
           stop("J4R allows for a maximum of 4 ports!")
         }
-        parms <- c(parms, "-ports", paste(port,collapse=portSplitter))
+        parms <- c(parms, "-ports", paste(ports,collapse=portSplitter))
       }
 
-      if (!is.null(internalPort)) {
-        if (any(internalPort < 0)) {
+      if (!is.null(internalPorts)) {
+        if (any(internalPorts < 0)) {
           stop("Internal ports should be integers equal to or greater than 0!")
         }
-        if (length(internalPort) != 2) {
+        if (length(internalPorts) != 2) {
           stop("There should be two internal ports!")
         }
-        parms <- c(parms, "-backdoorport", paste(internalPort,collapse=portSplitter))
+        parms <- c(parms, "-backdoorports", paste(internalPorts,collapse=portSplitter))
       }
 
-      if (!is.null(extensionPath)) {
-        quotedExtensionPath <- paste("\"", extensionPath, "\"", sep="")
-        parms <- c(parms, "-ext", paste(quotedExtensionPath, collapse = "::"))
-      }
+      parms <- c(parms, "-wd", .quoteIfNeeded(getwd()))
 
-      if (!is.null(memorySize)) {
-        if (!is.numeric(memorySize) && !is.integer(memorySize)) {
-          stop("The memorySize parameter should be either a numeric or an integer!")
-        }
-        if (memorySize < 50) {
-          stop("The minimum memory for the JVM is 50 Mb!")
-        }
-        parms <- c(parms, "-mem", as.integer(memorySize))
-      } else if (exists("defaultJVMMemory", envir = settingEnv, inherits = F)) {
-        memorySize <- get("defaultJVMMemory", envir = settingEnv, inherits = F)
-        parms <- c(parms, "-mem", as.integer(memorySize))
-      }
+      JVMparms <- .setJVMparms(memorySize = memorySize,
+                               headless = headless,
+                               extensionPath = extensionPath)
 
-      if (headless)
-        parms <- c(parms, "-headless", "true")
-      else
-        parms <- c(parms, "-headless", "false")
+      # if (!is.null(extensionPath)) {
+      #   quotedExtensionPath <- .quoteIfNeeded(extensionPath)
+      #   JVMparms <- c("-cp", paste(quotedExtensionPath, collapse = ";"))
+      # }
+      #
+      # if (!is.null(memorySize)) {
+      #   if (!is.numeric(memorySize) && !is.integer(memorySize)) {
+      #     stop("The memorySize parameter should be either a numeric or an integer!")
+      #   }
+      #   if (memorySize < 50) {
+      #     stop("The minimum memory for the JVM is 50 Mb!")
+      #   }
+      #   JVMparms <- c(JVMparms, paste0("-Xmx", as.integer(memorySize), "m"))
+      # } else if (exists("defaultJVMMemory", envir = settingEnv, inherits = F)) {
+      #   memorySize <- get("defaultJVMMemory", envir = settingEnv, inherits = F)
+      #   JVMparms <- c(JVMparms, paste0("-Xmx", as.integer(memorySize), "m"))
+      # }
+      #
+      # if (headless) {
+      #   JVMparms <- c(JVMparms, "-Djava.awt.headless=true")
+      # } else {
+      #   JVMparms <- c(JVMparms, "-Djava.awt.headless=false")
+      # }
 
-      parms <- c(parms, "-wd", paste("\"",getwd(),"\"", sep=""))
+
       filename <- file.path(getwd(), "J4RTmpFile")
-      if (file.exists(filename)) {
+      if (file.exists(filename)) { # delete the J4RTmpFile if it already exists
         file.remove(filename)
       }
 
-      rootPath <- system.file("java", package = "J4R")
-#    message(rootPath)
-      architecture <- suppressMessages(getJavaVersion()$architecture)
-      if (architecture == "32-Bit") {
-        stop("Java 32-Bit version are no longer supported!")
-      } else {
-        jarFilename <- paste("j4r_server-", J4R_Server_Version, ".jar", sep="")
-      }
-      path <- normalizePath(file.path(rootPath, jarFilename))
-      if (!file.exists(path)) {
-        stop("The path to the j4rserver library is incorrect!")
-      }
-      quotedPath <- paste("\"", path, "\"", sep="")
-      returnCode <- system2(.getJavaPath(), args = c("-Xmx50m", "-Djava.awt.headless=true", "-jar", quotedPath, parms), wait = F)  ### first JVM should always use the -Djava.awt.headless=true option. Otherwise headless JVM will fail to load the first JVM.
+#       rootPath <- system.file("java", package = "J4R")
+# #    message(rootPath)
+#       architecture <- suppressMessages(getJavaVersion()$architecture)
+#       if (architecture == "32-Bit") {
+#         stop("Java 32-Bit version are no longer supported!")
+#       } else {
+#         jarFilename <- paste("j4r_server-", J4R_Server_Version, ".jar", sep="")
+#       }
+#       j4rPath <- normalizePath(file.path(rootPath, jarFilename))
+#       if (!file.exists(j4rPath)) {
+#         stop("The path to the j4rserver library is incorrect!")
+#       }
+
+      javaPath <- .quoteIfNeeded(.getJavaPath())
+#      j4rPath <- .quoteIfNeeded(j4rPath)
+#      JVMSettings <- paste(c(JVMparms, "-jar", j4rPath), collapse= " ")
+      returnCode <- system2(javaPath, args = c(JVMparms, parms), wait = F)
       if (returnCode != 0) {
         stop("The call to the system2 function has returned an exception!")
       }
@@ -157,16 +167,73 @@ connectToJava <- function(host = "localhost",
   }
 }
 
+.quoteIfNeeded <- function(str) {
+  if (grepl(" ", str)) {
+    if (startsWith(str, "\"") & endsWith(str, "\"")) { # already quoted
+      return(str)
+    } else {  # we quote
+      return(paste0("\"", str, "\""))
+    }
+  } else { # no need to quote
+    return(str)
+  }
+}
+
+.setJVMparms <- function(memorySize, headless, extensionPath) {
+  JVMparms <- c()
+  if (!is.null(memorySize)) {
+    if (!is.numeric(memorySize) && !is.integer(memorySize)) {
+      stop("The memorySize parameter should be either a numeric or an integer!")
+    }
+    if (memorySize < 50) {
+      stop("The minimum memory for the JVM is 50 Mb!")
+    }
+    JVMparms <- c(JVMparms, paste0("-Xmx", as.integer(memorySize), "m"))
+  } else if (exists("defaultJVMMemory", envir = settingEnv, inherits = F)) {
+    memorySize <- get("defaultJVMMemory", envir = settingEnv, inherits = F)
+    JVMparms <- c(JVMparms, paste0("-Xmx", as.integer(memorySize), "m"))
+  }
+
+  if (headless) {
+    JVMparms <- c(JVMparms, "-Djava.awt.headless=true")
+  } else {
+    JVMparms <- c(JVMparms, "-Djava.awt.headless=false")
+  }
+
+  rootPath <- system.file("java", package = "J4R")
+  architecture <- suppressMessages(getJavaVersion()$architecture)
+  if (architecture == "32-Bit") {
+    stop("Java 32-Bit version are no longer supported!")
+  } else {
+    jarFilename <- paste("j4r_server-", J4R_Server_Version, ".jar", sep="")
+  }
+  j4rPath <- normalizePath(file.path(rootPath, jarFilename))
+  if (!file.exists(j4rPath)) {
+    stop("The path to the j4rserver library is incorrect!")
+  }
+
+  if (is.null(extensionPath)) {
+    extensionPath <- j4rPath
+  } else {
+    extensionPath <- c(j4rPath, extensionPath)
+  }
+  for (i in 1:length(extensionPath)) {
+    extensionPath[i] <- .quoteIfNeeded(extensionPath[i])
+  }
+  JVMparms <- c(JVMparms, "-cp", paste(extensionPath, collapse = ";"), "j4r.app.Startup")
+  return(JVMparms)
+}
+
 .instantiateConnectionHandlerFromFile <- function() {
   info <- suppressWarnings(utils::read.table("J4RTmpFile", header=F, sep=";", stringsAsFactors = F))
   key <- as.integer(info[1,1])
   internalports <- as.integer(strsplit(info[1,2], split = portSplitter)[[1]])
   if (is.integer(info[1,3])) { ### happens with a single port
-    port <- as.integer(info[1,3])
+    ports <- as.integer(info[1,3])
   } else {
-    port <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
+    ports <- as.integer(strsplit(info[1,3], split = portSplitter)[[1]])
   }
-  assign("connectionHandler", J4RConnectionHandler("localhost", port, key, internalports), envir = cacheEnv, inherits = F)  ### instantiated in the context of a private server
+  assign("connectionHandler", J4RConnectionHandler("localhost", ports, key, internalports), envir = cacheEnv, inherits = F)  ### instantiated in the context of a private server
 }
 
 

@@ -6,11 +6,11 @@
 \usage{
 connectToJava(
   host = "localhost",
-  port = c(0, 0),
+  ports = c(0, 0),
   extensionPath = NULL,
   memorySize = NULL,
   public = FALSE,
-  internalPort = c(0, 0),
+  internalPorts = c(0, 0),
   key = NULL,
   headless = T
 )
@@ -18,7 +18,7 @@ connectToJava(
 \arguments{
 \item{host}{the URL or IP address of the host ("localhost" by default )}
 
-\item{port}{a vector of the listening ports for the Java server}
+\item{ports}{a vector of the listening ports for the Java server}
 
 \item{extensionPath}{a vector of characters that contains the paths to jar files
 or to the classes that are to be loaded by the system classloader.}
@@ -27,7 +27,7 @@ or to the classes that are to be loaded by the system classloader.}
 
 \item{public}{true to connect to a server that is already running locally (FALSE by default)}
 
-\item{internalPort}{a vector of two integers representing the backdoor port and the garbage collector port}
+\item{internalPorts}{a vector of two integers representing the backdoor port and the garbage collector port}
 
 \item{key}{an integer used as a token to ensure a secure connection}
 
@@ -41,7 +41,7 @@ FALSE if the connection has failed
 This function connects the R environment to a gateway server that runs in Java.
 }
 \details{
-The first argument of the function provides the listening port for the Java server. A maximum of four ports is
+The first argument of the function provides the listening ports for the Java server. A maximum of four ports is
 allowed. When set to 0, these ports are randomly selected. By default, the server listens to two random
 ports.
 
