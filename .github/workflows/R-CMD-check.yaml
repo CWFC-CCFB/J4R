@@ -19,7 +19,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    name: ${{ matrix.os }} (${{ matrix.java }})
+    name: ${{ matrix.os }} (Java ${{ matrix.java }})
 
 
     env:
@@ -28,6 +28,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Setup Java ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
 
 #      - uses: r-lib/actions/setup-pandoc@v2
 
