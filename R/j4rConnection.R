@@ -91,52 +91,12 @@ connectToJava <- function(host = "localhost",
                                headless = headless,
                                extensionPath = extensionPath)
 
-      # if (!is.null(extensionPath)) {
-      #   quotedExtensionPath <- .quoteIfNeeded(extensionPath)
-      #   JVMparms <- c("-cp", paste(quotedExtensionPath, collapse = ";"))
-      # }
-      #
-      # if (!is.null(memorySize)) {
-      #   if (!is.numeric(memorySize) && !is.integer(memorySize)) {
-      #     stop("The memorySize parameter should be either a numeric or an integer!")
-      #   }
-      #   if (memorySize < 50) {
-      #     stop("The minimum memory for the JVM is 50 Mb!")
-      #   }
-      #   JVMparms <- c(JVMparms, paste0("-Xmx", as.integer(memorySize), "m"))
-      # } else if (exists("defaultJVMMemory", envir = settingEnv, inherits = F)) {
-      #   memorySize <- get("defaultJVMMemory", envir = settingEnv, inherits = F)
-      #   JVMparms <- c(JVMparms, paste0("-Xmx", as.integer(memorySize), "m"))
-      # }
-      #
-      # if (headless) {
-      #   JVMparms <- c(JVMparms, "-Djava.awt.headless=true")
-      # } else {
-      #   JVMparms <- c(JVMparms, "-Djava.awt.headless=false")
-      # }
-
-
       filename <- file.path(getwd(), "J4RTmpFile")
       if (file.exists(filename)) { # delete the J4RTmpFile if it already exists
         file.remove(filename)
       }
 
-#       rootPath <- system.file("java", package = "J4R")
-# #    message(rootPath)
-#       architecture <- suppressMessages(getJavaVersion()$architecture)
-#       if (architecture == "32-Bit") {
-#         stop("Java 32-Bit version are no longer supported!")
-#       } else {
-#         jarFilename <- paste("j4r_server-", J4R_Server_Version, ".jar", sep="")
-#       }
-#       j4rPath <- normalizePath(file.path(rootPath, jarFilename))
-#       if (!file.exists(j4rPath)) {
-#         stop("The path to the j4rserver library is incorrect!")
-#       }
-
       javaPath <- .quoteIfNeeded(.getJavaPath())
-#      j4rPath <- .quoteIfNeeded(j4rPath)
-#      JVMSettings <- paste(c(JVMparms, "-jar", j4rPath), collapse= " ")
       returnCode <- system2(javaPath, args = c(JVMparms, parms), wait = F)
       if (returnCode != 0) {
         stop("The call to the system2 function has returned an exception!")
@@ -225,8 +185,16 @@ connectToJava <- function(host = "localhost",
   for (i in 1:length(extensionPath)) {
     extensionPath[i] <- .quoteIfNeeded(extensionPath[i])
   }
-  JVMparms <- c(JVMparms, "-cp", paste(extensionPath, collapse = ";"), "j4r.app.Startup")
+  JVMparms <- c(JVMparms, "-cp", paste(extensionPath, collapse = .getClassPathSeparator()), "j4r.app.Startup")
   return(JVMparms)
+}
+
+.getClassPathSeparator <- function() {
+  if (Sys.info()["sysname"] == "Windows") {
+    return(";")
+  } else {
+    return(":")
+  }
 }
 
 .parseJavaVersion <- function(strVersion) {
