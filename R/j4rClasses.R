@@ -322,10 +322,10 @@ length.java.object <- function(x) {
 }
 
 
-J4RConnectionHandler <- function(host, port, key, internalports) {
+J4RConnectionHandler <- function(host, ports, key, internalports) {
   # me <- list(port = port, key = key, backdoorport = internalPorts[1], gcport = internalports[2], connections = list())
   me <- new.env(parent = emptyenv())
-  me$port <- port
+  me$ports <- ports
   me$key <- key
   me$backdoorport <- internalports[1]
   me$gcport <- internalports[2]
@@ -353,7 +353,7 @@ J4RConnectionHandler <- function(host, port, key, internalports) {
   if (is.null(connectionHandler)) {
     stop("The connection handler is null!")
   }
-  for (port in connectionHandler$port) {
+  for (port in connectionHandler$ports) {
     if (!.connectAndSecurePort(connectionHandler, port)) {
       return(FALSE)
     }

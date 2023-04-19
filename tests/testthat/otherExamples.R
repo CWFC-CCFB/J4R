@@ -13,10 +13,10 @@ myArray$add(5)
 shutdownClient()
 
 
-#### Example public sorver running on local host ####
+#### Example public sorver running on local host within existing app ####
 
 require(J4R)
-connectToJava(port = 18000:18001, internalPort = 50000:50001, public=T, key=212)
+connectToJava(port = 18000, internalPort = 50000:50001, public=T, key=212)
 
 defaultCharset <- callJavaMethod("java.nio.charset.Charset", "defaultCharset")
 print(paste("Encoding on JVM set to", defaultCharset$toString()))
@@ -30,9 +30,27 @@ obj$add(5)
 
 shutdownClient()
 
-connectToJava(port = 18000:18001, internalPort = 50000:50001, public=T, key=212)  ### reconnection
+connectToJava(port = 18000, internalPort = 50000:50001, public=T, key=212)  ### reconnection
 obj <- getMainInstance()
 obj$get(as.integer(0))
+
+shutdownClient()
+
+#### Example public sorver running on local host running as main app ####
+
+require(J4R)
+connectToJava(port = 18000, internalPort = 50000:50001, public=T, key=212)
+
+defaultCharset <- callJavaMethod("java.nio.charset.Charset", "defaultCharset")
+print(paste("Encoding on JVM set to", defaultCharset$toString()))
+
+myArray <- createJavaObject("java.util.ArrayList")
+myArray$add(5)
+
+myArray$toString()
+shutdownClient()
+
+connectToJava(port = 18000, internalPort = 50000:50001, public=T, key=212)  ### reconnection
 
 shutdownClient()
 
