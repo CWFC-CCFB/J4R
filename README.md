@@ -11,7 +11,9 @@ whether they are static or not. The package is based on a local Java server that
 is instantiated through a Java library packaged as j4r.jar. 
 
 Copyright (C) 2010-2020 Mathieu Fortin, repicea
-Copyright (C) 2020-2022 Her Majesty the Queen in right of Canada - Authors: Mathieu Fortin and Jean-Francois Lavoie (Canadian Wood Fibre Centre, Canadian Forest Service)
+Copyright (C) 2020-2023 His Majesty the King in right of Canada 
+
+Author: Mathieu Fortin (Canadian Wood Fibre Centre, Canadian Forest Service)
 
 Contact: Mathieu Fortin (mathieu.fortin.re@gmail.com)
 
