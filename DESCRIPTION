@@ -2,11 +2,10 @@ Package: J4R
 Type: Package
 Title: Create 'Java' Objects and Execute 'Java' Methods
 Version: 1.2.0
-Author@R: c(
+Authors@R: c(
     person("Mathieu", "Fortin", email = "mathieu.fortin.re@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6436-2727")),
-    person(c("Alex", "M"), "Chubaty", email="achubaty@for-cast.ca", role=c("ctb”), comment = c(ORCID = "0000-0001-7146-8135")),
-    person("His Majesty the King in right of Canada", role=c("cph”)))
-Copyright: 
+    person(c("Alex", "M"), "Chubaty", email="achubaty@for-cast.ca", role=c("ctb"), comment = c(ORCID = "0000-0001-7146-8135")),
+    person("His Majesty the King in right of Canada", role=c("cph")))
 Description: Makes it possible to create 'Java' objects and to execute 'Java' methods from the 'R' environment. 
     The 'Java' Virtual Machine is handled by a gateway server. Commands are sent to the server 
     through a socket connection from the 'R' environment. Calls to 'Java' methods allow for 
