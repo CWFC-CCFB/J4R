@@ -8,7 +8,7 @@
 #' The current version of the J4R Java server
 #'
 #' @export
-J4R_Server_Version <- "v1.2.0"
+J4R_Server_Version <- "v1.2.1"
 
 #'
 #' Connect to Java environment
@@ -412,19 +412,14 @@ getClassLoaderURLs <- function() {
 #' @export
 checkIfClasspathContains <- function(myJavaLibrary) {
   if (isConnectedToJava()) {
-    listURLs <- getClassLoaderPaths()
-    isLibIn <- FALSE
-    if (length(listURLs) > 1) {
-      for (i in 1:length(listURLs)) {
-        if (grepl(myJavaLibrary, listURLs[i])) {
-          isLibIn <- TRUE
-          break
-        }
-      }
+    myArray <- createJavaObject("java.util.ArrayList")
+    myArray$add(myJavaLibrary)
+    returnArray <- callJavaMethod("j4r.lang.J4RSystem", "checkIfPatternsAreInClassPath", myArray)
+    if (returnArray$size() == 0) {
+      return(TRUE)
     } else {
-      isLibIn <- grepl(myJavaLibrary, listURLs)
+      return(FALSE)
     }
-    return(isLibIn)
   } else {
     message("The local Java server is not running.")
   }
