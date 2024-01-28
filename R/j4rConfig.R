@@ -64,7 +64,8 @@ maxVectorLength <- 200
 #' JAVA environment variable in R, if it is not already set.
 #' It first tests if the path ends with java or java.exe and
 #' if it is actually a file. Note that if an empty character is
-#' passed to this function. It resets the JAVA environment variable.
+#' passed to this function, it resets the JAVA environment variable
+#' and J4R will then rely on the path to find java.exe.
 #'
 #' @param path the complete path to Java as in the example below. The file.path function should be used to
 #' define the path

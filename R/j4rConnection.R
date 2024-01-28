@@ -96,7 +96,7 @@ connectToJava <- function(host = "localhost",
         file.remove(filename)
       }
 
-      javaPath <- .quoteIfNeeded(.getJavaPath())
+      javaPath <- .getJavaPath()
       returnCode <- system2(javaPath, args = c(JVMparms, parms), wait = F)
       if (returnCode != 0) {
         stop("The call to the system2 function has returned an exception!")

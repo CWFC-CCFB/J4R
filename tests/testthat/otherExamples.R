@@ -93,4 +93,13 @@ while(iterator$hasNext()) {
   print(paste("Key:", key, "; Value:", value))
 }
 
+#### Manual test to check if setJavaPath properly works when contains spaces ####
 
+require(J4R)
+getJavaVersion()
+myPath <- file.path("C:","Program Files","Java","jdk-17","bin", "java.exe")
+setJavaPath(myPath)
+connectToJava()
+getJavaVersion()
+shutdownClient()
+setJavaPath("")
