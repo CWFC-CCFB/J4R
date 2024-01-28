@@ -25,6 +25,7 @@ new_java.pile <- function(myList) {
   return(me)
 }
 
+#' @export
 '[.java.pile' <- function(x,y) {
   return(new_java.pile(x$.innerList[y]))
 }

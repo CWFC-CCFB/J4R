@@ -15,7 +15,8 @@ This is an option function that makes it possible to set the
 JAVA environment variable in R, if it is not already set.
 It first tests if the path ends with java or java.exe and
 if it is actually a file. Note that if an empty character is
-passed to this function. It resets the JAVA environment variable.
+passed to this function, it resets the JAVA environment variable
+and J4R will then rely on the path to find java.exe.
 }
 \examples{
 myPath <- file.path("C:","Program Files (x86)","Java", "jre1.8.0_221", "bin", "java.exe")

@@ -132,7 +132,14 @@ test_that("Adding 1 to 601 to the 601 ArrayList instances", {
 
 path <- file.path(".","javatests","repicea.jar")
 #path <- file.path(".","tests","testthat", "javatests","repicea.jar")  ### for debugging
-addToClassPath(path)
+javaVersion <- as.numeric(strsplit(getJavaVersion()$version,"\\.")[[1]][1])
+
+if (javaVersion < 16) {
+  addToClassPath(path)
+} else {
+  shutdownClient()
+  connectToJava(extensionPath = c(path))
+}
 
 myMatrix <- createJavaObject("repicea.math.Matrix", as.integer(3), as.integer(3))
 nbColumns <- myMatrix$m_iCols

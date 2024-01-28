@@ -18,7 +18,6 @@ if (!isConnectedToJava()) {
 
 expectedJar <- paste("j4r_server-", J4R_Server_Version, ".jar", sep="")
 
-
 test_that("Check the return value of checkIfClasspathContains", {
   expect_equal(checkIfClasspathContains(expectedJar), TRUE)
   expect_equal(checkIfClasspathContains("repicea.jar"), FALSE)
@@ -26,21 +25,41 @@ test_that("Check the return value of checkIfClasspathContains", {
 
 #urlREpicea <- file.path(getwd(),"tests", "testthat", "javatests", "repicea.jar")
 urlREpicea <- file.path(getwd(),"javatests", "repicea.jar")
-suppressWarnings(addUrlToClassPath(urlREpicea))
 
-test_that("Check the return value of checkIfClasspathContains", {
-  expect_equal(checkIfClasspathContains(expectedJar), TRUE)
-  expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
-})
+javaVersion <- as.numeric(strsplit(getJavaVersion()$version,"\\.")[[1]][1])
 
-myMatrix <- createJavaObject("repicea.math.Matrix", as.integer(3), as.integer(3))
+if (javaVersion < 16) {
+  suppressWarnings(addUrlToClassPath(urlREpicea))
 
-test_that("Check if the Matrix object has been created", {
-  expect_equal(is.null(myMatrix), FALSE)
-  expect_equal("java.object" %in% class(myMatrix), TRUE)
-})
+  test_that("Check the return value of checkIfClasspathContains", {
+    expect_equal(checkIfClasspathContains(expectedJar), TRUE)
+    expect_equal(checkIfClasspathContains("repicea.jar"), TRUE)
+  })
 
-shutdownClient()
+  myMatrix <- createJavaObject("repicea.math.Matrix", as.integer(3), as.integer(3))
+
+  test_that("Check if the Matrix object has been created", {
+    expect_equal(is.null(myMatrix), FALSE)
+    expect_equal("java.object" %in% class(myMatrix), TRUE)
+  })
+  shutdownClient()
+} else {
+  behaviour <- tryCatch({
+    suppressWarnings(addUrlToClassPath(urlREpicea))
+    return(F)
+  },
+  error=function(e) {
+    message("The addUrlToClassPath function threw an exception as expected.")
+    return(T)
+  },
+  warning=function(w) {
+    return(F)
+  })
+  test_that("Check if an exception has been thrown.", {
+    expect_equal(behaviour, TRUE)
+  })
+  shutdownClient()
+}
 
 connectToJava(extensionPath = c(urlREpicea))
 test_that("Check the return value of checkIfClasspathContains", {
