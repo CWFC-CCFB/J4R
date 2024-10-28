@@ -557,4 +557,34 @@ mclapply.j4r <- function(X, FUN, ..., nbCores = getNbConnections()) {
   return(output)
 }
 
+#'
+#' Provide the Reference to the Main Logger
+#'
+#' This is a Java reference for convenience.
+#'
+#' @return a reference to the main Logger instance on the Java end
+#'
+#' @export
+getMainLoggerInstance <- function() {
+  J4RLogger <- callJavaMethod("j4r.app.Startup", "getMainLogger")
+  return(J4RLogger)
+}
+
+
+#'
+#' Set the Logging Level
+#'
+#' The level refers to the Java nomenclature: SEVERE, WARNING, INFO,
+#' FINE, FINER, and FINEST.
+#'
+#' @param level a String among these: SEVERE, WARNING, INFO,
+#' FINE, FINER, and FINEST (case sensitive)
+#' @return nothing
+#'
+#' @export
+setLogLevel <- function(level) {
+  levelRef <- getJavaField("java.util.logging.Level", level)
+  getMainLoggerInstance()$setLevel(levelRef)
+  return(invisible())
+}
 

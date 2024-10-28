@@ -8,7 +8,7 @@
 #' The current version of the J4R Java server
 #'
 #' @export
-J4R_Server_Version <- "v1.2.1"
+J4R_Server_Version <- "1.2.3"
 
 #'
 #' Connect to Java environment
