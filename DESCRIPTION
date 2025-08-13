@@ -1,7 +1,7 @@
 Package: J4R
 Type: Package
 Title: Create 'Java' Objects and Execute 'Java' Methods
-Version: 1.2.3
+Version: 1.2.4
 Authors@R: c(
     person("Mathieu", "Fortin", email = "mathieu.fortin.re@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6436-2727")),
     person(c("Alex", "M"), "Chubaty", email="achubaty@for-cast.ca", role=c("ctb"), comment = c(ORCID = "0000-0001-7146-8135")),
