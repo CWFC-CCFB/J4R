@@ -12,7 +12,8 @@ connectToJava(
   public = FALSE,
   internalPorts = c(0, 0),
   key = NULL,
-  headless = T
+  headless = T,
+  addOpens = NULL
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ or to the classes that are to be loaded by the system classloader.}
 \item{key}{an integer used as a token to ensure a secure connection}
 
 \item{headless}{a boolean to enable the headless mode (is true by default).}
+
+\item{addOpens}{a vector of java.base modules to be opened to ALL-UNNAMED}
 }
 \value{
 a logical TRUE if the function managed to get connected to the server or if it was already connected or
