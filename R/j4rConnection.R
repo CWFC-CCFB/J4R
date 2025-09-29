@@ -34,7 +34,7 @@ J4R_Server_Version <- "1.3.0"
 #' @param internalPorts a vector of two integers representing the backdoor port and the garbage collector port
 #' @param key an integer used as a token to ensure a secure connection
 #' @param headless a boolean to enable the headless mode (is true by default).
-#'
+#' @param addOpens a vector of java.base modules to be opened to ALL-UNNAMED
 #' @seealso \code{\link{addToClassPath}}
 #'
 #' @return a logical TRUE if the function managed to get connected to the server or if it was already connected or
@@ -48,7 +48,8 @@ connectToJava <- function(host = "localhost",
                           public = FALSE,
                           internalPorts = c(0,0),
                           key = NULL,
-                          headless = T) {
+                          headless = T,
+                          addOpens = NULL) {
   if (isConnectedToJava()) {
     message("It seems R is already connected to the local Java server.")
     return(TRUE)
@@ -89,7 +90,8 @@ connectToJava <- function(host = "localhost",
 
       JVMparms <- .setJVMparms(memorySize = memorySize,
                                headless = headless,
-                               extensionPath = extensionPath)
+                               extensionPath = extensionPath,
+                               addOpens = addOpens)
 
       filename <- file.path(getwd(), "J4RTmpFile")
       if (file.exists(filename)) { # delete the J4RTmpFile if it already exists
@@ -139,7 +141,7 @@ connectToJava <- function(host = "localhost",
   }
 }
 
-.setJVMparms <- function(memorySize, headless, extensionPath) {
+.setJVMparms <- function(memorySize, headless, extensionPath, addOpens) {
   JVMparms <- c()
   if (!is.null(memorySize)) {
     if (!is.numeric(memorySize) && !is.integer(memorySize)) {
@@ -163,8 +165,15 @@ connectToJava <- function(host = "localhost",
   rootPath <- system.file("java", package = "J4R")
   javaVersion <- getJavaVersion()
   versionNumber <- .parseJavaVersion(javaVersion$version)
-  if (versionNumber > 8 & versionNumber < 16) { # from version 9 to 15 the classloader can be accessed dynamically
-    JVMparms <- c(JVMparms, "--add-opens java.base/jdk.internal.loader=ALL-UNNAMED")
+  if (versionNumber > 8) {
+    if (versionNumber < 16) {
+      JVMparms <- c(JVMparms, "--add-opens java.base/jdk.internal.loader=ALL-UNNAMED")
+    }
+    if (!is.null(addOpens)) {
+      for (ao in addOpens) {
+        JVMparms <- c(JVMparms, paste0("--add-opens java.base/", ao, "=ALL-UNNAMED"))
+      }
+    }
   }
   architecture <- suppressMessages(javaVersion$architecture)
   if (architecture == "32-Bit") {
